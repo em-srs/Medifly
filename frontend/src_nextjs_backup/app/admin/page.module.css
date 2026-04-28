@@ -1,0 +1,32 @@
+.page { padding: var(--space-8) 0 var(--space-16); min-height: calc(100vh - var(--header-height)); background: var(--bg-secondary); }
+.header { margin-bottom: var(--space-6); }
+.header h1 { font-size: var(--text-2xl); margin-bottom: var(--space-1); }
+.header p { font-size: var(--text-sm); color: var(--slate-500); }
+
+.content { margin-top: var(--space-6); }
+
+.statsGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-8); }
+.statCard { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-5); background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-xl); transition: all var(--transition-base); }
+.statCard:hover { border-color: var(--teal-200); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.statCard span { font-size: 2rem; }
+.statCard strong { display: block; font-family: var(--font-display); font-size: var(--text-xl); font-weight: 800; color: var(--teal-600); }
+.statCard small { font-size: var(--text-xs); color: var(--slate-500); }
+
+.todaySection { margin-bottom: var(--space-8); }
+.todaySection h3 { font-size: var(--text-lg); margin-bottom: var(--space-4); }
+.todayGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+.todayCard { background: linear-gradient(135deg, var(--teal-50), var(--blue-50)); border: 1px solid var(--teal-200); border-radius: var(--radius-xl); padding: var(--space-6); text-align: center; }
+.todayLabel { font-size: var(--text-sm); color: var(--slate-600); margin-bottom: var(--space-2); }
+.todayValue { font-family: var(--font-display); font-size: var(--text-3xl); font-weight: 800; color: var(--teal-700); margin-bottom: var(--space-1); }
+.todayChange { font-size: var(--text-xs); color: var(--success); font-weight: 600; }
+
+.liveOrders h3 { font-size: var(--text-lg); margin-bottom: var(--space-4); }
+.ordersList { display: flex; flex-direction: column; gap: var(--space-3); }
+.liveOrder { background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-xl); padding: var(--space-4) var(--space-5); }
+.liveOrderHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); font-size: var(--text-sm); font-weight: 600; color: var(--slate-600); }
+.liveOrderInfo { display: flex; gap: var(--space-4); font-size: var(--text-sm); color: var(--slate-500); }
+
+@media (max-width: 768px) {
+  .statsGrid { grid-template-columns: 1fr 1fr; }
+  .todayGrid { grid-template-columns: 1fr; }
+}
