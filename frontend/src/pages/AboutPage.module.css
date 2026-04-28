@@ -1,0 +1,182 @@
+.pageWrap {
+  background-color: var(--bg-secondary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+.header {
+  background-color: white;
+  position: absolute; /* Floating header for hero */
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+  background: transparent; /* Assuming transparent overlay on hero image based on design */
+}
+
+.headerContainer {
+  max-width: 1300px;
+  margin: 0 auto;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 3rem;
+}
+
+.logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+.logoIcon { font-size: 1.5rem; color: var(--teal-400); }
+.logoText { font-size: 1.25rem; font-weight: 700; color: white; }
+.logoAccent { color: white; }
+
+.nav { display: flex; gap: 2.5rem; align-items: center; }
+.nav a { color: white; font-size: 0.95rem; font-weight: 500; text-decoration: none; opacity: 0.9; }
+.nav a:hover { opacity: 1; }
+.nav .activeLink { color: var(--teal-300); font-weight: 700; opacity: 1; }
+
+.signInBtn { 
+  background-color: var(--teal-100); 
+  color: var(--teal-800) !important; 
+  padding: 0.5rem 1.25rem; 
+  border-radius: var(--radius-full); 
+  font-weight: 600 !important; 
+  opacity: 1 !important;
+}
+
+/* Layout helpers */
+.main { flex: 1; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+.sectionTitle { font-size: 2rem; font-weight: 700; color: var(--slate-900); margin-bottom: 2rem; }
+.sectionTitleCenter { font-size: 2rem; font-weight: 700; color: var(--slate-900); text-align: center; margin-bottom: 1rem; }
+.sectionSubtitleCenter { color: var(--slate-500); text-align: center; max-width: 600px; margin: 0 auto; line-height: 1.6; font-size: 1rem;}
+
+/* HERO SECTION */
+.hero {
+  height: 500px;
+  background-image: url('https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=2000');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  /* Add specific brand coloring for hero overlay */
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(13, 148, 136, 0.9) 0%, rgba(13, 148, 136, 0.4) 100%);
+  display: flex;
+  align-items: center;
+}
+
+.heroContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 3rem;
+  padding-top: 4rem; /* offset for header */
+}
+
+.heroTitle {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1.1;
+  margin: 0 0 1.5rem 0;
+  font-family: var(--font-display);
+}
+
+.heroSub {
+  font-size: 1.125rem;
+  color: rgba(255,255,255,0.9);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* WHY WE EXIST */
+.whySection { padding: 6rem 0; background-color: var(--bg-secondary); }
+.whyGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
+.whyLeft { max-width: 500px; }
+.leadText { font-size: 1.125rem; color: var(--slate-600); line-height: 1.8; margin-bottom: 2.5rem; }
+.quoteBox { background-color: var(--teal-50); border: 1px solid var(--teal-100); padding: 2rem; border-radius: var(--radius-xl); font-style: italic; color: var(--teal-800); line-height: 1.6; }
+
+.whyStats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.statCard { background: white; padding: 2rem; border-radius: var(--radius-xl); box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--slate-100); }
+.statIcon { width: 32px; height: 32px; background: var(--teal-50); color: var(--teal-500); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+.statCard h3 { font-size: 1.5rem; font-weight: 700; color: var(--slate-900); margin: 0 0 0.5rem 0; }
+.statCard p { font-size: 0.875rem; color: var(--slate-500); margin: 0; }
+
+/* THE MINDS BEHIND */
+.teamSection { padding: 6rem 0; background-color: var(--slate-50); }
+.teamHeader { margin-bottom: 4rem; }
+.teamGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+.teamCard { background: white; padding: 3rem; text-align: center; border-radius: var(--radius-xl); box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--slate-100); }
+.teamIconBox { width: 64px; height: 64px; background: var(--teal-50); color: var(--teal-500); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem auto; }
+.teamCard h3 { font-size: 1.25rem; font-weight: 700; color: var(--slate-900); margin: 0 0 1rem 0; }
+.teamCard p { font-size: 0.9rem; color: var(--slate-500); line-height: 1.6; margin: 0; }
+
+/* TRUST & COMPLIANCE */
+.trustSection { padding: 6rem 0; background-color: var(--bg-secondary); }
+.trustGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
+.trustImage { 
+  height: 500px; 
+  background-image: url('https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=800');
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+.trustContent { max-width: 500px; }
+.trustItems { display: flex; flex-direction: column; gap: 2.5rem; }
+.trustItem { display: flex; gap: 1.25rem; align-items: flex-start; }
+.trustIcon { width: 24px; height: 24px; background: var(--teal-500); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0; margin-top: 0.25rem; }
+.trustItem h3 { font-size: 1.125rem; font-weight: 700; color: var(--slate-900); margin: 0 0 0.5rem 0; }
+.trustItem p { font-size: 0.9rem; color: var(--slate-600); line-height: 1.6; margin: 0; }
+
+/* CTA SECTION */
+.ctaSection { padding: 0 0 6rem 0; background-color: var(--bg-secondary); }
+.ctaBox { background-color: var(--teal-400); border-radius: var(--radius-2xl); padding: 4rem; text-align: center; }
+.ctaBox h2 { font-size: 2.5rem; font-weight: 700; color: white; margin: 0 0 1rem 0; }
+.ctaBox p { font-size: 1.125rem; color: rgba(255,255,255,0.9); line-height: 1.6; margin: 0 0 2rem 0; }
+.ctaBtns { display: flex; justify-content: center; gap: 1rem; }
+.btnDark { background-color: var(--slate-900); color: white; padding: 1rem 2rem; border-radius: var(--radius-md); font-weight: 600; font-size: 1rem; border: none; }
+.btnDark:hover { background-color: black; }
+.btnOutlineTeal { background-color: transparent; border: 2px solid rgba(255,255,255,0.4); color: white; padding: 1rem 2rem; border-radius: var(--radius-md); font-weight: 600; font-size: 1rem; }
+
+/* FOOTER EXACT MATCH */
+.footer { background-color: white; padding: 5rem 0 2rem 0; border-top: 1px solid var(--slate-100); }
+.fGrid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; margin-bottom: 4rem; }
+.fBrand .logoText { color: var(--slate-900); }
+.fBrand .logoAccent { color: var(--teal-500); }
+.logo { display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; margin-bottom: 1.5rem; }
+.fDesc { font-size: 0.875rem; color: var(--slate-500); line-height: 1.6; }
+.fLinks h4 { font-size: 1rem; font-weight: 700; color: var(--slate-900); margin: 0 0 1.5rem 0; }
+.fLinks a { display: block; color: var(--slate-500); font-size: 0.875rem; text-decoration: none; margin-bottom: 1rem; }
+.fLinks a:hover { color: var(--slate-800); }
+.fLinks p { color: var(--slate-500); font-size: 0.875rem; margin: 0 0 1rem 0; }
+.fBottom { border-top: 1px solid var(--slate-100); padding-top: 2rem; color: var(--slate-400); font-size: 0.75rem; text-align: left; }
+
+/* ─── Mobile Responsiveness ─────────────────────────── */
+@media (max-width: 960px) {
+  .whyGrid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .whyLeft { max-width: 100%; }
+  .trustGrid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .trustImage { height: 280px; }
+  .trustContent { max-width: 100%; }
+  .teamGrid { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+}
+
+@media (max-width: 640px) {
+  .hero { height: 360px; }
+  .heroTitle { font-size: 2.25rem; }
+  .heroContent { padding: 0 1.25rem; padding-top: 3rem; }
+  .whySection, .teamSection, .trustSection { padding: 3.5rem 0; }
+  .container { padding: 0 1.25rem; }
+  .teamGrid { grid-template-columns: 1fr; }
+  .whyStats { grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .statCard { padding: 1.25rem; }
+  .ctaBox { padding: 2.5rem 1.25rem; border-radius: var(--radius-xl); }
+  .ctaBox h2 { font-size: 1.75rem; }
+  .ctaBtns { flex-direction: column; align-items: center; }
+  .btnDark, .btnOutlineTeal { width: 100%; max-width: 320px; }
+}
+

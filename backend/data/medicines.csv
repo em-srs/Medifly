@@ -1,0 +1,51 @@
+medicineId,brandName,genericName,saltComposition,category,dosageForm,strength,manufacturer,scheduleType,requiresPrescription,coldChainRequired,packSize,price
+MED001,Dolo 650,Paracetamol,Paracetamol 650mg,Analgesic,Tablet,650mg,Micro Labs Ltd,OTC,false,false,15 Tablets,30
+MED002,Crocin Advance,Paracetamol,Paracetamol 500mg,Analgesic,Tablet,500mg,GlaxoSmithKline,OTC,false,false,15 Tablets,25
+MED003,Calpol 500,Paracetamol,Paracetamol 500mg,Analgesic,Tablet,500mg,GlaxoSmithKline,OTC,false,false,15 Tablets,18
+MED004,Combiflam,Ibuprofen + Paracetamol,Ibuprofen 400mg + Paracetamol 325mg,Analgesic,Tablet,400mg+325mg,Sanofi India,OTC,false,false,20 Tablets,42
+MED005,Brufen 400,Ibuprofen,Ibuprofen 400mg,Anti-inflammatory,Tablet,400mg,Abbott India,OTC,false,false,15 Tablets,35
+MED006,Disprin,Aspirin,Aspirin 350mg,Analgesic,Tablet,350mg,Reckitt Benckiser,OTC,false,false,10 Tablets,15
+MED007,Azithral 500,Azithromycin,Azithromycin 500mg,Antibiotic,Tablet,500mg,Alembic Pharma,H,true,false,3 Tablets,120
+MED008,Augmentin 625 Duo,Amoxicillin + Clavulanic Acid,Amoxicillin 500mg + Clavulanic Acid 125mg,Antibiotic,Tablet,625mg,GlaxoSmithKline,H,true,false,10 Tablets,210
+MED009,Cipro 500,Ciprofloxacin,Ciprofloxacin 500mg,Antibiotic,Tablet,500mg,Bayer,H,true,false,10 Tablets,95
+MED010,Amoxyclav 625,Amoxicillin + Clavulanic Acid,Amoxicillin 500mg + Clavulanic Acid 125mg,Antibiotic,Tablet,625mg,Cipla,H,true,false,10 Tablets,180
+MED011,Cefix 200,Cefixime,Cefixime 200mg,Antibiotic,Capsule,200mg,Mankind Pharma,H,true,false,10 Capsules,140
+MED012,Metformin 500,Metformin,Metformin 500mg,Antidiabetic,Tablet,500mg,USV Pvt Ltd,H,true,false,20 Tablets,25
+MED013,Glycomet GP 2,Glimepiride + Metformin,Glimepiride 2mg + Metformin 500mg,Antidiabetic,Tablet,2mg+500mg,USV Pvt Ltd,H,true,false,15 Tablets,135
+MED014,Janumet 50/500,Sitagliptin + Metformin,Sitagliptin 50mg + Metformin 500mg,Antidiabetic,Tablet,50mg+500mg,MSD Pharma,H,true,false,15 Tablets,680
+MED015,Amaryl 2,Glimepiride,Glimepiride 2mg,Antidiabetic,Tablet,2mg,Sanofi India,H,true,false,15 Tablets,115
+MED016,Amlodipine 5,Amlodipine,Amlodipine 5mg,Antihypertensive,Tablet,5mg,Cipla,H,true,false,15 Tablets,30
+MED017,Telma 40,Telmisartan,Telmisartan 40mg,Antihypertensive,Tablet,40mg,Glenmark Pharma,H,true,false,15 Tablets,130
+MED018,Aten 50,Atenolol,Atenolol 50mg,Antihypertensive,Tablet,50mg,Zydus Cadila,H,true,false,14 Tablets,28
+MED019,Ramipril 5,Ramipril,Ramipril 5mg,Antihypertensive,Capsule,5mg,Sanofi India,H,true,false,15 Capsules,85
+MED020,Losartan 50,Losartan,Losartan 50mg,Antihypertensive,Tablet,50mg,Torrent Pharma,H,true,false,15 Tablets,60
+MED021,Pantop 40,Pantoprazole,Pantoprazole 40mg,Gastrointestinal,Tablet,40mg,Aristo Pharma,H,true,false,15 Tablets,95
+MED022,Omez 20,Omeprazole,Omeprazole 20mg,Gastrointestinal,Capsule,20mg,Dr Reddys,OTC,false,false,15 Capsules,65
+MED023,Rantac 150,Ranitidine,Ranitidine 150mg,Gastrointestinal,Tablet,150mg,J B Chemicals,OTC,false,false,30 Tablets,40
+MED024,Gelusil MPS,Magaldrate + Simethicone,Dried Aluminium Hydroxide 400mg + Magnesium Hydroxide 400mg,Antacid,Liquid,170ml,Pfizer,OTC,false,false,170ml Bottle,75
+MED025,Digene,Magaldrate + Simethicone,Magaldrate 400mg + Simethicone 20mg,Antacid,Tablet,400mg+20mg,Abbott India,OTC,false,false,15 Tablets,25
+MED026,Cetirizine 10,Cetirizine,Cetirizine 10mg,Antihistamine,Tablet,10mg,Cipla,OTC,false,false,10 Tablets,15
+MED027,Allegra 120,Fexofenadine,Fexofenadine 120mg,Antihistamine,Tablet,120mg,Sanofi India,OTC,false,false,10 Tablets,150
+MED028,Montair LC,Montelukast + Levocetirizine,Montelukast 10mg + Levocetirizine 5mg,Antihistamine,Tablet,10mg+5mg,Cipla,H,true,false,15 Tablets,175
+MED029,Avil 25,Pheniramine,Pheniramine 25mg,Antihistamine,Tablet,25mg,Sanofi India,OTC,false,false,15 Tablets,12
+MED030,Levocetirizine 5,Levocetirizine,Levocetirizine 5mg,Antihistamine,Tablet,5mg,Sun Pharma,OTC,false,false,10 Tablets,20
+MED031,Ascoril LS,Ambroxol + Levosalbutamol + Guaifenesin,Ambroxol 30mg + Levosalbutamol 1mg + Guaifenesin 50mg,Respiratory,Syrup,100ml,Glenmark Pharma,OTC,false,false,100ml Bottle,110
+MED032,Benadryl DR,Diphenhydramine + Ammonium Chloride,Diphenhydramine 14mg + Ammonium Chloride 138mg,Cough Suppressant,Syrup,100ml,Johnson & Johnson,OTC,false,false,100ml Bottle,85
+MED033,Grilinctus,Dextromethorphan + Phenylephrine + Chlorpheniramine,Dextromethorphan 10mg + Phenylephrine 5mg + CPM 2mg,Cough Suppressant,Syrup,100ml,Franco Indian,OTC,false,false,100ml Bottle,70
+MED034,Deriphyllin,Etophylline + Theophylline,Etophylline 77mg + Theophylline 23mg,Respiratory,Tablet,100mg,Zydus Cadila,H,true,false,30 Tablets,50
+MED035,Asthalin Inhaler,Salbutamol,Salbutamol 100mcg,Respiratory,Inhaler,100mcg,Cipla,H,true,false,200 Doses,115
+MED036,Vicks VapoRub,Menthol + Camphor + Eucalyptus Oil,Menthol 2.75% + Camphor 5.25%,Topical,Ointment,50g,P&G Health,OTC,false,false,50g Jar,110
+MED037,Moov,Diclofenac Diethylamine,Diclofenac Diethylamine 1.16%,Topical,Gel,50g,Reckitt Benckiser,OTC,false,false,50g Tube,85
+MED038,Volini Spray,Diclofenac Diethylamine,Diclofenac Diethylamine 4%,Topical,Spray,40g,Sun Pharma,OTC,false,false,40g Spray,195
+MED039,Betnovate-N,Betamethasone + Neomycin,Betamethasone 0.1% + Neomycin 0.5%,Dermatological,Cream,20g,GlaxoSmithKline,H,true,false,20g Tube,65
+MED040,Soframycin,Framycetin,Framycetin 1%,Dermatological,Cream,30g,Sanofi India,OTC,false,false,30g Tube,80
+MED041,Insulin Lispro,Insulin Lispro,Insulin Lispro 100 IU/ml,Antidiabetic,Injection,100 IU/ml,Eli Lilly,H1,true,true,5 Cartridges,1850
+MED042,Insulin Glargine,Insulin Glargine,Insulin Glargine 100 IU/ml,Antidiabetic,Injection,100 IU/ml,Sanofi India,H1,true,true,5 Cartridges,2100
+MED043,Eyemist Drops,Hydroxypropyl Methylcellulose,HPMC 0.3%,Ophthalmic,Eye Drops,10ml,Sun Pharma,OTC,false,false,10ml Bottle,95
+MED044,Tobradex Eye Drops,Tobramycin + Dexamethasone,Tobramycin 0.3% + Dexamethasone 0.1%,Ophthalmic,Eye Drops,5ml,Novartis,H,true,false,5ml Bottle,210
+MED045,Otrivin Nasal Spray,Xylometazoline,Xylometazoline 0.1%,Nasal,Spray,10ml,Novartis,OTC,false,false,10ml Spray,90
+MED046,Becosules,Multivitamin B Complex,Vitamin B Complex + Vitamin C,Vitamin,Capsule,Multivitamin,Pfizer,OTC,false,false,20 Capsules,35
+MED047,Supradyn,Multivitamin + Multimineral,Multivitamin + Multimineral,Vitamin,Tablet,Multivitamin,Bayer,OTC,false,false,15 Tablets,50
+MED048,Shelcal 500,Calcium + Vitamin D3,Calcium 500mg + Vitamin D3 250 IU,Supplement,Tablet,500mg+250 IU,Torrent Pharma,OTC,false,false,15 Tablets,110
+MED049,Limcee,Ascorbic Acid,Vitamin C 500mg,Vitamin,Tablet,500mg,Abbott India,OTC,false,false,15 Tablets,25
+MED050,Zincovit,Multivitamin + Zinc,Multivitamin + Zinc,Supplement,Tablet,Multivitamin,Apex Labs,OTC,false,false,15 Tablets,105
