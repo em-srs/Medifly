@@ -39,7 +39,7 @@ export default function CartSidebar() {
             <div className={styles.items}>
               {items.map(item => (
                 <div key={item.id} className={styles.item}>
-                  <div className={styles.itemIcon}>{item.image || <Pill size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />}</div>
+                  <div className={styles.itemIcon}>{item.image ? <img src={item.image} alt={item.name} className={styles.itemImg} /> : <Pill size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />}</div>
                   <div className={styles.itemInfo}>
                     <strong className={styles.itemName}>{item.name}</strong>
                     <span className={styles.itemSalt}>{item.salt}</span>
