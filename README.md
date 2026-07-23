@@ -1,3 +1,4 @@
+
 # 🚀 Medifly
 
 **Instant Pharmacy Delivery Platform**
@@ -16,9 +17,23 @@ Medifly is a modern, ultra-fast medicine delivery application designed to bring 
 - **Database:** MongoDB
 
 ## 📦 Project Structure
-- `/frontend` - Contains the client-side UI application.
-- `/backend` - Contains the Node.js server and API logic.
 
+The repository is structured as a monorepo containing both the frontend and backend codebases:
+
+### 🖥️ Frontend (`/frontend`)
+- **`src/components/`**: Reusable UI components (e.g., `CartSidebar` with cart breakdown, fees, and subscription checks).
+- **`src/context/`**: React Context providers for global state management (e.g., Cart and Auth context).
+- **`src/pages/`**: Page-level components defining the application's views.
+- **`src/hooks/`**: Custom React hooks for shared logic.
+- **`scripts/`**: Utility scripts for extracting medicine data.
+
+### ⚙️ Backend (`/backend`)
+- **`config/`**: Database connection (`db.js`) and authentication configuration (`auth.js`).
+- **`controllers/`**: Request handlers managing business logic for users, admins, medicines, orders, pharmacies, prescriptions, riders, and subscriptions.
+- **`models/`**: Mongoose schemas defining the database structure (e.g., `User`, `Medicine`, `Order`, `Subscription`, `Rider`, `Salt`).
+- **`routes/`**: Express API endpoints mapping to their respective controllers.
+- **`services/`**: Core background services including cron jobs (`cronService`), pricing calculations (`pricingService`), rider assignment (`riderAssignmentService`), and salt comparison (`saltComparisonService`).
+- **`middleware/`**: Custom middleware for authentication and role-based access control.
 ## 🚀 Getting Started
 
 ### Prerequisites
