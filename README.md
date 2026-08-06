@@ -376,8 +376,8 @@ erDiagram
     USER ||--o{ ORDER : "places"
     USER ||--o{ PRESCRIPTION : "uploads"
     USER ||--o{ SUBSCRIPTION : "subscribes"
-    USER ||--o1 PHARMACY : "operates"
-    USER ||--o1 RIDER : "drives"
+    USER ||--o| PHARMACY : "operates"
+    USER ||--o| RIDER : "drives"
 
     SALT ||--o{ MEDICINE : "composes"
     MEDICINE ||--o{ ORDER_ITEM : "contained_in"
@@ -386,7 +386,7 @@ erDiagram
     USER {
         ObjectId _id PK
         String name
-        String email UK
+        String email
         String password
         String phone
         String role "enum: user, pharmacy, rider, admin"
@@ -399,7 +399,7 @@ erDiagram
 
     SALT {
         ObjectId _id PK
-        String saltName UK
+        String saltName
         String description
         StringArray medicalUses
         StringArray commonSideEffects
@@ -408,7 +408,7 @@ erDiagram
 
     MEDICINE {
         ObjectId _id PK
-        String medicineId UK
+        String medicineId
         String brandName
         String genericName
         ObjectId saltComposition FK
@@ -463,7 +463,7 @@ erDiagram
         ObjectId _id PK
         ObjectId user FK
         String name
-        String licenseNumber UK
+        String licenseNumber
         Object address "street, city, state, zipCode, location"
         Array inventory "medicine, stock, price"
         String status "enum: PENDING, VERIFIED, BANNED"
