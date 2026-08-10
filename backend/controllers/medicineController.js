@@ -52,7 +52,7 @@ exports.getAlternatives = async (req, res) => {
     const saltQuery = req.params.saltName;
     const alternatives = await Medicine.find({ 
       genericName: { $regex: saltQuery, $options: 'i' } 
-    }).sort({ priceInr: 1 }); // Sorted by price for cheaper option first
+    }).sort({ price: 1 }); // Sorted by price for cheaper option first
 
     res.json(alternatives);
   } catch (error) {

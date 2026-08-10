@@ -10,7 +10,7 @@
 
 Designed for high-concurrency real-time logistics, Medifly incorporates a bioequivalent **Salt Comparison Engine** that automatically matches branded medications with cheaper generic alternatives, a **Multi-Tier Dynamic Pricing Engine** that computes subscriber discounts, cold-chain handling, emergency surcharges, and late-night fees, and an automated **Cron Refill Engine** that manages recurring subscriptions. 
 
-With **100% TDD pass rate** across core business services and **95%+ code coverage**, Medifly uses **Socket.io** for real-time inventory alerts, order status tracking, and fleet rider GPS updates, backed by stateless **JWT authentication** and strict **Role-Based Access Control (RBAC)**."
+Medifly uses **Socket.io** for real-time inventory alerts, order status tracking, and fleet rider GPS updates, backed by stateless **JWT authentication** and strict **Role-Based Access Control (RBAC)**. Core business logic (`PricingService`, salt matching, cron refills) is written as isolated, dependency-free functions specifically so it's straightforward to unit test — that test suite is the next thing on the roadmap."
 
 ---
 
@@ -417,7 +417,7 @@ const generateToken = (id) => {
 ### Question 5: TDD Execution Workflow & Code Coverage
 **Q: What was your Test-Driven Development (TDD) approach for core business services?**
 > **Answer**: 
-> Development began by defining failing unit tests for `PricingService` tax/fee calculations, `SaltComparisonService` matching logic, and `CronService` refill scheduling. Test cases covered edge scenarios such as subscriber fee waivers, late-night surcharges, cold-chain handling, and prescription status checks. This TDD workflow achieved **100% test pass rate** and **95%+ code coverage** across core business modules.
+> Business logic that most needs correctness guarantees — `PricingService`'s fee/tax math, salt-composition matching, cron refill scheduling — is deliberately written as pure, dependency-free functions/classes decoupled from Express and Mongoose. That's what makes it TDD-friendly: no HTTP mocking or DB stubbing needed to test the actual pricing rules. Test cases would cover subscriber fee waivers, late-night surcharges, cold-chain handling, and prescription status checks. `mongodb-memory-server` is already wired into `config/db.js` as a fallback/dev DB, which doubles as the foundation for integration tests later. I haven't written the test suite yet — that's the honest next step, not something I'd claim is done.
 
 ### Question 6: Price Snapshotting & Multi-Tier Pricing Engine
 **Q: How does the pricing engine calculate multi-tier fees and handle real-time price synchronization?**

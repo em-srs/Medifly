@@ -8,8 +8,6 @@
 [![Socket.io](https://img.shields.io/badge/socket.io-v4.8.3-black.svg)](https://socket.io/)
 [![JWT Auth](https://img.shields.io/badge/auth-JWT%20Bearer-orange.svg)](https://jwt.io/)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
-[![Test Pass Rate](https://img.shields.io/badge/tests-100%25%20passing-brightgreen.svg)](#test-suite)
-[![Code Coverage](https://img.shields.io/badge/coverage-95%25%20plus-success.svg)](#test-suite)
 
 > **Medifly** is a enterprise-grade, real-time emergency healthcare delivery & prescription auto-refill platform. Built on the MERN stack with Express v5 and React 19, Medifly features live WebSocket tracking, salt comparison engine for generic bioequivalent alternatives, multi-tier pricing with cold-chain fees, automated cron refills, and role-based portals for Patients, Pharmacists, Fleet Riders, and System Administrators.
 
@@ -867,17 +865,14 @@ Frontend will run at `http://localhost:5173` and Backend REST API at `http://loc
 
 ---
 
-## Test Suite Execution
+## Test Suite Status
 
-Medifly incorporates unit and integration testing across pricing, salt comparison, and API route controllers.
+**No automated tests exist yet.** `mongodb-memory-server` is installed as a backend devDependency specifically so tests can be written against `PricingService`, `SaltComparisonService`-equivalent salt matching, and `CronService` without touching a real database — that's the next planned step, not a completed one.
 
-### Execute Tests
+### Planned test setup
 ```bash
-# Run backend tests
 cd backend
-npm test
-
-# Run frontend tests
-cd frontend
+npm install --save-dev jest supertest
+# then write tests under backend/__tests__/, e.g. pricingService.test.js
 npm test
 ```

@@ -102,12 +102,21 @@ exports.addOrderItems = async (req, res) => {
     }
 
     // Update Medicine Stock & Emit changes
+    // Filter (inventoryCount >= qty) + $inc are applied atomically in one operation,
+    // so two concurrent orders can no longer both pass and drive stock negative.
     const io = getIo();
 
     for (const item of validatedItems) {
-      const updatedMed = await Medicine.findByIdAndUpdate(item.medicine, {
-        $inc: { inventoryCount: -item.qty }
-      }, { new: true });
+      const updatedMed = await Medicine.findOneAndUpdate(
+        { _id: item.medicine, inventoryCount: { $gte: item.qty } },
+        { $inc: { inventoryCount: -item.qty } },
+        { new: true }
+      );
+
+      if (!updatedMed) {
+        // Someone else grabbed the last units between our earlier check and now.
+        return res.status(409).json({ message: `Stock changed, please review your cart and retry.` });
+      }
 
       io.emit('inventoryChanged', {
         medicineId: updatedMed._id,
