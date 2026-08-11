@@ -1,22 +1,19 @@
 const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
-const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
 // Load env from backend root
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
-const Medicine = require('../models/Medicine');
-const Salt = require('../models/Salt');
+const { pool, connectDB, query } = require('../config/db');
 
 const CSV_PATH = path.join(__dirname, '..', 'data', 'medicines.csv');
 
 const seedMedicines = async () => {
   try {
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ MongoDB Connected');
+    // Initialize PostgreSQL connection & tables
+    await connectDB();
 
     const medicines = [];
 
@@ -31,57 +28,67 @@ const seedMedicines = async () => {
 
     console.log(`📄 Parsed ${medicines.length} medicines from CSV`);
 
-    let created = 0;
-    let updated = 0;
+    let seededCount = 0;
 
     for (const med of medicines) {
-      // Find or create the Salt entry using the saltComposition column
       const saltName = med.saltComposition || med.genericName;
-      let salt = await Salt.findOne({ saltName });
-      if (!salt) {
-        salt = await Salt.create({ saltName });
-        console.log(`  🧂 Created salt: ${saltName}`);
-      }
 
-      // Upsert medicine (insert if new, update if exists)
-      const result = await Medicine.findOneAndUpdate(
-        { medicineId: med.medicineId },
-        {
-          medicineId: med.medicineId,
-          brandName: med.brandName,
-          genericName: med.genericName,
-          saltComposition: salt._id,
-          category: med.category,
-          dosageForm: med.dosageForm,
-          strength: med.strength,
-          manufacturer: med.manufacturer,
-          scheduleType: med.scheduleType || 'OTC',
-          requiresPrescription: med.requiresPrescription === 'true',
-          coldChainRequired: med.coldChainRequired === 'true',
-          packSize: med.packSize,
-          price: parseFloat(med.price),
-          stock: true,
-          inventoryCount: 50,
-        },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
+      // Upsert Salt
+      const saltResult = await query(
+        `INSERT INTO salts (salt_name) 
+         VALUES ($1) 
+         ON CONFLICT (salt_name) DO UPDATE SET salt_name = EXCLUDED.salt_name 
+         RETURNING id`,
+        [saltName]
       );
+      const saltId = saltResult.rows[0].id;
 
-      // Check if it was an insert or update
-      if (result.createdAt.getTime() === result.updatedAt.getTime()) {
-        created++;
-      } else {
-        updated++;
-      }
+      // Upsert Medicine
+      await query(
+        `INSERT INTO medicines (
+          medicine_id, brand_name, generic_name, salt_id, category, dosage_form, 
+          strength, manufacturer, schedule_type, requires_prescription, cold_chain_required, 
+          pack_size, price, stock, inventory_count
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, true, 50)
+        ON CONFLICT (medicine_id) DO UPDATE SET 
+          brand_name = EXCLUDED.brand_name,
+          generic_name = EXCLUDED.generic_name,
+          salt_id = EXCLUDED.salt_id,
+          category = EXCLUDED.category,
+          dosage_form = EXCLUDED.dosage_form,
+          strength = EXCLUDED.strength,
+          manufacturer = EXCLUDED.manufacturer,
+          schedule_type = EXCLUDED.schedule_type,
+          requires_prescription = EXCLUDED.requires_prescription,
+          cold_chain_required = EXCLUDED.cold_chain_required,
+          pack_size = EXCLUDED.pack_size,
+          price = EXCLUDED.price`,
+        [
+          med.medicineId,
+          med.brandName,
+          med.genericName,
+          saltId,
+          med.category,
+          med.dosageForm,
+          med.strength,
+          med.manufacturer,
+          med.scheduleType || 'OTC',
+          med.requiresPrescription === 'true',
+          med.coldChainRequired === 'true',
+          med.packSize,
+          parseFloat(med.price) || 99.00
+        ]
+      );
+      seededCount++;
     }
 
     console.log('');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log(`✅ Seeding complete!`);
-    console.log(`   📦 Created: ${created} medicines`);
-    console.log(`   🔄 Updated: ${updated} medicines`);
-    console.log(`   📊 Total:   ${medicines.length} medicines`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`✅ PostgreSQL Seeding complete!`);
+    console.log(`   📦 Seeded: ${seededCount} medicines into PostgreSQL`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
+    await pool.end();
     process.exit(0);
   } catch (err) {
     console.error('❌ Seeding failed:', err.message);

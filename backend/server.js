@@ -15,6 +15,17 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // Body parser
 
+// Health check endpoint for monitoring & load balancers
+app.get('/api/health', async (req, res) => {
+  try {
+    const { query } = require('./config/db');
+    await query('SELECT 1');
+    res.json({ status: 'OK', database: 'PostgreSQL Connected', timestamp: new Date() });
+  } catch (err) {
+    res.status(500).json({ status: 'ERROR', database: 'Disconnected', error: err.message });
+  }
+});
+
 // Route mapping
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/medicines', require('./routes/medicineRoutes'));

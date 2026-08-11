@@ -1,86 +1,96 @@
 const cron = require('node-cron');
-const Subscription = require('../models/Subscription');
-const Order = require('../models/Order');
-const User = require('../models/User');
+const { query, pool } = require('../config/db');
 
 const startCronJobs = () => {
   // Run everyday at 00:00 (Midnight)
   cron.schedule('0 0 * * *', async () => {
     console.log('Running daily subscription & auto-refill check...');
 
+    const client = await pool.connect();
+
     try {
-      const today = new Date();
-      // Find active subscriptions where nextDeliveryDate is today or before today
-      const dueSubscriptions = await Subscription.find({
-        status: 'ACTIVE',
-        nextDeliveryDate: { $lte: today }
-      }).populate('user').populate('medicines.medicine');
+      // Find active subscriptions where next_delivery_date is today or before today
+      const dueResult = await client.query(
+        `SELECT s.*, u.id as user_id, u.email as user_email, u.is_subscribed as user_is_subscribed 
+         FROM subscriptions s 
+         JOIN users u ON s.user_id = u.id 
+         WHERE s.status = 'ACTIVE' AND s.next_delivery_date <= CURRENT_TIMESTAMP`
+      );
 
-      for (const sub of dueSubscriptions) {
-        // Step 1: Create auto order
-        // Note: Realistically, here we would charge the user's saved card. For this architecture, we skip actual charging.
+      for (const sub of dueResult.rows) {
+        await client.query('BEGIN');
 
-        // Convert subscription items to order items shape
-        const orderItems = sub.medicines.map(m => ({
-          name: m.medicine.brandName,
-          qty: m.quantity,
-          price: m.medicine.price,
-          medicine: m.medicine._id
+        // Fetch subscription items with medicine details
+        const itemsResult = await client.query(
+          `SELECT si.*, m.id as med_id, m.brand_name, m.price 
+           FROM subscription_items si 
+           JOIN medicines m ON si.medicine_id = m.id 
+           WHERE si.subscription_id = $1`,
+          [sub.id]
+        );
+
+        const orderItems = itemsResult.rows.map(item => ({
+          name: item.brand_name,
+          qty: item.quantity,
+          price: parseFloat(item.price),
+          medicineId: item.med_id
         }));
 
         const itemsPrice = orderItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
-        
-        // Subscription users get priority and lower platform fees. Flat tax rate.
         const taxPrice = itemsPrice * 0.05;
-        const platformFee = 2.0; // Reduced for subscribers
-        let deliveryFee = 50.0;
-        
-        // Premium feature: free shipping regardless of size or highly discounted
-        if (sub.user.isSubscribed) {
-          deliveryFee = 0; // VIP Free Delivery for Prime members
-        }
-
+        const platformFee = 2.0;
+        let deliveryFee = sub.user_is_subscribed ? 0 : 50.0;
         const totalPrice = itemsPrice + taxPrice + platformFee + deliveryFee;
 
-        const newOrder = new Order({
-          user: sub.user._id,
-          orderItems,
-          shippingAddress: {
-            address: sub.deliveryAddress,
-            city: 'AutoCity',
-            postalCode: '00000',
-            country: 'DefaultCountry'
-          },
-          paymentMethod: 'Auto-Billed',
-          itemsPrice,
-          taxPrice,
-          platformFee,
-          deliveryFee,
-          coldChainFee: 0,
-          emergencyFee: 0,
-          lateNightFee: 0,
-          totalPrice,
-          isPaid: true, // Assuming auto-charge was successful
-          paidAt: Date.now(),
-          status: 'verified' // Auto-verified
-        });
+        // Insert new order row
+        const orderResult = await client.query(
+          `INSERT INTO orders (
+            user_id, payment_method, shipping_address, items_price, tax_price, 
+            platform_fee, delivery_fee, cold_chain_fee, emergency_fee, late_night_fee, 
+            total_price, is_paid, paid_at, status
+          ) VALUES ($1, 'Auto-Billed', $2, $3, $4, $5, $6, 0, 0, 0, $7, true, CURRENT_TIMESTAMP, 'verified')
+          RETURNING id`,
+          [
+            sub.user_id,
+            JSON.stringify({ address: sub.delivery_address, city: 'AutoCity', postalCode: '00000', country: 'DefaultCountry' }),
+            itemsPrice,
+            taxPrice,
+            platformFee,
+            deliveryFee,
+            totalPrice
+          ]
+        );
 
-        await newOrder.save();
+        const newOrderId = orderResult.rows[0].id;
 
-        // Step 2: Notify User (placeholder config for pushing notifications)
-        console.log(`Auto-refill order ${newOrder._id} created for user ${sub.user.email}`);
+        // Insert order items
+        for (const item of orderItems) {
+          await client.query(
+            `INSERT INTO order_items (order_id, medicine_id, name, qty, price)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [newOrderId, item.medicineId, item.name, item.qty, item.price]
+          );
+        }
 
-        // Step 3: Fast-forward the nextDeliveryDate
-        let nextDate = new Date(sub.nextDeliveryDate);
+        // Fast-forward next_delivery_date
+        let nextDate = new Date(sub.next_delivery_date);
         if (sub.frequency === 'WEEKLY') nextDate.setDate(nextDate.getDate() + 7);
         else if (sub.frequency === 'BIWEEKLY') nextDate.setDate(nextDate.getDate() + 14);
         else if (sub.frequency === 'MONTHLY') nextDate.setMonth(nextDate.getMonth() + 1);
 
-        sub.nextDeliveryDate = nextDate;
-        await sub.save();
+        await client.query(
+          'UPDATE subscriptions SET next_delivery_date = $1 WHERE id = $2',
+          [nextDate, sub.id]
+        );
+
+        await client.query('COMMIT');
+        console.log(`Auto-refill order #${newOrderId} created for user ${sub.user_email}`);
       }
     } catch (error) {
+      await client.query('ROLLBACK');
       console.error('Error running daily auto-refill logic:', error);
+    } finally {
+      client.release();
     }
   });
 };

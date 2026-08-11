@@ -1,24 +1,35 @@
-const Prescription = require('../models/Prescription');
+const { query } = require('../config/db');
+
+const formatPrescription = (row) => ({
+  _id: row.id,
+  id: row.id,
+  user: row.user_id,
+  documentUrl: row.document_url,
+  uploadDate: row.upload_date,
+  status: row.status,
+  reviewerNotes: row.reviewer_notes,
+  pharmacist: row.pharmacist_id,
+  verifiedAt: row.verified_at,
+  createdAt: row.created_at
+});
 
 // @desc    Upload new prescription
 // @route   POST /api/prescriptions
 // @access  Private
 exports.uploadPrescription = async (req, res) => {
   try {
-    // Expected to have multer process the request and add file to req.file
-    const { documentUrl } = req.body; 
-    
-    if(!documentUrl) {
+    const { documentUrl } = req.body;
+
+    if (!documentUrl) {
       return res.status(400).json({ message: 'No document provided' });
     }
 
-    const prescription = new Prescription({
-      user: req.user._id,
-      documentUrl
-    });
+    const result = await query(
+      'INSERT INTO prescriptions (user_id, document_url) VALUES ($1, $2) RETURNING *',
+      [req.user.id, documentUrl]
+    );
 
-    const savedPrescription = await prescription.save();
-    res.status(201).json(savedPrescription);
+    res.status(201).json(formatPrescription(result.rows[0]));
   } catch (error) {
     res.status(500).json({ message: 'Server Error', error: error.message });
   }
@@ -29,8 +40,11 @@ exports.uploadPrescription = async (req, res) => {
 // @access  Private
 exports.getMyPrescriptions = async (req, res) => {
   try {
-    const prescriptions = await Prescription.find({ user: req.user._id });
-    res.json(prescriptions);
+    const result = await query(
+      'SELECT * FROM prescriptions WHERE user_id = $1 ORDER BY upload_date DESC',
+      [req.user.id]
+    );
+    res.json(result.rows.map(formatPrescription));
   } catch (error) {
     res.status(500).json({ message: 'Server Error', error: error.message });
   }
@@ -41,19 +55,24 @@ exports.getMyPrescriptions = async (req, res) => {
 // @access  Private/Pharmacy
 exports.verifyPrescription = async (req, res) => {
   try {
-    const prescription = await Prescription.findById(req.params.id);
-    if(prescription) {
-      prescription.status = req.body.status || 'VERIFIED';
-      prescription.reviewerNotes = req.body.notes || 'Verified by pharmacist';
-      prescription.pharmacist = req.user._id;
-      prescription.verifiedAt = Date.now();
+    const status = req.body.status || 'VERIFIED';
+    const reviewerNotes = req.body.notes || 'Verified by pharmacist';
 
-      const updated = await prescription.save();
+    const result = await query(
+      `UPDATE prescriptions 
+       SET status = $1, reviewer_notes = $2, pharmacist_id = $3, verified_at = CURRENT_TIMESTAMP 
+       WHERE id = $4 
+       RETURNING *`,
+      [status, reviewerNotes, req.user.id, req.params.id]
+    );
+
+    if (result.rows.length > 0) {
+      const updated = formatPrescription(result.rows[0]);
 
       // Emit real-time notification to the user
       const { getIo } = require('../socket');
       const io = getIo();
-      io.to(prescription.user.toString()).emit('prescriptionVerified', {
+      io.to(updated.user.toString()).emit('prescriptionVerified', {
         prescriptionId: updated._id,
         status: updated.status,
         notes: updated.reviewerNotes
@@ -63,7 +82,7 @@ exports.verifyPrescription = async (req, res) => {
     } else {
       res.status(404).json({ message: 'Prescription not found' });
     }
-  } catch(error) {
+  } catch (error) {
     res.status(500).json({ message: 'Server Error', error: error.message });
   }
 };

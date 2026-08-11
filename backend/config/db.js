@@ -1,73 +1,177 @@
-const mongoose = require('mongoose');
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  host: process.env.PGHOST || 'localhost',
+  user: process.env.PGUSER || 'postgres',
+  password: process.env.PGPASSWORD || 'postgres',
+  database: process.env.PGDATABASE || 'medifly',
+  port: parseInt(process.env.PGPORT || '5432', 10),
+});
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000
-    });
-    console.log(`MongoDB Connected: ${conn.connection.host} | DB Name: ${conn.connection.name}`);
+    const client = await pool.connect();
+    console.log(`✅ PostgreSQL Connected to database: ${process.env.PGDATABASE || 'medifly'}`);
+    client.release();
+    await initDb();
   } catch (err) {
-    console.error(`Error connecting to MongoDB: ${err.message}`);
-    try {
-      console.log('🔄 Attempting in-memory MongoDB fallback...');
-      const { MongoMemoryServer } = require('mongodb-memory-server');
-      const mongod = await MongoMemoryServer.create();
-      const uri = mongod.getUri();
-      await mongoose.connect(uri);
-      console.log(`✅ In-Memory MongoDB Connected successfully at ${uri}`);
-
-      // Auto-seed medicines from CSV if memory DB is clean
-      const Medicine = require('../models/Medicine');
-      const count = await Medicine.countDocuments();
-      if (count === 0) {
-        console.log('🌱 Auto-seeding initial medicine data into In-Memory database...');
-        const fs = require('fs');
-        const path = require('path');
-        const csv = require('csv-parser');
-        const Salt = require('../models/Salt');
-        const CSV_PATH = path.join(__dirname, '..', 'data', 'medicines.csv');
-        if (fs.existsSync(CSV_PATH)) {
-          const medicines = [];
-          await new Promise((resolve, reject) => {
-            fs.createReadStream(CSV_PATH)
-              .pipe(csv())
-              .on('data', (row) => medicines.push(row))
-              .on('end', resolve)
-              .on('error', reject);
-          });
-          for (const med of medicines) {
-            const saltName = med.saltComposition || med.genericName;
-            let salt = await Salt.findOne({ saltName });
-            if (!salt) {
-              salt = await Salt.create({ saltName });
-            }
-            await Medicine.create({
-              medicineId: med.medicineId,
-              brandName: med.brandName,
-              genericName: med.genericName,
-              saltComposition: salt._id,
-              category: med.category,
-              dosageForm: med.dosageForm,
-              strength: med.strength,
-              manufacturer: med.manufacturer,
-              scheduleType: med.scheduleType || 'OTC',
-              requiresPrescription: med.requiresPrescription === 'true',
-              coldChainRequired: med.coldChainRequired === 'true',
-              packSize: med.packSize,
-              price: parseFloat(med.price) || 99,
-              stock: true,
-              inventoryCount: 50,
-            });
-          }
-          console.log(`✅ Auto-seeded ${medicines.length} medicines into In-Memory Database!`);
-        }
-      }
-    } catch (fallbackErr) {
-      console.warn('⚠️ In-Memory fallback failed or unavailable:', fallbackErr.message);
-      console.warn('Server will continue running without database connection.');
-    }
+    console.error(`❌ Error connecting to PostgreSQL: ${err.message}`);
   }
 };
 
-module.exports = connectDB;
+const initDb = async () => {
+  const schemaSql = `
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      phone VARCHAR(50) NOT NULL,
+      role VARCHAR(20) DEFAULT 'user',
+      is_subscribed BOOLEAN DEFAULT false,
+      subscription_plan VARCHAR(20) DEFAULT 'none',
+      subscription_expiry TIMESTAMP,
+      street VARCHAR(255),
+      city VARCHAR(100),
+      state VARCHAR(100),
+      zip_code VARCHAR(20),
+      lat DOUBLE PRECISION,
+      lng DOUBLE PRECISION,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
 
+    CREATE TABLE IF NOT EXISTS salts (
+      id SERIAL PRIMARY KEY,
+      salt_name VARCHAR(255) UNIQUE NOT NULL,
+      description TEXT,
+      medical_uses TEXT[],
+      common_side_effects TEXT[],
+      precautions TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS medicines (
+      id SERIAL PRIMARY KEY,
+      medicine_id VARCHAR(100) UNIQUE NOT NULL,
+      brand_name VARCHAR(255) NOT NULL,
+      generic_name VARCHAR(255) NOT NULL,
+      salt_id INTEGER REFERENCES salts(id) ON DELETE CASCADE,
+      category VARCHAR(100) NOT NULL,
+      dosage_form VARCHAR(100) NOT NULL,
+      strength VARCHAR(100) NOT NULL,
+      manufacturer VARCHAR(255) NOT NULL,
+      schedule_type VARCHAR(20) DEFAULT 'OTC',
+      requires_prescription BOOLEAN DEFAULT false,
+      cold_chain_required BOOLEAN DEFAULT false,
+      pack_size VARCHAR(100) NOT NULL,
+      price NUMERIC(10, 2) NOT NULL,
+      stock BOOLEAN DEFAULT true,
+      inventory_count INTEGER DEFAULT 50,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS orders (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      rider_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      payment_method VARCHAR(50) DEFAULT 'Razorpay',
+      payment_result JSONB,
+      items_price NUMERIC(10, 2) DEFAULT 0.00,
+      tax_price NUMERIC(10, 2) DEFAULT 0.00,
+      platform_fee NUMERIC(10, 2) DEFAULT 0.00,
+      delivery_fee NUMERIC(10, 2) DEFAULT 0.00,
+      cold_chain_fee NUMERIC(10, 2) DEFAULT 0.00,
+      emergency_fee NUMERIC(10, 2) DEFAULT 0.00,
+      late_night_fee NUMERIC(10, 2) DEFAULT 0.00,
+      total_price NUMERIC(10, 2) DEFAULT 0.00,
+      is_paid BOOLEAN DEFAULT false,
+      paid_at TIMESTAMP,
+      is_delivered BOOLEAN DEFAULT false,
+      delivered_at TIMESTAMP,
+      status VARCHAR(50) DEFAULT 'pending',
+      shipping_address JSONB NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS order_items (
+      id SERIAL PRIMARY KEY,
+      order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+      medicine_id INTEGER REFERENCES medicines(id) ON DELETE CASCADE,
+      name VARCHAR(255) NOT NULL,
+      qty INTEGER NOT NULL,
+      image VARCHAR(550),
+      price NUMERIC(10, 2) NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS pharmacies (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      name VARCHAR(255) NOT NULL,
+      license_number VARCHAR(255) UNIQUE NOT NULL,
+      street VARCHAR(255),
+      city VARCHAR(100),
+      state VARCHAR(100),
+      zip_code VARCHAR(20),
+      lat DOUBLE PRECISION,
+      lng DOUBLE PRECISION,
+      status VARCHAR(50) DEFAULT 'PENDING',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS prescriptions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      document_url TEXT NOT NULL,
+      upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      status VARCHAR(50) DEFAULT 'PENDING',
+      reviewer_notes TEXT DEFAULT 'Pending Pharmacist Review',
+      pharmacist_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      verified_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS riders (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      vehicle_make VARCHAR(100),
+      vehicle_model VARCHAR(100),
+      vehicle_reg_number VARCHAR(100),
+      lat DOUBLE PRECISION,
+      lng DOUBLE PRECISION,
+      is_available BOOLEAN DEFAULT false,
+      status VARCHAR(50) DEFAULT 'OFFLINE',
+      active_order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+      rating NUMERIC(3, 2) DEFAULT 5.00,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      frequency VARCHAR(50) NOT NULL,
+      next_delivery_date TIMESTAMP NOT NULL,
+      status VARCHAR(50) DEFAULT 'ACTIVE',
+      delivery_address TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS subscription_items (
+      id SERIAL PRIMARY KEY,
+      subscription_id INTEGER REFERENCES subscriptions(id) ON DELETE CASCADE,
+      medicine_id INTEGER REFERENCES medicines(id) ON DELETE CASCADE,
+      quantity INTEGER DEFAULT 1
+    );
+  `;
+  try {
+    await pool.query(schemaSql);
+    console.log('✅ PostgreSQL Schema & Tables initialized successfully');
+  } catch (err) {
+    console.error('❌ Error initializing PostgreSQL tables:', err.message);
+  }
+};
+
+module.exports = {
+  pool,
+  connectDB,
+  query: (text, params) => pool.query(text, params),
+};
