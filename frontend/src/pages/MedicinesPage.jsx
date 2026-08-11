@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import MedicineCard from '@/components/MedicineCard';
 import styles from './MedicinesPage.module.css';
-import { AlertTriangle, Sparkles, Pill, Search, X, Database } from 'lucide-react';
+import { AlertTriangle, Sparkles, Pill, Search, X, Database, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 12;
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
@@ -37,7 +37,7 @@ export default function MedicinesPage() {
   // Debounce timer ref
   const debounceRef = useRef(null);
 
-  // ── Fetch from PostgreSQL Backend API ──────────────────────────────────────
+  // ── Ultra-Fast Indexed Fetch from PostgreSQL Backend API ──────────────────
   const fetchMedicines = useCallback(async (q, category, sort, page) => {
     setLoading(true);
     setError(null);
@@ -50,7 +50,12 @@ export default function MedicinesPage() {
         url += `&category=${encodeURIComponent(category)}`;
       }
 
-      const res = await fetch(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout guard
+
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
       if (res.ok) {
         const data = await res.json();
         let results = data.medicines || [];
@@ -116,7 +121,7 @@ export default function MedicinesPage() {
   // ── Debounced search / filter changes ──────────────────────────────────────
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    const delay = query !== '' ? 300 : 0;
+    const delay = query !== '' ? 350 : 0;
 
     debounceRef.current = setTimeout(() => {
       fetchMedicines(query, activeCategory, sortBy, currentPage);
@@ -144,13 +149,14 @@ export default function MedicinesPage() {
   };
 
   const goToPage = (page) => {
+    if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const getPageNumbers = () => {
     const pages = [];
-    if (totalPages <= 7) {
+    if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
       pages.push(1);
@@ -175,8 +181,8 @@ export default function MedicinesPage() {
           <p>
             Browse 250,000+ medicines from licensed pharmacies in PostgreSQL database{' '}
             {isLiveDb && (
-              <span style={{ fontSize: '0.8rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '12px', fontWeight: 600, marginLeft: '6px' }}>
-                <Database size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} /> Live Supabase PostgreSQL
+              <span style={{ fontSize: '0.8rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '12px', fontWeight: 600, marginLeft: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <Database size={14} /> Live Supabase PostgreSQL (Indexed)
               </span>
             )}
           </p>
@@ -224,7 +230,7 @@ export default function MedicinesPage() {
         </div>
 
         {/* Results count */}
-        <div className={styles.results}>
+        <div className={styles.results} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
           <span className={styles.resultCount}>
             {loading
               ? 'Querying PostgreSQL Database…'
@@ -232,6 +238,12 @@ export default function MedicinesPage() {
               ? `Error: ${error}`
               : `Showing ${total > 0 ? startIndex + 1 : 0}–${Math.min(startIndex + ITEMS_PER_PAGE, total)} of ${total.toLocaleString()} medicines`}
           </span>
+
+          {!loading && totalPages > 1 && (
+            <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
+              Page <strong>{currentPage.toLocaleString()}</strong> of <strong>{totalPages.toLocaleString()}</strong>
+            </span>
+          )}
         </div>
 
         {/* Grid */}
@@ -261,15 +273,16 @@ export default function MedicinesPage() {
           </div>
         )}
 
-        {/* Pagination */}
+        {/* High-Performance Clean Pagination */}
         {!loading && totalPages > 1 && (
-          <div className={styles.pagination}>
+          <div className={styles.pagination} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '2rem' }}>
             <button
               className={`${styles.pageBtn} ${styles.pageNavBtn}`}
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}
+              style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
             >
-              ← Prev
+              <ChevronLeft size={16} /> Prev
             </button>
 
             <div className={styles.pageNumbers}>
@@ -292,8 +305,9 @@ export default function MedicinesPage() {
               className={`${styles.pageBtn} ${styles.pageNavBtn}`}
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages}
+              style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
             >
-              Next →
+              Next <ChevronRight size={16} />
             </button>
           </div>
         )}

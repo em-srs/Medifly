@@ -23,7 +23,25 @@ const formatMedicine = (row) => ({
   createdAt: row.created_at
 });
 
-// @desc    Get all medicines (with full pagination, category, sorting & search support)
+// Cache global un-filtered total count in memory to avoid repeated SELECT COUNT(*) over 250k rows
+let cachedTotalCount = 254023;
+let lastCountFetch = 0;
+
+const getCachedCount = async () => {
+  const now = Date.now();
+  if (now - lastCountFetch > 300000) { // Refresh count every 5 minutes
+    try {
+      const res = await query('SELECT COUNT(*) FROM medicines');
+      cachedTotalCount = parseInt(res.rows[0].count, 10);
+      lastCountFetch = now;
+    } catch (e) {
+      console.warn('Failed to refresh total count, using cached:', e.message);
+    }
+  }
+  return cachedTotalCount;
+};
+
+// @desc    Get all medicines (with fast indexing, fast count & pagination)
 // @route   GET /api/medicines
 // @access  Public
 exports.getMedicines = async (req, res) => {
@@ -53,14 +71,21 @@ exports.getMedicines = async (req, res) => {
 
     const whereString = whereClauses.length > 0 ? ` WHERE ${whereClauses.join(' AND ')}` : '';
 
-    // Count Total Matching Rows
-    const countQuery = `SELECT COUNT(*) FROM medicines m${whereString}`;
-    const countResult = await query(countQuery, params);
-    const totalCount = parseInt(countResult.rows[0].count, 10);
+    // Fast Total Count Optimization
+    let totalCount;
+    if (!keyword && !category) {
+      totalCount = await getCachedCount();
+    } else {
+      const countQuery = `SELECT COUNT(*) FROM medicines m${whereString}`;
+      const countResult = await query(countQuery, params);
+      totalCount = parseInt(countResult.rows[0].count, 10);
+    }
 
-    // Sorting Clause
-    let orderClause = 'ORDER BY m.brand_name ASC, m.id ASC';
-    if (sort === 'price-low') {
+    // Fast Sorting Clause
+    let orderClause = 'ORDER BY m.id ASC';
+    if (sort === 'name') {
+      orderClause = 'ORDER BY m.brand_name ASC, m.id ASC';
+    } else if (sort === 'price-low') {
       orderClause = 'ORDER BY m.price ASC, m.id ASC';
     } else if (sort === 'price-high') {
       orderClause = 'ORDER BY m.price DESC, m.id ASC';
@@ -122,7 +147,7 @@ exports.getMedicineById = async (req, res) => {
   }
 };
 
-// @desc    Get alternatives by Salt Name (For Salt Comparison engine)
+// @desc    Get alternatives by Salt Name
 // @route   GET /api/medicines/alternatives/:saltName
 // @access  Public
 exports.getAlternatives = async (req, res) => {
@@ -133,7 +158,7 @@ exports.getAlternatives = async (req, res) => {
        FROM medicines m 
        LEFT JOIN salts s ON m.salt_id = s.id 
        WHERE m.generic_name ILIKE $1 OR s.salt_name ILIKE $1 
-       ORDER BY m.price ASC`,
+       ORDER BY m.price ASC LIMIT 20`,
       [saltQuery]
     );
 
@@ -176,7 +201,7 @@ exports.compareSalts = async (req, res) => {
          FROM medicines m 
          LEFT JOIN salts s ON m.salt_id = s.id 
          WHERE m.salt_id = $1 AND m.id != $2 
-         ORDER BY m.price ASC`,
+         ORDER BY m.price ASC LIMIT 20`,
         [originalRow.salt_id, originalRow.id]
       );
     } else {
@@ -185,7 +210,7 @@ exports.compareSalts = async (req, res) => {
          FROM medicines m 
          LEFT JOIN salts s ON m.salt_id = s.id 
          WHERE m.generic_name ILIKE $1 AND m.id != $2 
-         ORDER BY m.price ASC`,
+         ORDER BY m.price ASC LIMIT 20`,
         [`%${originalRow.generic_name}%`, originalRow.id]
       );
     }
@@ -215,7 +240,6 @@ exports.updateMedicinePrice = async (req, res) => {
     if (result.rows.length > 0) {
       const updatedMed = formatMedicine(result.rows[0]);
 
-      // Emit real-time price update to all clients
       const { getIo } = require('../socket');
       const io = getIo();
       io.emit('priceChanged', {
