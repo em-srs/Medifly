@@ -236,10 +236,10 @@ erDiagram
     users ||--o| riders : "drives"
 
     salts ||--o{ medicines : "composes"
+    salts ||--o{ salt_common_uses : "has_uses"
+    salts ||--o{ salt_side_effects : "has_side_effects"
     medicines ||--o{ order_items : "contained_in"
     orders ||--|{ order_items : "includes"
-    subscriptions ||--|{ subscription_items : "contains"
-    medicines ||--o{ subscription_items : "referenced_in"
     
     users {
         BIGSERIAL id PK
@@ -259,9 +259,17 @@ erDiagram
         BIGSERIAL id PK
         VARCHAR salt_name UK
         TEXT description
-        JSONB medical_uses
-        JSONB common_side_effects
         TEXT precautions
+    }
+
+    salt_common_uses {
+        BIGINT salt_id FK
+        TEXT use_description
+    }
+
+    salt_side_effects {
+        BIGINT salt_id FK
+        TEXT side_effect_description
     }
 
     medicines {
@@ -353,21 +361,6 @@ erDiagram
         VARCHAR status "enum: ACTIVE, PAUSED, CANCELLED"
         TEXT delivery_address
         TIMESTAMP created_at
-    }
-
-    subscription_items {
-        BIGSERIAL id PK
-        BIGINT subscription_id FK
-        BIGINT medicine_id FK
-        INTEGER qty
-    }
-
-    spatial_ref_sys {
-        INTEGER srid PK
-        VARCHAR auth_name
-        INTEGER auth_srid
-        VARCHAR srtext
-        VARCHAR proj4text
     }
 ```
 
