@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import MedicineCard from '@/components/MedicineCard';
 import styles from './MedicinesPage.module.css';
-import { AlertTriangle, Sparkles, Pill, Search, X } from 'lucide-react';
+import { AlertTriangle, Sparkles, Pill, Search, X, Database } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 12;
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
 const CATEGORIES = [
   { id: 'all',         label: 'All Medicines',   icon: <Pill size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> },
@@ -32,6 +32,7 @@ export default function MedicinesPage() {
   const [totalPages,  setTotalPages]  = useState(0);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
+  const [isLiveDb,    setIsLiveDb]    = useState(false);
 
   // Debounce timer ref
   const debounceRef = useRef(null);
@@ -41,9 +42,12 @@ export default function MedicinesPage() {
     setLoading(true);
     setError(null);
     try {
-      let url = `${API_BASE}/api/medicines?pageNumber=${page}`;
+      let url = `${API_BASE}/api/medicines?pageNumber=${page}&pageSize=${ITEMS_PER_PAGE}&sort=${sort}`;
       if (q) {
         url += `&keyword=${encodeURIComponent(q)}`;
+      }
+      if (category && category !== 'all') {
+        url += `&category=${encodeURIComponent(category)}`;
       }
 
       const res = await fetch(url);
@@ -51,69 +55,65 @@ export default function MedicinesPage() {
         const data = await res.json();
         let results = data.medicines || [];
 
-        // Apply local category filter if applicable
-        if (category && category !== 'all') {
-          results = results.filter((med) => med.category === category);
-        }
-
-        // Apply sorting
-        if (sort === 'price-low')       results.sort((a, b) => a.price - b.price);
-        else if (sort === 'price-high') results.sort((a, b) => b.price - a.price);
-        else                            results.sort((a, b) => (a.brandName || a.name).localeCompare(b.brandName || b.name));
-
         setItems(results.map(med => ({
           ...med,
           id: med._id || med.id,
           name: med.brandName || med.name,
+          brandName: med.brandName || med.name,
           salt: med.genericName || med.saltComposition?.saltName || med.salt || 'General Chemical Salt',
           price: parseFloat(med.price),
           manufacturer: med.manufacturer || 'Licensed Partner Pharma',
           requiresPrescription: med.requiresPrescription || false,
+          coldChainRequired: med.coldChainRequired || false,
           image: med.image || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300'
         })));
-        setTotal(data.pages ? data.pages * ITEMS_PER_PAGE : results.length);
+        setTotal(data.totalCount !== undefined ? data.totalCount : results.length);
         setTotalPages(data.pages || 1);
-      } else {
-        throw new Error('Backend query failed');
+        setIsLiveDb(true);
+        setLoading(false);
+        return;
       }
     } catch (err) {
       console.warn('Backend fetch fallback to static file:', err.message);
-      try {
-        const res = await fetch('/medicines.json');
-        let results = await res.json();
-        const searchQuery = q?.toLowerCase().trim() || '';
+    }
 
-        if (searchQuery) {
-          results = results.filter(
-            (med) =>
-              med.name.toLowerCase().includes(searchQuery) ||
-              med.salt.toLowerCase().includes(searchQuery) ||
-              med.manufacturer.toLowerCase().includes(searchQuery)
-          );
-        } else if (category && category !== 'all') {
-          results = results.filter((med) => med.category === category);
-        }
+    // Fallback to static JSON if backend is offline
+    try {
+      setIsLiveDb(false);
+      const res = await fetch('/medicines.json');
+      let results = await res.json();
+      const searchQuery = q?.toLowerCase().trim() || '';
 
-        if (sort === 'price-low')       results.sort((a, b) => a.price - b.price);
-        else if (sort === 'price-high') results.sort((a, b) => b.price - a.price);
-        else                            results.sort((a, b) => a.name.localeCompare(b.name));
-
-        const totalItems = results.length;
-        const startIndex = (page - 1) * ITEMS_PER_PAGE;
-        const paginatedItems = results.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-
-        setItems(paginatedItems);
-        setTotal(totalItems);
-        setTotalPages(Math.ceil(totalItems / ITEMS_PER_PAGE));
-      } catch (fallbackErr) {
-        setError(fallbackErr.message);
+      if (searchQuery) {
+        results = results.filter(
+          (med) =>
+            med.name.toLowerCase().includes(searchQuery) ||
+            med.salt.toLowerCase().includes(searchQuery) ||
+            med.manufacturer.toLowerCase().includes(searchQuery)
+        );
+      } else if (category && category !== 'all') {
+        results = results.filter((med) => med.category === category);
       }
+
+      if (sort === 'price-low')       results.sort((a, b) => a.price - b.price);
+      else if (sort === 'price-high') results.sort((a, b) => b.price - a.price);
+      else                            results.sort((a, b) => a.name.localeCompare(b.name));
+
+      const totalItems = results.length;
+      const startIndex = (page - 1) * ITEMS_PER_PAGE;
+      const paginatedItems = results.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+      setItems(paginatedItems);
+      setTotal(totalItems);
+      setTotalPages(Math.ceil(totalItems / ITEMS_PER_PAGE));
+    } catch (fallbackErr) {
+      setError(fallbackErr.message);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // ── Debounced search ───────────────────────────────────────────────────────
+  // ── Debounced search / filter changes ──────────────────────────────────────
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const delay = query !== '' ? 300 : 0;
@@ -172,7 +172,14 @@ export default function MedicinesPage() {
         {/* Header */}
         <div className={styles.header}>
           <h1>Order Medicines</h1>
-          <p>Browse 250,000+ medicines from licensed pharmacies in PostgreSQL database</p>
+          <p>
+            Browse 250,000+ medicines from licensed pharmacies in PostgreSQL database{' '}
+            {isLiveDb && (
+              <span style={{ fontSize: '0.8rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '12px', fontWeight: 600, marginLeft: '6px' }}>
+                <Database size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} /> Live Supabase PostgreSQL
+              </span>
+            )}
+          </p>
         </div>
 
         {/* Search */}
@@ -180,7 +187,7 @@ export default function MedicinesPage() {
           <span className={styles.searchIcon}><Search size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>
           <input
             type="text"
-            placeholder="Search 250,000+ medicines by brand name, salt, or generic composition..."
+            placeholder="Search 250,000+ medicines by brand name, salt, or manufacturer..."
             value={query}
             onChange={handleSearch}
             className={styles.searchInput}
@@ -223,7 +230,7 @@ export default function MedicinesPage() {
               ? 'Querying PostgreSQL Database…'
               : error
               ? `Error: ${error}`
-              : `Showing ${total > 0 ? startIndex + 1 : 0}–${Math.min(startIndex + ITEMS_PER_PAGE, total)} of ${total} medicines`}
+              : `Showing ${total > 0 ? startIndex + 1 : 0}–${Math.min(startIndex + ITEMS_PER_PAGE, total)} of ${total.toLocaleString()} medicines`}
           </span>
         </div>
 
