@@ -259,7 +259,8 @@ export default function SubscriptionPage() {
 
         {/* ── TAB 1: ACTIVE SUBSCRIPTIONS ─────────────────────────────────────── */}
         {activeTab === 'active' && (
-          <div className={styles.grid}>
+          <>
+            <div className={styles.grid}>
             {/* LEFT COLUMN */}
             <div className={styles.leftCol}>
               
@@ -347,8 +348,42 @@ export default function SubscriptionPage() {
                 )}
               </div>
 
+              {/* WHY MEDIFLY PERKS BOX */}
+              <div className={styles.whyBox}>
+                <h3 className={styles.whyTitle}>Why MediFly Auto-Refill?</h3>
+                <ul className={styles.whyList}>
+                  {[
+                    '⚡ 30-Minute Priority Express Dispatch',
+                    '🏷️ 10% Subscriber Medication Discount',
+                    '0 Convenience & Platform Fees',
+                    '❄️ Free Cold Chain (2-8°C) Handling',
+                    '📋 Automatic Doctor Rx Renewal Check'
+                  ].map((item, idx) => (
+                    <li key={idx}>
+                      <span className={styles.checkIcon}><Check size={16} /></span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div className={styles.rightCol}>
+              
+              {/* NEED TO PAUSE OR SKIP CARD */}
+              <div className={styles.breakBox}>
+                <h4>Need to pause or skip?</h4>
+                <p>Skip your next refill cycle or pause anytime with zero cancellation fees.</p>
+                <div className={styles.breakBoxActions}>
+                  <button className={styles.textLinkDark} onClick={() => setModal('skipRefill')}>SKIP NEXT REFILL →</button>
+                  <button className={styles.textLinkDark} onClick={() => setModal('pause')}>PAUSE SUBSCRIPTION →</button>
+                </div>
+              </div>
+
               {/* QUICK CONTROL CARDS */}
-              <div className={styles.infoCardsGrid}>
+              <div className={styles.controlCardsStack}>
                 <div className={styles.infoCard}>
                   <div className={styles.infoIcon} style={{ background: '#e0f2fe', color: '#0284c7' }}><Clock size={20} /></div>
                   <div className={styles.infoContent}>
@@ -369,72 +404,53 @@ export default function SubscriptionPage() {
               </div>
 
             </div>
+          </div>
 
-            {/* RIGHT COLUMN */}
-            <div className={styles.rightCol}>
-              
-              {/* NEED A BREAK / PAUSE OR SKIP CARD AT TOP */}
-              <div className={styles.breakBox}>
-                <h4>Need to pause or skip?</h4>
-                <p>Skip your next refill cycle or pause anytime with zero cancellation fees.</p>
-                <div className={styles.breakBoxActions}>
-                  <button className={styles.textLinkDark} onClick={() => setModal('skipRefill')}>SKIP NEXT REFILL →</button>
-                  <button className={styles.textLinkDark} onClick={() => setModal('pause')}>PAUSE SUBSCRIPTION →</button>
-                </div>
-              </div>
-
-              {/* SUBSCRIBER PERKS BOX */}
-              <div className={styles.whyBox}>
-                <h3 className={styles.whyTitle}>Why MediFly Auto-Refill?</h3>
-                <ul className={styles.whyList}>
-                  {[
-                    '⚡ 30-Minute Priority Express Dispatch',
-                    '🏷️ 10% Subscriber Medication Discount',
-                    '0 Convenience & Platform Fees',
-                    '❄️ Free Cold Chain (2-8°C) Handling',
-                    '📋 Automatic Doctor Rx Renewal Check'
-                  ].map((item, idx) => (
-                    <li key={idx}>
-                      <span className={styles.checkIcon}><Check size={16} /></span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* UPGRADE PLAN CARDS */}
-              <div className={styles.upgradeSection} ref={plansRef}>
-                <h3 className={styles.sectionTitle}>Upgrade Your Plan</h3>
-                <div className={styles.plansContainer}>
-                  {PLANS.map((plan) => (
-                    <div
-                      key={plan.id}
-                      className={`${styles.planCard} ${plan.highlight ? styles.planHighlight : ''} ${currentPlan === plan.id ? styles.planCurrent : ''}`}
-                    >
-                      {plan.highlight && <span className={styles.badgeBest}>BEST VALUE</span>}
-                      {currentPlan === plan.id && <span className={styles.badgeCurrent}>YOUR PLAN</span>}
-                      <div className={styles.planInfo}>
-                        <h4>{plan.name}</h4>
-                        <div className={styles.planPrice}>
-                          <strong>{plan.price}</strong>
-                          <span>{plan.period}</span>
-                          {plan.save && <em className={styles.planSave}>{plan.save}</em>}
-                        </div>
-                      </div>
-                      <button
-                        className={currentPlan === plan.id ? styles.planBtnCurrent : `btn btn-primary ${styles.planBtnPrimary}`}
-                        onClick={() => currentPlan !== plan.id && openPlanSelect(plan)}
-                        disabled={currentPlan === plan.id}
-                      >
-                        {currentPlan === plan.id ? <><Check size={16} /> Current Plan</> : `Select ${plan.name}`}
-                      </button>
+          {/* FULL-WIDTH SYMMETRICAL UPGRADE PLAN ROW */}
+          <div className={styles.upgradeSectionFullWidth} ref={plansRef}>
+            <div className={styles.upgradeHeaderCentered}>
+              <h3>Upgrade Your Membership Plan</h3>
+              <p>Get 30-min express refills, priority pharmacist verification, and waived convenience fees</p>
+            </div>
+            
+            <div className={styles.plansContainerRow}>
+              {PLANS.map((plan) => (
+                <div
+                  key={plan.id}
+                  className={`${styles.planCardRow} ${plan.highlight ? styles.planHighlight : ''} ${currentPlan === plan.id ? styles.planCurrent : ''}`}
+                >
+                  {plan.highlight && <span className={styles.badgeBest}>BEST VALUE</span>}
+                  {currentPlan === plan.id && <span className={styles.badgeCurrent}>YOUR PLAN</span>}
+                  
+                  <div className={styles.planCardRowHeader}>
+                    <div>
+                      <h4>{plan.name}</h4>
+                      <p className={styles.planCardRowSub}>{plan.save || 'Flexible monthly billing'}</p>
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <div className={styles.planPriceRow}>
+                      <strong>{plan.price}</strong>
+                      <span>{plan.period}</span>
+                    </div>
+                  </div>
 
+                  <ul className={styles.planRowFeatures}>
+                    {plan.features.map((feat, idx) => (
+                      <li key={idx}><Check size={14} /> {feat}</li>
+                    ))}
+                  </ul>
+
+                  <button
+                    className={currentPlan === plan.id ? styles.planBtnCurrent : `btn btn-primary ${styles.planBtnPrimary}`}
+                    onClick={() => currentPlan !== plan.id && openPlanSelect(plan)}
+                    disabled={currentPlan === plan.id}
+                  >
+                    {currentPlan === plan.id ? <><Check size={16} /> Current Plan</> : `Select ${plan.name}`}
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
+        </>
         )}
 
         {/* ── TAB 2: REFILL HISTORY LOG ─────────────────────────────────────── */}
