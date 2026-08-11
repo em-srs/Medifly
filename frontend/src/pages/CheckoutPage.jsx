@@ -93,7 +93,7 @@ export default function CheckoutPage() {
             <div className={styles.successIcon}><CheckCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></div>
             <h2>Order Placed Successfully!</h2>
             <p className={styles.orderId}>Order ID: MF-{Date.now().toString().slice(-8)}</p>
-            <p>Your medicines will be delivered within 1–6 hours. Track your order from the dashboard.</p>
+            <p>Your medicines will be delivered in 30 minutes. Track your order live from the dashboard.</p>
             <div className={styles.successActions}>
               <Link to="/dashboard" className="btn btn-primary btn-lg"><BarChart3 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Go to Dashboard</Link>
               <Link to="/medicines" className="btn btn-secondary btn-lg"><Pill size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Order More</Link>

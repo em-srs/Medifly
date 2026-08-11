@@ -20,7 +20,7 @@ export default function Footer() {
               <span className={styles.logoText}>MediFly</span>
             </div>
             <p className={styles.tagline}>
-              The fastest, safest way to get your medications. Licensed, verified, and professional healthcare delivery.
+              Medicines delivered in 30 minutes. Licensed, verified, and professional healthcare delivery across India.
             </p>
             <div className={styles.social}>
               <a href="#" aria-label="X (Twitter)" className={styles.socialIcon}>𝕏</a>

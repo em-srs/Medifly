@@ -89,10 +89,10 @@ export default function LoginPage() {
           <div className={styles.branding}>
             <span className={styles.brandIcon}>⚕️</span>
             <h1>Welcome to <span className="text-gradient">MediFly</span></h1>
-            <p>Enterprise Emergency Medicine & Refill Platform. Sign in to access your role-based portal.</p>
+            <p>Medicines delivered in 30 minutes. Sign in to access your dashboard, prescriptions, and orders.</p>
           </div>
           <div className={styles.features}>
-            <div className={styles.feature}><span><Zap size={18} /></span> 1–6 hour emergency delivery</div>
+            <div className={styles.feature}><span><Zap size={18} /></span> 30-minute emergency delivery</div>
             <div className={styles.feature}><span><TestTubes size={18} /></span> Bioequivalent salt matching engine</div>
             <div className={styles.feature}><span><RefreshCw size={18} /></span> Auto-refill for chronic meds</div>
             <div className={styles.feature}><span><Lock size={18} /></span> Secure Rx verification vault</div>
