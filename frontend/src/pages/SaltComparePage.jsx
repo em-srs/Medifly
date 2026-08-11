@@ -60,37 +60,71 @@ export default function SaltComparePage() {
 
   // Select Medicine 1
   const selectMed1 = async (med) => {
-    setQuery1(med.brandName);
+    setQuery1(med.brandName || med.name);
     setResults1([]);
     setMed1(med);
     setMed2(null);
     setQuery2('');
     setAutoSuggested(false);
 
+    const targetSalt = (med.genericName || med.salt || '').toLowerCase().trim();
+
     try {
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const res = await fetch(`${API_BASE}/api/medicines/salt-comparison/${med.id}`);
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+      // 1. Try salt-comparison endpoint
+      let res = await fetch(`${API_BASE}/api/medicines/salt-comparison/${med.id}`);
       if (res.ok) {
         const data = await res.json();
-        const alts = (data.alternative_medicines || []).map(m => ({
+        let alts = (data.alternative_medicines || []).map(m => ({
           ...m,
           id: m._id || m.id,
           brandName: m.brandName || m.name,
-          genericName: m.genericName || m.saltName,
+          genericName: m.genericName || m.salt || m.saltName,
           price: parseFloat(m.price)
         }));
-        setAlternatives(alts);
-        return;
+
+        // Filter to ensure same salt match if targetSalt exists
+        if (targetSalt) {
+          const sameSaltAlts = alts.filter(a => (a.genericName || a.salt || '').toLowerCase().includes(targetSalt));
+          if (sameSaltAlts.length > 0) alts = sameSaltAlts;
+        }
+
+        if (alts.length > 0) {
+          setAlternatives(alts.sort((a, b) => a.price - b.price));
+          return;
+        }
+      }
+
+      // 2. Query PostgreSQL API by salt keyword
+      if (targetSalt) {
+        res = await fetch(`${API_BASE}/api/medicines?keyword=${encodeURIComponent(targetSalt)}&pageSize=20`);
+        if (res.ok) {
+          const data = await res.json();
+          const dbMeds = (data.medicines || []).map(m => ({
+            ...m,
+            id: m._id || m.id,
+            brandName: m.brandName || m.name,
+            genericName: m.genericName || m.salt || m.saltName,
+            price: parseFloat(m.price)
+          })).filter(m => m.id !== med.id);
+
+          const sameSaltDb = dbMeds.filter(m => (m.genericName || m.salt || '').toLowerCase().includes(targetSalt));
+          if (sameSaltDb.length > 0) {
+            setAlternatives(sameSaltDb.sort((a, b) => a.price - b.price));
+            return;
+          }
+        }
       }
     } catch (err) {
-      console.warn('Backend salt-compare failed, using local search:', err.message);
+      console.warn('Backend salt-compare search failed, using local catalog:', err.message);
     }
 
-    // Pre-compute alternatives for "Suggest" button (fallback)
-    const alts = medicinesData
-      .filter(m => m.genericName === med.genericName && m.id !== med.id)
+    // 3. Fallback to local medicinesData same-salt search
+    const localSameSalt = medicinesData
+      .filter(m => m.id !== med.id && targetSalt && (m.genericName || m.salt || '').toLowerCase().includes(targetSalt))
       .sort((a, b) => a.price - b.price);
-    setAlternatives(alts);
+
+    setAlternatives(localSameSalt.length > 0 ? localSameSalt : medicinesData.filter(m => m.id !== med.id));
   };
 
   // Search 2 change (filter to same-salt medicines only)
@@ -99,7 +133,6 @@ export default function SaltComparePage() {
     setQuery2(q);
     setAutoSuggested(false);
     if (q.trim().length < 2) { setResults2([]); setMed2(null); return; }
-    // Show all medicines matching the query (user might want to compare across salts too)
     const res = medicinesData.filter(med =>
       (med.brandName.toLowerCase().includes(q.toLowerCase()) ||
        med.genericName.toLowerCase().includes(q.toLowerCase())) &&
@@ -111,22 +144,27 @@ export default function SaltComparePage() {
 
   // Select Medicine 2
   const selectMed2 = (med) => {
-    setQuery2(med.brandName);
+    setQuery2(med.brandName || med.name);
     setResults2([]);
     setMed2(med);
     setAutoSuggested(false);
   };
 
-  // "Suggest Alternatives" — auto-pick cheapest same-salt alternative
+  // "Suggest Alternatives" — strictly pick cheapest same-salt alternative
   const handleSuggest = () => {
-    if (alternatives.length > 0) {
-      setMed2(alternatives[0]);
-      setQuery2(alternatives[0].brandName);
+    if (!med1) return;
+    const targetSalt = (med1.genericName || med1.salt || '').toLowerCase().trim();
+
+    // Find same salt match first
+    const sameSaltMatch = alternatives.find(a => targetSalt && (a.genericName || a.salt || '').toLowerCase().includes(targetSalt));
+
+    if (sameSaltMatch) {
+      setMed2(sameSaltMatch);
+      setQuery2(sameSaltMatch.brandName || sameSaltMatch.name);
       setAutoSuggested(true);
-    } else if (medicinesData.length > 0) {
-      const alt = medicinesData.find(m => m.id !== med1?.id) || medicinesData[0];
-      setMed2(alt);
-      setQuery2(alt.brandName);
+    } else if (alternatives.length > 0) {
+      setMed2(alternatives[0]);
+      setQuery2(alternatives[0].brandName || alternatives[0].name);
       setAutoSuggested(true);
     }
   };
