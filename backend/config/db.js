@@ -4,23 +4,32 @@ const path = require('path');
 
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
-const sslConfig = process.env.PGSSL === 'true' || (process.env.PGHOST && process.env.PGHOST.includes('supabase'))
-  ? { rejectUnauthorized: false }
-  : false;
+const isCloud = process.env.PGSSL === 'true' || 
+                (process.env.PGHOST && process.env.PGHOST.includes('supabase')) ||
+                (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('supabase'));
 
-const pool = new Pool({
-  host: process.env.PGHOST || 'localhost',
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || 'postgres',
-  database: process.env.PGDATABASE || 'postgres',
-  port: parseInt(process.env.PGPORT || '5432', 10),
-  ssl: sslConfig,
-});
+const sslConfig = isCloud ? { rejectUnauthorized: false } : false;
+
+const poolConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: sslConfig,
+    }
+  : {
+      host: process.env.PGHOST || 'localhost',
+      user: process.env.PGUSER || 'postgres',
+      password: process.env.PGPASSWORD || 'postgres',
+      database: process.env.PGDATABASE || 'postgres',
+      port: parseInt(process.env.PGPORT || '5432', 10),
+      ssl: sslConfig,
+    };
+
+const pool = new Pool(poolConfig);
 
 const connectDB = async () => {
   try {
     const client = await pool.connect();
-    console.log(`✅ PostgreSQL Connected to database: ${process.env.PGDATABASE || 'postgres'} on ${process.env.PGHOST}`);
+    console.log(`✅ PostgreSQL Connected to database via ${process.env.DATABASE_URL ? 'DATABASE_URL' : process.env.PGHOST}`);
     client.release();
     await initDb();
   } catch (err) {
