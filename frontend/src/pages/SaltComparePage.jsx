@@ -367,44 +367,72 @@ export default function SaltComparePage() {
               </div>
             </div>
 
-            {/* Other Same-Salt Alternatives (only if auto-suggested or salt matches) */}
-            {isSameSalt && alternatives.length > 1 && (
-              <div className={styles.otherSec} data-reveal="true" data-delay="100">
-                <h3 className={styles.otherTitle}>Other {med1.genericName} Alternatives</h3>
-                <div className={styles.otherGrid}>
-                  {alternatives
-                    .filter(a => a.id !== med2.id)
-                    .slice(0, 6)
-                    .map((alt, i) => (
-                    <div key={alt.id} className={styles.otherCard} data-reveal="scale" data-delay={i * 60}>
-                      <div className={styles.otherCardHeader}>
-                        <div className={styles.otherCardIcon}><Pill size={16} /></div>
-                        <div className={styles.otherCardInfo}>
-                          <h4>{alt.brandName}</h4>
-                          <span className={styles.otherMfr}>{alt.manufacturer}</span>
-                        </div>
-                        <span className={styles.priceGreen}>₹{alt.price.toFixed(2)}</span>
-                      </div>
-                      <div className={styles.otherCardMeta}>
-                        <span>{alt.genericName}</span>
-                        <span className={styles.otherDot}>•</span>
-                        <span>{alt.strength}</span>
-                        <span className={styles.otherDot}>•</span>
-                        <span className={styles.otherStock}>In Stock</span>
-                      </div>
-                      <div className={styles.otherCardActions}>
-                        <button className={styles.otherCompareBtn} onClick={() => selectMed2(alt)}>
-                          Compare
-                        </button>
-                        <button className={styles.otherAddBtn} onClick={() => addItem(toCartItem(alt))}>
-                          Add to Cart
-                        </button>
-                      </div>
+            {/* More Generic & Salt Alternatives */}
+            {(() => {
+              const displayAlts = (alternatives.length > 0 ? alternatives : medicinesData)
+                .filter(a => a.id !== med1?.id && a.id !== med2?.id)
+                .slice(0, 6);
+
+              return (
+                <div className={styles.otherSec} data-reveal="true" data-delay="100">
+                  <div className={styles.otherHeaderRow}>
+                    <div>
+                      <h3 className={styles.otherTitle}>
+                        More Generic & Salt Alternatives {med1 ? `for ${med1.genericName}` : ''}
+                      </h3>
+                      <p className={styles.otherSubTitle}>
+                        Compare pricing, manufacturer quality, and bioequivalent salt strength
+                      </p>
                     </div>
-                  ))}
+                    <Link to="/medicines" className="btn btn-outline btn-sm">
+                      Browse 250k+ Meds →
+                    </Link>
+                  </div>
+
+                  {displayAlts.length > 0 && (
+                    <div className={styles.otherGrid}>
+                      {displayAlts.map((alt, i) => (
+                        <div key={alt.id} className={styles.otherCard} data-reveal="scale" data-delay={i * 60}>
+                          <div className={styles.otherCardHeader}>
+                            <div className={styles.otherCardIcon}><Pill size={16} /></div>
+                            <div className={styles.otherCardInfo}>
+                              <h4>{alt.brandName || alt.name}</h4>
+                              <span className={styles.otherMfr}>{alt.manufacturer || 'Licensed Partner'}</span>
+                            </div>
+                            <span className={styles.priceGreen}>₹{parseFloat(alt.price).toFixed(2)}</span>
+                          </div>
+                          <div className={styles.otherCardMeta}>
+                            <span>{alt.genericName || alt.salt || 'Generic Salt'}</span>
+                            <span className={styles.otherDot}>•</span>
+                            <span>{alt.strength || 'Standard'}</span>
+                            <span className={styles.otherDot}>•</span>
+                            <span className={styles.otherStock}>In Stock</span>
+                          </div>
+                          <div className={styles.otherCardActions}>
+                            <button className={styles.otherCompareBtn} onClick={() => selectMed2(alt)}>
+                              Compare Side by Side
+                            </button>
+                            <button className={styles.otherAddBtn} onClick={() => addItem(toCartItem(alt))}>
+                              + Add
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className={styles.browseBanner}>
+                    <div>
+                      <h4>Looking for a different generic formulation?</h4>
+                      <p>Search over 250,000+ medicines with instant salt analysis and 30-minute delivery.</p>
+                    </div>
+                    <Link to="/medicines" className="btn btn-primary">
+                      Explore Full Medicine Catalog →
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </>
         )}
 
