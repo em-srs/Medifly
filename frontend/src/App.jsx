@@ -5,6 +5,7 @@ import { SocketProvider } from '@/context/SocketContext';
 import Header      from '@/components/Header';
 import Footer      from '@/components/Footer';
 import CartSidebar from '@/components/CartSidebar';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 // Pages
 import HomePage         from '@/pages/HomePage';
@@ -45,22 +46,27 @@ export default function App() {
           <CartProvider>
             <Layout>
               <Routes>
+                {/* Public Routes */}
                 <Route path="/"             element={<HomePage />} />
                 <Route path="/medicines"    element={<MedicinesPage />} />
                 <Route path="/about"        element={<AboutPage />} />
                 <Route path="/contact"      element={<ContactPage />} />
                 <Route path="/login"        element={<LoginPage />} />
-                <Route path="/dashboard"    element={<DashboardPage />} />
-                <Route path="/profile"      element={<ProfilePage />} />
-                <Route path="/checkout"     element={<CheckoutPage />} />
-                <Route path="/subscription" element={<SubscriptionPage />} />
                 <Route path="/salt-compare" element={<SaltComparePage />} />
-                <Route path="/prescriptions" element={<PrescriptionsPage />} />
-                <Route path="/orders"       element={<OrdersPage />} />
-                <Route path="/settings"     element={<SettingsPage />} />
-                <Route path="/admin"        element={<AdminPage />} />
-                <Route path="/pharmacy"     element={<PharmacyPage />} />
-                <Route path="/rider"        element={<RiderPage />} />
+
+                {/* Patient / Authenticated User Protected Routes */}
+                <Route path="/dashboard"    element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin']}><DashboardPage /></ProtectedRoute>} />
+                <Route path="/profile"      element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin']}><ProfilePage /></ProtectedRoute>} />
+                <Route path="/checkout"     element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin']}><CheckoutPage /></ProtectedRoute>} />
+                <Route path="/subscription" element={<ProtectedRoute allowedRoles={['user', 'admin']}><SubscriptionPage /></ProtectedRoute>} />
+                <Route path="/prescriptions" element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'admin']}><PrescriptionsPage /></ProtectedRoute>} />
+                <Route path="/orders"       element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin']}><OrdersPage /></ProtectedRoute>} />
+                <Route path="/settings"     element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin']}><SettingsPage /></ProtectedRoute>} />
+
+                {/* Role-Specific Protected Dashboards */}
+                <Route path="/admin"        element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
+                <Route path="/pharmacy"     element={<ProtectedRoute allowedRoles={['pharmacy', 'admin']}><PharmacyPage /></ProtectedRoute>} />
+                <Route path="/rider"        element={<ProtectedRoute allowedRoles={['rider', 'admin']}><RiderPage /></ProtectedRoute>} />
               </Routes>
             </Layout>
           </CartProvider>

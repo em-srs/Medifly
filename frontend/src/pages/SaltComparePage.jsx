@@ -59,7 +59,7 @@ export default function SaltComparePage() {
   };
 
   // Select Medicine 1
-  const selectMed1 = (med) => {
+  const selectMed1 = async (med) => {
     setQuery1(med.brandName);
     setResults1([]);
     setMed1(med);
@@ -67,7 +67,26 @@ export default function SaltComparePage() {
     setQuery2('');
     setAutoSuggested(false);
 
-    // Pre-compute alternatives for "Suggest" button
+    try {
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${API_BASE}/api/medicines/salt-comparison/${med.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        const alts = (data.alternative_medicines || []).map(m => ({
+          ...m,
+          id: m._id || m.id,
+          brandName: m.brandName || m.name,
+          genericName: m.genericName || m.saltName,
+          price: parseFloat(m.price)
+        }));
+        setAlternatives(alts);
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend salt-compare failed, using local search:', err.message);
+    }
+
+    // Pre-compute alternatives for "Suggest" button (fallback)
     const alts = medicinesData
       .filter(m => m.genericName === med.genericName && m.id !== med.id)
       .sort((a, b) => a.price - b.price);

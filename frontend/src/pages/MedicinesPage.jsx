@@ -3,8 +3,8 @@ import MedicineCard from '@/components/MedicineCard';
 import styles from './MedicinesPage.module.css';
 import { AlertTriangle, Sparkles, Pill, Search, X } from 'lucide-react';
 
-
 const ITEMS_PER_PAGE = 12;
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const CATEGORIES = [
   { id: 'all',         label: 'All Medicines',   icon: <Pill size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> },
@@ -36,51 +36,86 @@ export default function MedicinesPage() {
   // Debounce timer ref
   const debounceRef = useRef(null);
 
-  // ── Fetch from static JSON ──────────────────────────────────────────────────
+  // ── Fetch from PostgreSQL Backend API ──────────────────────────────────────
   const fetchMedicines = useCallback(async (q, category, sort, page) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/medicines.json');
-      if (!res.ok) throw new Error('Failed to fetch medicines');
-      let results = await res.json();
-
-      const query = q?.toLowerCase().trim() || '';
-      
-      if (query) {
-        results = results.filter(
-          (med) =>
-            med.name.toLowerCase().includes(query) ||
-            med.salt.toLowerCase().includes(query) ||
-            med.manufacturer.toLowerCase().includes(query)
-        );
-      } else if (category && category !== 'all') {
-        results = results.filter((med) => med.category === category);
+      let url = `${API_BASE}/api/medicines?pageNumber=${page}`;
+      if (q) {
+        url += `&keyword=${encodeURIComponent(q)}`;
       }
 
-      if (sort === 'price-low')       results.sort((a, b) => a.price - b.price);
-      else if (sort === 'price-high') results.sort((a, b) => b.price - a.price);
-      else                            results.sort((a, b) => a.name.localeCompare(b.name));
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        let results = data.medicines || [];
 
-      const totalItems = results.length;
-      const startIndex = (page - 1) * ITEMS_PER_PAGE;
-      const paginatedItems = results.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+        // Apply local category filter if applicable
+        if (category && category !== 'all') {
+          results = results.filter((med) => med.category === category);
+        }
 
-      setItems(paginatedItems);
-      setTotal(totalItems);
-      setTotalPages(Math.ceil(totalItems / ITEMS_PER_PAGE));
+        // Apply sorting
+        if (sort === 'price-low')       results.sort((a, b) => a.price - b.price);
+        else if (sort === 'price-high') results.sort((a, b) => b.price - a.price);
+        else                            results.sort((a, b) => (a.brandName || a.name).localeCompare(b.brandName || b.name));
+
+        setItems(results.map(med => ({
+          ...med,
+          id: med._id || med.id,
+          name: med.brandName || med.name,
+          salt: med.genericName || med.saltComposition?.saltName || med.salt || 'General Chemical Salt',
+          price: parseFloat(med.price),
+          manufacturer: med.manufacturer || 'Licensed Partner Pharma',
+          requiresPrescription: med.requiresPrescription || false,
+          image: med.image || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300'
+        })));
+        setTotal(data.pages ? data.pages * ITEMS_PER_PAGE : results.length);
+        setTotalPages(data.pages || 1);
+      } else {
+        throw new Error('Backend query failed');
+      }
     } catch (err) {
-      setError(err.message);
+      console.warn('Backend fetch fallback to static file:', err.message);
+      try {
+        const res = await fetch('/medicines.json');
+        let results = await res.json();
+        const searchQuery = q?.toLowerCase().trim() || '';
+
+        if (searchQuery) {
+          results = results.filter(
+            (med) =>
+              med.name.toLowerCase().includes(searchQuery) ||
+              med.salt.toLowerCase().includes(searchQuery) ||
+              med.manufacturer.toLowerCase().includes(searchQuery)
+          );
+        } else if (category && category !== 'all') {
+          results = results.filter((med) => med.category === category);
+        }
+
+        if (sort === 'price-low')       results.sort((a, b) => a.price - b.price);
+        else if (sort === 'price-high') results.sort((a, b) => b.price - a.price);
+        else                            results.sort((a, b) => a.name.localeCompare(b.name));
+
+        const totalItems = results.length;
+        const startIndex = (page - 1) * ITEMS_PER_PAGE;
+        const paginatedItems = results.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+        setItems(paginatedItems);
+        setTotal(totalItems);
+        setTotalPages(Math.ceil(totalItems / ITEMS_PER_PAGE));
+      } catch (fallbackErr) {
+        setError(fallbackErr.message);
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // ── Debounced search / immediate filter changes ───────────────────────────
+  // ── Debounced search ───────────────────────────────────────────────────────
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    // Only debounce the text search; category/sort changes are instant
     const delay = query !== '' ? 300 : 0;
 
     debounceRef.current = setTimeout(() => {
@@ -88,8 +123,7 @@ export default function MedicinesPage() {
     }, delay);
 
     return () => clearTimeout(debounceRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, activeCategory, sortBy, currentPage]);
+  }, [query, activeCategory, sortBy, currentPage, fetchMedicines]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handleSearch = (e) => {
@@ -114,7 +148,6 @@ export default function MedicinesPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // ── Pagination: page numbers with ellipsis ────────────────────────────────
   const getPageNumbers = () => {
     const pages = [];
     if (totalPages <= 7) {
@@ -139,7 +172,7 @@ export default function MedicinesPage() {
         {/* Header */}
         <div className={styles.header}>
           <h1>Order Medicines</h1>
-          <p>Browse 400+ medicines from licensed pharmacies near you</p>
+          <p>Browse 250,000+ medicines from licensed pharmacies in PostgreSQL database</p>
         </div>
 
         {/* Search */}
@@ -147,7 +180,7 @@ export default function MedicinesPage() {
           <span className={styles.searchIcon}><Search size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>
           <input
             type="text"
-            placeholder="Search by medicine name, salt, or manufacturer..."
+            placeholder="Search 250,000+ medicines by brand name, salt, or generic composition..."
             value={query}
             onChange={handleSearch}
             className={styles.searchInput}
@@ -187,7 +220,7 @@ export default function MedicinesPage() {
         <div className={styles.results}>
           <span className={styles.resultCount}>
             {loading
-              ? 'Loading…'
+              ? 'Querying PostgreSQL Database…'
               : error
               ? `Error: ${error}`
               : `Showing ${total > 0 ? startIndex + 1 : 0}–${Math.min(startIndex + ITEMS_PER_PAGE, total)} of ${total} medicines`}

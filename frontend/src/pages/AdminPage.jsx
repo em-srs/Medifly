@@ -1,11 +1,34 @@
-import { useState } from 'react';
-import { adminStats, pharmacies, riders, sampleOrders } from '@/data/mockData';
+import { useState, useEffect } from 'react';
+import { adminStats as mockStats, pharmacies, riders, sampleOrders } from '@/data/mockData';
 import styles from './AdminPage.module.css';
+import { useAuth } from '@/context/AuthContext';
 import { Shield, Package, CheckCircle2, AlertTriangle, Zap, BarChart3, Users, IndianRupee, Bike, Star, Hospital } from 'lucide-react';
-
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('overview');
+  const { apiCall } = useAuth();
+  const [liveStats, setLiveStats] = useState(null);
+
+  useEffect(() => {
+    apiCall('/api/admin/dashboard')
+      .then(data => {
+        if (data && data.stats) {
+          setLiveStats(data.stats);
+        }
+      })
+      .catch(err => console.warn('Backend admin dashboard fetch fallback:', err.message));
+  }, [apiCall]);
+
+  const stats = {
+    totalUsers: liveStats?.users || mockStats.totalUsers,
+    totalOrders: liveStats?.orders || mockStats.totalOrders,
+    totalRevenue: liveStats?.revenue || mockStats.totalRevenue,
+    activePharmacies: mockStats.activePharmacies,
+    activeRiders: mockStats.activeRiders,
+    avgDeliveryTime: mockStats.avgDeliveryTime,
+    slaCompliance: mockStats.slaCompliance,
+    customerSatisfaction: mockStats.customerSatisfaction
+  };
 
   return (
     <div className={styles.page}>
@@ -27,14 +50,14 @@ export default function AdminPage() {
           {activeTab === 'overview' && (
             <>
               <div className={styles.statsGrid}>
-                <div className={styles.statCard}><span><Users size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{adminStats.totalUsers.toLocaleString()}</strong><small>Total Users</small></div></div>
-                <div className={styles.statCard}><span><Package size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{adminStats.totalOrders.toLocaleString()}</strong><small>Total Orders</small></div></div>
-                <div className={styles.statCard}><span><IndianRupee size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>₹{(adminStats.totalRevenue / 100000).toFixed(1)}L</strong><small>Total Revenue</small></div></div>
-                <div className={styles.statCard}><span><Hospital size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{adminStats.activePharmacies}</strong><small>Active Pharmacies</small></div></div>
-                <div className={styles.statCard}><span><Bike size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{adminStats.activeRiders}</strong><small>Active Riders</small></div></div>
-                <div className={styles.statCard}><span><Zap size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{adminStats.avgDeliveryTime}</strong><small>Avg Delivery</small></div></div>
-                <div className={styles.statCard}><span><BarChart3 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{adminStats.slaCompliance}%</strong><small>SLA Compliance</small></div></div>
-                <div className={styles.statCard}><span><Star size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{adminStats.customerSatisfaction}/5</strong><small>Satisfaction</small></div></div>
+                <div className={styles.statCard}><span><Users size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{stats.totalUsers.toLocaleString()}</strong><small>Total Users</small></div></div>
+                <div className={styles.statCard}><span><Package size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{stats.totalOrders.toLocaleString()}</strong><small>Total Orders</small></div></div>
+                <div className={styles.statCard}><span><IndianRupee size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>₹{stats.totalRevenue.toLocaleString()}</strong><small>Total Revenue</small></div></div>
+                <div className={styles.statCard}><span><Hospital size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{stats.activePharmacies}</strong><small>Active Pharmacies</small></div></div>
+                <div className={styles.statCard}><span><Bike size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{stats.activeRiders}</strong><small>Active Riders</small></div></div>
+                <div className={styles.statCard}><span><Zap size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{stats.avgDeliveryTime}</strong><small>Avg Delivery</small></div></div>
+                <div className={styles.statCard}><span><BarChart3 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{stats.slaCompliance}%</strong><small>SLA Compliance</small></div></div>
+                <div className={styles.statCard}><span><Star size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span><div><strong>{stats.customerSatisfaction}/5</strong><small>Satisfaction</small></div></div>
               </div>
 
               <div className={styles.todaySection}>

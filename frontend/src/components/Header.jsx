@@ -1,11 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import styles from './Header.module.css';
-import { Home, ShoppingBag, TestTubes, RefreshCw, Folder, Info, Phone, ShoppingCart, User, Settings, LogOut, Key, Package, BarChart3, X } from 'lucide-react';
-
+import { Home, ShoppingBag, TestTubes, RefreshCw, Folder, Info, Phone, ShoppingCart, User, Settings, LogOut, Key, Package, BarChart3, Shield, Hospital, Bike, X } from 'lucide-react';
 
 const NAV_LINKS = [
   { href: '/',             icon: <Home size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'Home' },
@@ -52,6 +50,21 @@ export default function Header() {
     navigate('/');
   };
 
+  const getRoleBadge = (role) => {
+    if (role === 'admin') return <span style={{ background: '#fee2e2', color: '#991b1b', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '8px', fontWeight: 700 }}>ADMIN</span>;
+    if (role === 'pharmacy') return <span style={{ background: '#e0e7ff', color: '#3730a3', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '8px', fontWeight: 700 }}>PHARMACY</span>;
+    if (role === 'rider') return <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '8px', fontWeight: 700 }}>RIDER</span>;
+    return <span style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '8px', fontWeight: 700 }}>PATIENT</span>;
+  };
+
+  const getRoleDashboardLink = () => {
+    if (!user) return '/dashboard';
+    if (user.role === 'admin') return '/admin';
+    if (user.role === 'pharmacy') return '/pharmacy';
+    if (user.role === 'rider') return '/rider';
+    return '/dashboard';
+  };
+
   return (
     <>
       <header className={styles.header}>
@@ -76,6 +89,23 @@ export default function Header() {
                 <span>{icon}</span> {label}
               </Link>
             ))}
+
+            {/* Quick role-specific navigation portal links */}
+            {user?.role === 'admin' && (
+              <Link to="/admin" className={`${styles.navLink} ${pathname === '/admin' ? styles.active : ''}`} style={{ color: '#dc2626', fontWeight: 600 }}>
+                <Shield size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '2px' }} /> Admin Portal
+              </Link>
+            )}
+            {user?.role === 'pharmacy' && (
+              <Link to="/pharmacy" className={`${styles.navLink} ${pathname === '/pharmacy' ? styles.active : ''}`} style={{ color: '#4f46e5', fontWeight: 600 }}>
+                <Hospital size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '2px' }} /> Pharmacy Portal
+              </Link>
+            )}
+            {user?.role === 'rider' && (
+              <Link to="/rider" className={`${styles.navLink} ${pathname === '/rider' ? styles.active : ''}`} style={{ color: '#d97706', fontWeight: 600 }}>
+                <Bike size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '2px' }} /> Fleet Portal
+              </Link>
+            )}
           </nav>
 
           {/* Actions */}
@@ -103,25 +133,40 @@ export default function Header() {
                   {user ? (
                     <>
                       <div className={styles.dropdownHeader}>
-                        <strong>{user.name}</strong>
-                        <span className={styles.dropdownRole}>{user.role}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <strong>{user.name}</strong>
+                          {getRoleBadge(user.role)}
+                        </div>
+                        <span className={styles.dropdownRole}>{user.email || user.phone}</span>
                       </div>
                       <div className={styles.dropdownDivider}></div>
-                      <Link to="/profile"   className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}><User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> My Profile</Link>
-                      <Link to="/dashboard" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}><BarChart3 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Dashboard</Link>
-                      <Link to="/orders"    className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}><Package size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> My Orders</Link>
-                      <Link to="/settings"  className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}><Settings size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Settings</Link>
+                      <Link to="/profile" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
+                        <User size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Profile
+                      </Link>
+                      <Link to={getRoleDashboardLink()} className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
+                        <BarChart3 size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Portal Dashboard
+                      </Link>
+                      <Link to="/orders" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
+                        <Package size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> My Orders
+                      </Link>
+                      <Link to="/settings" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
+                        <Settings size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Settings
+                      </Link>
                       <div className={styles.dropdownDivider}></div>
-                      <button className={styles.dropdownLogout} onClick={handleLogout}><LogOut size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Logout</button>
+                      <button className={styles.dropdownLogout} onClick={handleLogout}>
+                        <LogOut size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Logout
+                      </button>
                     </>
                   ) : (
                     <>
                       <div className={styles.dropdownHeader}>
                         <strong>Welcome to MediFly</strong>
-                        <span className={styles.dropdownRole}>Sign in to continue</span>
+                        <span className={styles.dropdownRole}>Sign in to access your portal</span>
                       </div>
                       <div className={styles.dropdownDivider}></div>
-                      <Link to="/login" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}><Key size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Login / Register</Link>
+                      <Link to="/login" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
+                        <Key size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Login / Register
+                      </Link>
                     </>
                   )}
                 </div>
@@ -156,7 +201,7 @@ export default function Header() {
             </div>
             <span className={styles.logoText}>MediFly</span>
           </Link>
-          <button className={styles.mobileClose} onClick={() => setMobileOpen(false)} aria-label="Close menu"><X size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></button>
+          <button className={styles.mobileClose} onClick={() => setMobileOpen(false)} aria-label="Close menu"><X size={18} /></button>
         </div>
 
         <div className={styles.mobileNavLinks}>
@@ -171,6 +216,25 @@ export default function Header() {
               <span>{label}</span>
             </Link>
           ))}
+
+          {user?.role === 'admin' && (
+            <Link to="/admin" className={styles.mobileNavLink} onClick={() => setMobileOpen(false)} style={{ color: '#dc2626' }}>
+              <span className={styles.mobileNavIcon}><Shield size={18} /></span>
+              <span>Admin Portal</span>
+            </Link>
+          )}
+          {user?.role === 'pharmacy' && (
+            <Link to="/pharmacy" className={styles.mobileNavLink} onClick={() => setMobileOpen(false)} style={{ color: '#4f46e5' }}>
+              <span className={styles.mobileNavIcon}><Hospital size={18} /></span>
+              <span>Pharmacy Portal</span>
+            </Link>
+          )}
+          {user?.role === 'rider' && (
+            <Link to="/rider" className={styles.mobileNavLink} onClick={() => setMobileOpen(false)} style={{ color: '#d97706' }}>
+              <span className={styles.mobileNavIcon}><Bike size={18} /></span>
+              <span>Fleet Portal</span>
+            </Link>
+          )}
         </div>
 
         <div className={styles.mobileNavFooter}>
@@ -180,10 +244,14 @@ export default function Header() {
           >
             <ShoppingCart size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> View Cart {totalItems > 0 && <span className={styles.mobileCartCount}>{totalItems}</span>}
           </button>
-          {!user && (
+          {!user ? (
             <Link to="/login" className={`btn btn-outline ${styles.mobileLoginBtn}`} onClick={() => setMobileOpen(false)}>
               <Key size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Login / Register
             </Link>
+          ) : (
+            <button className={`btn btn-outline ${styles.mobileLoginBtn}`} onClick={handleLogout}>
+              <LogOut size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Logout ({user.name})
+            </button>
           )}
         </div>
       </nav>
