@@ -123,6 +123,11 @@ export default function SaltComparePage() {
       setMed2(alternatives[0]);
       setQuery2(alternatives[0].brandName);
       setAutoSuggested(true);
+    } else if (medicinesData.length > 0) {
+      const alt = medicinesData.find(m => m.id !== med1?.id) || medicinesData[0];
+      setMed2(alt);
+      setQuery2(alt.brandName);
+      setAutoSuggested(true);
     }
   };
 
@@ -240,7 +245,7 @@ export default function SaltComparePage() {
                 </div>
               )}
             </div>
-            {med1 && !med2 && alternatives.length > 0 && (
+            {med1 && !med2 && (
               <button className={styles.suggestBtn} onClick={handleSuggest}>
                 <Zap size={14} /> Don't know? Suggest best alternative
               </button>
