@@ -2,6 +2,7 @@
   "name": "medifly",
   "version": "1.0.0",
   "description": "Medifly - Emergency & Subscription Medicine Delivery Platform",
+  "author": "sunnyrajsu <sunnyrajrvr@gmail.com>",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",

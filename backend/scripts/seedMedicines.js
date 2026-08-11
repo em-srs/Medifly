@@ -6,18 +6,22 @@ const dotenv = require('dotenv');
 // Load env from backend root
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
+const createDatabaseIfNotExists = require('./initDatabase');
 const { pool, connectDB, query } = require('../config/db');
 
 const CSV_PATH = path.join(__dirname, '..', 'data', 'medicines.csv');
 
 const seedMedicines = async () => {
   try {
-    // Initialize PostgreSQL connection & tables
+    // Step 1: Ensure database exists
+    await createDatabaseIfNotExists();
+
+    // Step 2: Initialize PostgreSQL connection & tables
     await connectDB();
 
     const medicines = [];
 
-    // Parse CSV file
+    // Step 3: Parse CSV file
     await new Promise((resolve, reject) => {
       fs.createReadStream(CSV_PATH)
         .pipe(csv())
