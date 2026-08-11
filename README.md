@@ -3,13 +3,13 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![Express Version](https://img.shields.io/badge/express-v5.2.1-blue.svg)](https://expressjs.com/)
 [![React Version](https://img.shields.io/badge/react-v19.0.0-61dafb.svg)](https://react.dev/)
-[![Vite Version](https://img.shields.io/badge/vite-v6.4.2-646cff.svg)](https://vitejs.dev/)
+[![Vite Version](https://img.shields.io/badge/vite-v6.2.0-646cff.svg)](https://vitejs.dev/)
 [![PostgreSQL](https://img.shields.io/badge/database-PostgreSQL%20Supabase-blue.svg)](https://supabase.com/)
 [![Socket.io](https://img.shields.io/badge/socket.io-v4.8.3-black.svg)](https://socket.io/)
 [![JWT Auth](https://img.shields.io/badge/auth-JWT%20Bearer-orange.svg)](https://jwt.io/)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
 
-> **Medifly** is an enterprise-grade, real-time emergency healthcare delivery & prescription auto-refill platform built on Node.js Express v5, React 19, and **PostgreSQL (Supabase)**. Medifly hosts over **254,000+ authentic medicines** and **11,800+ bioequivalent chemical salts**, featuring **30-Minute Ultra-Express Delivery**, GIN trigram indexed SQL search, salt comparison matching engine, cold-chain handling, automated subscription refills, and role-based access portals for Patients, Pharmacists, Delivery Riders, and System Administrators.
+> **Medifly** is an enterprise-grade, real-time emergency healthcare delivery & prescription auto-refill platform built on Node.js Express v5, React 19, Vite 6, and **PostgreSQL (Supabase)**. Medifly hosts over **254,000+ authentic medicines** and **11,800+ bioequivalent chemical salts**, featuring **30-Minute Ultra-Express Delivery**, GIN trigram indexed SQL search, salt comparison matching engine, cold-chain handling, automated subscription refills, and role-based access portals for Patients, Pharmacists, Delivery Riders, and System Administrators.
 
 ---
 
@@ -120,7 +120,7 @@ Medifly's primary mission across every page, header, and order dispatch service 
 ```mermaid
 graph TB
     subgraph Client Tier
-        UI["React 19 Frontend SPA"]
+        UI["React 19 Frontend SPA (Vite 6)"]
         AC["AuthContext (JWT & Role)"]
         CC["CartContext (State)"]
         SC["SocketContext (WS Client)"]
@@ -236,65 +236,64 @@ erDiagram
     users ||--o| riders : "drives"
 
     salts ||--o{ medicines : "composes"
-    salts ||--o{ salt_common_uses : "has_uses"
-    salts ||--o{ salt_side_effects : "has_side_effects"
     medicines ||--o{ order_items : "contained_in"
     orders ||--|{ order_items : "includes"
+    subscriptions ||--o{ subscription_items : "contains"
+    medicines ||--o{ subscription_items : "consists_of"
     
     users {
-        BIGSERIAL id PK
+        SERIAL id PK
         VARCHAR name
         VARCHAR email UK
         VARCHAR password
         VARCHAR phone
-        VARCHAR role "enum: user, pharmacy, rider, admin"
-        JSONB address "street, city, state, postalCode"
+        VARCHAR role "user, pharmacy, rider, admin"
         BOOLEAN is_subscribed
-        VARCHAR subscription_plan "enum: none, monthly, yearly"
+        VARCHAR subscription_plan
         TIMESTAMP subscription_expiry
+        VARCHAR street
+        VARCHAR city
+        VARCHAR state
+        VARCHAR zip_code
+        FLOAT lat
+        FLOAT lng
         TIMESTAMP created_at
     }
 
     salts {
-        BIGSERIAL id PK
+        SERIAL id PK
         VARCHAR salt_name UK
         TEXT description
+        TEXT_ARRAY medical_uses
+        TEXT_ARRAY common_side_effects
         TEXT precautions
-    }
-
-    salt_common_uses {
-        BIGINT salt_id FK
-        TEXT use_description
-    }
-
-    salt_side_effects {
-        BIGINT salt_id FK
-        TEXT side_effect_description
+        TIMESTAMP created_at
     }
 
     medicines {
-        BIGSERIAL id PK
+        SERIAL id PK
         VARCHAR medicine_id UK
         VARCHAR brand_name
         VARCHAR generic_name
-        BIGINT salt_id FK
+        INTEGER salt_id FK
         VARCHAR category
         VARCHAR dosage_form
         VARCHAR strength
         VARCHAR manufacturer
-        VARCHAR schedule_type "enum: OTC, H, H1"
+        VARCHAR schedule_type
         BOOLEAN requires_prescription
         BOOLEAN cold_chain_required
         VARCHAR pack_size
         NUMERIC price
         BOOLEAN stock
         INTEGER inventory_count
+        TIMESTAMP created_at
     }
 
     orders {
-        BIGSERIAL id PK
-        BIGINT user_id FK
-        JSONB shipping_address
+        SERIAL id PK
+        INTEGER user_id FK
+        INTEGER rider_id FK
         VARCHAR payment_method
         JSONB payment_result
         NUMERIC items_price
@@ -309,58 +308,78 @@ erDiagram
         TIMESTAMP paid_at
         BOOLEAN is_delivered
         TIMESTAMP delivered_at
-        VARCHAR status "enum: pending, verified, assigned, picked_up, delivered"
-        BIGINT rider_id FK
+        VARCHAR status "pending, verified, assigned, picked_up, delivered"
+        JSONB shipping_address
         TIMESTAMP created_at
     }
 
     order_items {
-        BIGSERIAL id PK
-        BIGINT order_id FK
-        BIGINT medicine_id FK
+        SERIAL id PK
+        INTEGER order_id FK
+        INTEGER medicine_id FK
+        VARCHAR name
         INTEGER qty
+        VARCHAR image
         NUMERIC price
     }
 
     prescriptions {
-        BIGSERIAL id PK
-        BIGINT user_id FK
-        VARCHAR document_url
+        SERIAL id PK
+        INTEGER user_id FK
+        TEXT document_url
         TIMESTAMP upload_date
-        VARCHAR status "enum: PENDING, VERIFIED, REJECTED"
+        VARCHAR status "PENDING, VERIFIED, REJECTED"
         TEXT reviewer_notes
-        BIGINT pharmacist_id FK
+        INTEGER pharmacist_id FK
         TIMESTAMP verified_at
+        TIMESTAMP created_at
     }
 
     pharmacies {
-        BIGSERIAL id PK
-        BIGINT user_id FK
+        SERIAL id PK
+        INTEGER user_id FK
         VARCHAR name
-        VARCHAR license_number
-        JSONB address
-        VARCHAR status "enum: PENDING, VERIFIED, BANNED"
+        VARCHAR license_number UK
+        VARCHAR street
+        VARCHAR city
+        VARCHAR state
+        VARCHAR zip_code
+        FLOAT lat
+        FLOAT lng
+        VARCHAR status "PENDING, APPROVED"
+        TIMESTAMP created_at
     }
 
     riders {
-        BIGSERIAL id PK
-        BIGINT user_id FK
-        JSONB vehicle_detail
-        JSONB current_location "lat, lng"
+        SERIAL id PK
+        INTEGER user_id FK
+        VARCHAR vehicle_make
+        VARCHAR vehicle_model
+        VARCHAR vehicle_reg_number
+        FLOAT lat
+        FLOAT lng
         BOOLEAN is_available
-        VARCHAR status "enum: OFFLINE, ONLINE, ON_DELIVERY"
-        BIGINT active_order_id FK
+        VARCHAR status "OFFLINE, ONLINE, ON_DELIVERY"
+        INTEGER active_order_id FK
         NUMERIC rating
+        TIMESTAMP created_at
     }
 
     subscriptions {
-        BIGSERIAL id PK
-        BIGINT user_id FK
-        VARCHAR frequency "enum: WEEKLY, BIWEEKLY, MONTHLY"
+        SERIAL id PK
+        INTEGER user_id FK
+        VARCHAR frequency "WEEKLY, BIWEEKLY, MONTHLY"
         TIMESTAMP next_delivery_date
-        VARCHAR status "enum: ACTIVE, PAUSED, CANCELLED"
+        VARCHAR status "ACTIVE, PAUSED, CANCELLED"
         TEXT delivery_address
         TIMESTAMP created_at
+    }
+
+    subscription_items {
+        SERIAL id PK
+        INTEGER subscription_id FK
+        INTEGER medicine_id FK
+        INTEGER quantity
     }
 ```
 
@@ -427,31 +446,46 @@ sequenceDiagram
 ```ascii
 medifly-mern/
 ├── README.md                          # Main Repository Documentation
-├── notes.md                           # Technical Interview Prep & Revision Notebook
-├── package.json                       # Root Workspace Package Configuration
+├── notes.md                           # Comprehensive Developer & Interview Revision Guide
+├── package.json                       # Root Workspace Package (Concurrently Scripts)
+├── index.html                         # Root HTML Entrypoint
+├── vercel.json                        # Monorepo Vercel Deployment Configuration
 ├── .gitignore                         # Repository Git Ignore Rules
 │
 ├── backend/                           # Node.js + Express v5 Application Server
-│   ├── .env                           # Environment Variables (PORT, DATABASE_URL, JWT_SECRET)
-│   ├── package.json                   # Backend Dependencies (Express 5, pg, Socket.io)
-│   ├── server.js                      # Express App Initialization, Route Mounts & Error Handler
-│   ├── socket.js                      # Socket.io Singleton Engine & Room Handler
+│   ├── .env                           # Environment Variables (DATABASE_URL, JWT_SECRET, PORT)
+│   ├── .env.example                   # Environment Template
+│   ├── package.json                   # Backend Dependencies (Express 5, pg, Socket.io, node-cron)
+│   ├── server.js                      # Express App Setup, API Route Mounts, Health Check & Error Handler
+│   ├── socket.js                      # Socket.io Real-Time Singleton Engine & Channel Dispatcher
 │   ├── config/
-│   │   ├── db.js                      # PostgreSQL node-postgres (pg Pool) Connection Setup
-│   │   └── auth.js                    # JWT Configuration Parameters
-│   ├── controllers/                   # HTTP Request Handlers & Business Logic
-│   │   ├── adminController.js         # Administrative Analytics & Low-Stock Dashboard
-│   │   ├── authController.js          # User Registration, Login & Profile Handlers
-│   │   ├── medicineController.js      # Medicine Catalog, Salt Comparison & Price Updates
-│   │   ├── orderController.js         # Order Creation, Rx Checks, Pricing & Stock Decrement
-│   │   ├── pharmacyController.js      # Pharmacy Registration & Workstation Dashboard
-│   │   ├── prescriptionController.js  # Prescription Upload & Pharmacist Verification
-│   │   ├── riderController.js         # Rider Registration & Real-Time GPS Tracking
-│   │   └── subscriptionController.js  # Refill Subscription Management
-│   ├── middleware/                    # Security & Protection Middleware
-│   │   ├── authMiddleware.js          # JWT Verification Guard
-│   │   └── roleMiddleware.js          # Role-Based Access Control (RBAC) Guard
-│   ├── routes/                        # Express API Route Mapping Definitions
+│   │   ├── db.js                      # PostgreSQL connection pool & automatic table schema initialization
+│   │   └── auth.js                    # JWT configuration constants
+│   ├── controllers/                   # HTTP Request Handlers & Route Business Logic
+│   │   ├── adminController.js         # Revenue Analytics, System Counters & Low-Stock Alerts
+│   │   ├── authController.js          # User Registration, Login & Authenticated Profile Handlers
+│   │   ├── medicineController.js      # Medicine Search, Filtering, Salt Comparison & Price Updates
+│   │   ├── orderController.js         # Order Creation, Rx Checks, Fee Calculations & Payment Handling
+│   │   ├── pharmacyController.js      # Pharmacy Registration & Store Management
+│   │   ├── prescriptionController.js  # Prescription Document Upload & Pharmacist Verification
+│   │   ├── riderController.js         # Rider Registration, Dispatch Status & Live GPS Coordinates
+│   │   └── subscriptionController.js  # Refill Subscription Creation & Management
+│   ├── data/                          # Seed Datasets
+│   │   ├── medicines.csv              # Initial Medicine Sample Dataset
+│   │   └── meds_dB_original.csv       # Enterprise 254,023 Medicine Master Dataset
+│   ├── middleware/                    # Express Security & Guard Middleware
+│   │   ├── authMiddleware.js          # JWT Verification Guard (`protect`)
+│   │   └── roleMiddleware.js          # Role-Based Access Control Guard (`authorize`)
+│   ├── models/                        # SQL Data Model Wrappers & Query Abstractions
+│   │   ├── User.js                    # User queries (auth, role, subscriptions)
+│   │   ├── Medicine.js                # Medicine queries (trigram search, categories)
+│   │   ├── Salt.js                    # Chemical salt queries & bioequivalent comparison
+│   │   ├── Order.js                   # Order queries & item line links
+│   │   ├── Prescription.js            # Prescription document status queries
+│   │   ├── Pharmacy.js                # Pharmacy profile & license queries
+│   │   ├── Rider.js                   # Fleet rider profile & location updates
+│   │   └── Subscription.js            # Subscription refill schedule queries
+│   ├── routes/                        # Express API Route Definitions
 │   │   ├── adminRoutes.js             # /api/admin Endpoints
 │   │   ├── authRoutes.js              # /api/auth Endpoints
 │   │   ├── medicineRoutes.js          # /api/medicines Endpoints
@@ -460,46 +494,55 @@ medifly-mern/
 │   │   ├── prescriptionRoutes.js      # /api/prescriptions Endpoints
 │   │   ├── riderRoutes.js             # /api/riders Endpoints
 │   │   └── subscriptionRoutes.js      # /api/subscriptions Endpoints
-│   ├── services/                      # Decoupled Domain Business Logic
-│   │   ├── cronService.js             # Subscription Auto-Refill Scheduler
-│   │   ├── pricingService.js          # Multi-Tier Tax, Fee & Surcharge Calculator
-│   │   ├── riderAssignmentService.js  # Automated Rider Dispatch Logic
-│   │   └── saltComparisonService.js   # Bioequivalent Alternative Matcher
-│   └── scripts/
-│       ├── seedPostgres.js            # Initial PostgreSQL Schema & User Seeding Script
-│       └── seedLargeDataset.js        # High-Scale 254k Medicine Dataset Seeder
+│   ├── scripts/                       # Database Management & Seeding Scripts
+│   │   ├── seedMedicines.js           # 254k Dataset High-Performance PostgreSQL Seeder
+│   │   ├── initDatabase.js            # Table Initialization Script
+│   │   ├── addIndexes.js              # GIN Trigram Indexing Script
+│   │   ├── testSeeder.js              # Seeder Verification Test Script
+│   │   ├── testBatch.js               # Batch Insertion Test Script
+│   │   └── verifyDb.js                # Database Count & Sanity Checker
+│   └── services/                      # Domain Business Logic Services
+│       ├── cronService.js             # Automated Daily Subscription Auto-Refill Job
+│       ├── pricingService.js          # Multi-Tier Tax, Fee & Surcharge Calculator
+│       ├── riderAssignmentService.js  # Proximity-Based Fleet Rider Dispatch Logic
+│       └── saltComparisonService.js   # Bioequivalent Chemical Salt Matcher
 │
-└── frontend/                          # React 19 + Vite Frontend SPA Application
-    ├── package.json                   # Frontend Dependencies (React 19, Vite 6, Lucide)
-    ├── vite.config.js                 # Vite Bundler Setup & Path Aliasing (@ -> /src)
-    ├── index.html                     # HTML Template Entrypoint
+└── frontend/                          # React 19 + Vite 6 Single Page Application
+    ├── package.json                   # Frontend Dependencies (React 19, Vite 6, Lucide, Router v7)
+    ├── vite.config.js                 # Vite Config Setup & Path Aliasing
+    ├── index.html                     # HTML Entrypoint
+    ├── vercel.json                    # Frontend Vercel Rewrite Rules
     └── src/
-        ├── main.jsx                   # React DOM Entrypoint
-        ├── App.jsx                    # React Router v7 Routes & App Shell Layout
-        ├── index.css                  # Global CSS Design Tokens & Utilities
-        ├── components/                # Modular Reusable UI Components
-        │   ├── Header.jsx             # Navigation Bar with Role Links & Cart Trigger
-        │   ├── Footer.jsx             # App Footer with Links & Platform Info
-        │   ├── CartSidebar.jsx        # Slide-over Shopping Cart & Fee Summary
-        │   └── MedicineCard.jsx       # Interactive Medicine Display Card
-        ├── context/                   # Global React Context State Providers
-        │   ├── AuthContext.jsx        # Auth Session & Role Management Context
-        │   ├── CartContext.jsx        # Shopping Cart State & Items Management
-        │   └── SocketContext.jsx      # WebSocket Real-Time Event Listener Context
-        └── pages/                     # Application Page Components
-            ├── HomePage.jsx           # Landing Page with Hero, 30-Min Motto & SLA Matrix
-            ├── MedicinesPage.jsx      # 254k+ Medicine Browser with GIN Trigram Search
-            ├── PrescriptionsPage.jsx  # Rx Upload & Verification Status Page
-            ├── SubscriptionPage.jsx   # Recurring Subscription Refill Manager
-            ├── CheckoutPage.jsx       # Order Checkout & Multi-Tier Fee Review
-            ├── OrdersPage.jsx         # User Order History & Real-Time Map Tracking
+        ├── main.jsx                   # React Application Entrypoint
+        ├── App.jsx                    # Router v7 Component Tree & Layout Shell
+        ├── index.css                  # Modern Design System (Glassmorphism, CSS Variables, Animations)
+        ├── components/                # Reusable UI Components
+        │   ├── Header.jsx             # Top Navbar with Live Search & Navigation
+        │   ├── Footer.jsx             # Platform Footer with Quick Links & Motto
+        │   ├── CartSidebar.jsx        # Slide-over Express Shopping Cart & Fee Summary
+        │   ├── MedicineCard.jsx       # Interactive Medicine Card Component
+        │   └── ProtectedRoute.jsx     # Client-side RBAC Route Guard Component
+        ├── context/                   # React Context State Providers
+        │   ├── AuthContext.jsx        # JWT Authentication & Role Session Management
+        │   ├── CartContext.jsx        # Cart State, Item Manipulation & Total Fees
+        │   └── SocketContext.jsx      # Socket.io WebSockets Provider
+        └── pages/                     # Application Pages
+            ├── HomePage.jsx           # Landing Page with Hero Banner, Search & SLA Matrix
+            ├── MedicinesPage.jsx      # 254k+ Medicine Search Browser with Filters
+            ├── PrescriptionsPage.jsx  # Prescription Upload & Pharmacist Review Status
+            ├── SubscriptionPage.jsx   # Chronic Refill Subscription Management
+            ├── CheckoutPage.jsx       # 30-Min Order Checkout & Multi-Tier Surcharge Review
+            ├── OrdersPage.jsx         # User Order History & Live GPS Dispatch Tracker Map
             ├── SaltComparePage.jsx    # Generic Bioequivalent Salt Alternative Tool
-            ├── DashboardPage.jsx      # User Overview Dashboard
-            ├── AdminPage.jsx          # Admin System Analytics & Stock Alerts
-            ├── PharmacyPage.jsx       # Pharmacist Verification Terminal
-            ├── RiderPage.jsx          # Rider Dispatch & GPS Tracker Terminal
-            ├── ProfilePage.jsx        # User Account Profile Manager
-            └── SettingsPage.jsx       # User Settings Panel
+            ├── DashboardPage.jsx      # Patient Account Overview Dashboard
+            ├── AdminPage.jsx          # Admin Revenue Metrics & Stock Alerts Dashboard
+            ├── PharmacyPage.jsx       # Pharmacist Verification Terminal Page
+            ├── RiderPage.jsx          # Rider Dispatch & GPS Broadcast Terminal Page
+            ├── ProfilePage.jsx        # User Profile Management
+            ├── SettingsPage.jsx       # User Account & Notification Settings
+            ├── AboutPage.jsx          # About Medifly & SLA Commitment Page
+            ├── ContactPage.jsx        # Support & Emergency Helpline Contact Page
+            └── LoginPage.jsx          # User Login & Account Registration Page
 ```
 
 ---
@@ -510,6 +553,7 @@ medifly-mern/
 
 | Category | Method | URL Path | Auth Required | Allowed Roles | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Health** | `GET` | `/api/health` | Public | All | System & Database Connection Health Check |
 | **Auth** | `POST` | `/api/auth/register` | Public | All | Register a new user account |
 | **Auth** | `POST` | `/api/auth/login` | Public | All | Authenticate user & return JWT token |
 | **Auth** | `GET` | `/api/auth/profile` | Private | All Logged In | Get current authenticated user profile |
@@ -685,23 +729,32 @@ npm run install:all
 Create `backend/.env`:
 ```env
 PORT=5000
-DATABASE_URL=postgresql://postgres.ehdyoeznrfzbrsclpdpo:sql%40srs%40123@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres
+NODE_ENV=development
+DATABASE_URL=postgresql://postgres.your_project_ref:your_password@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres
 PGHOST=aws-0-ap-northeast-1.pooler.supabase.com
-PGUSER=postgres.ehdyoeznrfzbrsclpdpo
-PGPASSWORD=sql@srs@123
+PGUSER=postgres.your_project_ref
+PGPASSWORD=your_password
 PGDATABASE=postgres
 PGPORT=6543
 PGSSL=true
 JWT_SECRET=supersecretjwtkey_for_medifly
-JWT_EXPIRES_IN=7d
 ```
 
 Create `frontend/.env`:
 ```env
-VITE_API_URL=http://127.0.0.1:5000
+VITE_API_URL=http://localhost:5000
 ```
 
-### 4️⃣ Run the Application
+### 4️⃣ Database Seeding & Setup
+
+To seed the 254,000+ medicine dataset into PostgreSQL:
+
+```bash
+npm --prefix backend run dev
+# Seeding scripts in backend/scripts/ automatically build tables and indices
+```
+
+### 5️⃣ Run the Application
 
 From the root directory, start both backend and frontend concurrently:
 
@@ -710,10 +763,10 @@ npm run dev
 ```
 
 - **Frontend Application**: `http://localhost:5173`
-- **Backend Express API**: `http://127.0.0.1:5000`
+- **Backend Express API**: `http://localhost:5000`
 
 ---
 
 ## License
 
-This project is licensed under the ISC License.
+This project is licensed under the **ISC License**.

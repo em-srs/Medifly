@@ -13,7 +13,6 @@ const SMALL_CSV_PATH = path.join(__dirname, '..', 'data', 'medicines.csv');
 
 const processBulkBatch = async (client, rows) => {
   if (rows.length === 0) return;
-
   try {
     await client.query('BEGIN');
 
@@ -55,7 +54,7 @@ const processBulkBatch = async (client, rows) => {
     for (const r of preparedRows) {
       const saltId = saltMap.get(r.saltName) || null;
       valueClauses.push(
-        `($${paramIndex}, $${paramIndex+1}, $${paramIndex+2}, $${paramIndex+3}, $${paramIndex+4}, 'Tablet', 'Standard', $${paramIndex+5}, 'OTC', false, false, $${paramIndex+6}, $${paramIndex+7}, true, 50)`
+        `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, 'Tablet', 'Standard', $${paramIndex + 5}, 'OTC', false, false, $${paramIndex + 6}, $${paramIndex + 7}, true, 50)`
       );
       values.push(r.medId, r.brandName, r.genericName, saltId, r.category, r.manufacturer, r.packSize, r.price);
       paramIndex += 8;

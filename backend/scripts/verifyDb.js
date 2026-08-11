@@ -3,8 +3,8 @@ const { query, pool } = require('../config/db');
 const verifyDb = async () => {
   try {
     const tablesRes = await query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;");
-    console.log('📋 Existing SQL Tables in Supabase:');
-    tablesRes.rows.forEach(t => console.log(`   - ${t.table_name}`));
+    console.log('📋 Public Schema SQL Tables:');
+    tablesRes.rows.forEach(t => console.log(`   - public.${t.table_name}`));
 
     const medCountRes = await query("SELECT COUNT(*) FROM medicines;");
     console.log(`\n📦 Total Medicines in Supabase: ${medCountRes.rows[0].count}`);
