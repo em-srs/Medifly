@@ -354,6 +354,21 @@ erDiagram
         TEXT delivery_address
         TIMESTAMP created_at
     }
+
+    subscription_items {
+        BIGSERIAL id PK
+        BIGINT subscription_id FK
+        BIGINT medicine_id FK
+        INTEGER qty
+    }
+
+    spatial_ref_sys {
+        INTEGER srid PK
+        VARCHAR auth_name
+        INTEGER auth_srid
+        VARCHAR srtext
+        VARCHAR proj4text
+    }
 ```
 
 ---
