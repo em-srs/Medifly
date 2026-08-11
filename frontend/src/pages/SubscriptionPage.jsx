@@ -373,6 +373,16 @@ export default function SubscriptionPage() {
             {/* RIGHT COLUMN */}
             <div className={styles.rightCol}>
               
+              {/* NEED A BREAK / PAUSE OR SKIP CARD AT TOP */}
+              <div className={styles.breakBox}>
+                <h4>Need to pause or skip?</h4>
+                <p>Skip your next refill cycle or pause anytime with zero cancellation fees.</p>
+                <div className={styles.breakBoxActions}>
+                  <button className={styles.textLinkDark} onClick={() => setModal('skipRefill')}>SKIP NEXT REFILL →</button>
+                  <button className={styles.textLinkDark} onClick={() => setModal('pause')}>PAUSE SUBSCRIPTION →</button>
+                </div>
+              </div>
+
               {/* SUBSCRIBER PERKS BOX */}
               <div className={styles.whyBox}>
                 <h3 className={styles.whyTitle}>Why MediFly Auto-Refill?</h3>
@@ -421,13 +431,6 @@ export default function SubscriptionPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-
-              {/* NEED A BREAK CARD */}
-              <div className={styles.breakBox}>
-                <h4>Need to pause or skip?</h4>
-                <p>Skip your next refill cycle or pause anytime with zero cancellation fees.</p>
-                <button className={styles.textLinkDark} onClick={() => setModal('skipRefill')}>SKIP NEXT REFILL →</button>
               </div>
 
             </div>

@@ -1,14 +1,13 @@
 .pageWrap {
   width: 100%;
-  min-height: 100vh;
   background-color: #f8fafc;
-  padding-bottom: 80px;
+  padding-bottom: 24px;
 }
 
 .main {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 40px 20px 20px 20px;
 }
 
 /* Page Header */
@@ -112,6 +111,7 @@
   display: grid;
   grid-template-columns: 1fr 340px;
   gap: 32px;
+  align-items: start;
 }
 
 /* Member Card */
@@ -566,6 +566,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   padding: 20px;
+  margin-bottom: 24px;
 }
 
 .breakBox h4 {
@@ -578,7 +579,13 @@
 .breakBox p {
   font-size: 0.82rem;
   color: #64748b;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.breakBoxActions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .textLinkDark {
