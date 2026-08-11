@@ -178,14 +178,7 @@ export default function MedicinesPage() {
         {/* Header */}
         <div className={styles.header}>
           <h1>Order Medicines</h1>
-          <p>
-            Browse 250,000+ medicines from licensed pharmacies in PostgreSQL database{' '}
-            {isLiveDb && (
-              <span style={{ fontSize: '0.8rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '12px', fontWeight: 600, marginLeft: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <Database size={14} /> Live Supabase PostgreSQL (Indexed)
-              </span>
-            )}
-          </p>
+          <p>Browse 250,000+ authentic medicines from licensed pharmacies near you</p>
         </div>
 
         {/* Search */}
@@ -233,7 +226,7 @@ export default function MedicinesPage() {
         <div className={styles.results} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
           <span className={styles.resultCount}>
             {loading
-              ? 'Querying PostgreSQL Database…'
+              ? 'Searching medicines…'
               : error
               ? `Error: ${error}`
               : `Showing ${total > 0 ? startIndex + 1 : 0}–${Math.min(startIndex + ITEMS_PER_PAGE, total)} of ${total.toLocaleString()} medicines`}
