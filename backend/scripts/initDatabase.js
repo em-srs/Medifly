@@ -8,16 +8,20 @@ const createDatabaseIfNotExists = async () => {
   const host = process.env.PGHOST || 'localhost';
   const user = process.env.PGUSER || 'postgres';
   const password = process.env.PGPASSWORD || 'postgres';
-  const dbName = process.env.PGDATABASE || 'medifly';
+  const dbName = process.env.PGDATABASE || 'postgres';
   const port = parseInt(process.env.PGPORT || '5432', 10);
 
-  // Connect to default 'postgres' system database
+  const sslConfig = process.env.PGSSL === 'true' || (host && host.includes('supabase'))
+    ? { rejectUnauthorized: false }
+    : false;
+
   const systemPool = new Pool({
     host,
     user,
     password,
     database: 'postgres',
     port,
+    ssl: sslConfig,
   });
 
   try {

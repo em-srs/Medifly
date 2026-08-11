@@ -1,17 +1,26 @@
 const { Pool } = require('pg');
+const dotenv = require('dotenv');
+const path = require('path');
+
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
+const sslConfig = process.env.PGSSL === 'true' || (process.env.PGHOST && process.env.PGHOST.includes('supabase'))
+  ? { rejectUnauthorized: false }
+  : false;
 
 const pool = new Pool({
   host: process.env.PGHOST || 'localhost',
   user: process.env.PGUSER || 'postgres',
   password: process.env.PGPASSWORD || 'postgres',
-  database: process.env.PGDATABASE || 'medifly',
+  database: process.env.PGDATABASE || 'postgres',
   port: parseInt(process.env.PGPORT || '5432', 10),
+  ssl: sslConfig,
 });
 
 const connectDB = async () => {
   try {
     const client = await pool.connect();
-    console.log(`✅ PostgreSQL Connected to database: ${process.env.PGDATABASE || 'medifly'}`);
+    console.log(`✅ PostgreSQL Connected to database: ${process.env.PGDATABASE || 'postgres'} on ${process.env.PGHOST}`);
     client.release();
     await initDb();
   } catch (err) {
@@ -164,7 +173,7 @@ const initDb = async () => {
   `;
   try {
     await pool.query(schemaSql);
-    console.log('✅ PostgreSQL Schema & Tables initialized successfully');
+    console.log('✅ PostgreSQL Schema & Tables initialized successfully on Supabase');
   } catch (err) {
     console.error('❌ Error initializing PostgreSQL tables:', err.message);
   }
