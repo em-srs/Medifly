@@ -9,17 +9,17 @@ const formatMedicine = (row) => ({
   genericName: row.generic_name || row.salt_name || 'Generic Salt Composition',
   saltComposition: row.salt_name ? { _id: row.salt_id, saltName: row.salt_name } : row.salt_id,
   saltId: row.salt_id,
-  category: row.category || 'General',
+  category: row.category || 'allopathy',
   dosageForm: row.dosage_form || 'Tablet',
   strength: row.strength || '',
-  manufacturer: row.manufacturer || 'Licensed Pharmaceutical Partner',
+  manufacturer: row.manufacturer || 'Licensed Partner Pharma',
   scheduleType: row.schedule_type || 'OTC',
   requiresPrescription: row.requires_prescription || false,
   coldChainRequired: row.cold_chain_required || false,
   packSize: row.pack_size || '1 Strip',
   price: parseFloat(row.price || 50),
-  stock: row.stock !== undefined ? row.stock : 100,
-  inventoryCount: row.inventory_count !== undefined ? row.inventory_count : 100,
+  stock: row.stock !== undefined ? row.stock : true,
+  inventoryCount: row.inventory_count !== undefined ? row.inventory_count : 50,
   createdAt: row.created_at
 });
 
@@ -41,13 +41,27 @@ const getCachedCount = async () => {
   return cachedTotalCount;
 };
 
-// @desc    Get all medicines (with fast indexing, fast count & pagination)
+// Category Map to map frontend category IDs to generic salt compositions & categories
+const CATEGORY_SQL_MAP = {
+  'pain-relief': "(m.generic_name ILIKE '%paracetamol%' OR m.generic_name ILIKE '%ibuprofen%' OR m.generic_name ILIKE '%nimesulide%' OR m.generic_name ILIKE '%diclofenac%' OR m.generic_name ILIKE '%aceclofenac%' OR m.category ILIKE '%pain%')",
+  'antibiotic': "(m.generic_name ILIKE '%cef%' OR m.generic_name ILIKE '%amoxicillin%' OR m.generic_name ILIKE '%azithromycin%' OR m.generic_name ILIKE '%cipro%' OR m.generic_name ILIKE '%ofloxacin%' OR m.category ILIKE '%anti%')",
+  'diabetes': "(m.generic_name ILIKE '%metformin%' OR m.generic_name ILIKE '%insulin%' OR m.generic_name ILIKE '%glimepiride%' OR m.generic_name ILIKE '%vildagliptin%' OR m.category ILIKE '%diabet%')",
+  'cardiac': "(m.generic_name ILIKE '%amlodipine%' OR m.generic_name ILIKE '%telmisartan%' OR m.generic_name ILIKE '%atorvastatin%' OR m.generic_name ILIKE '%losartan%' OR m.category ILIKE '%cardiac%')",
+  'allergy': "(m.generic_name ILIKE '%cetirizine%' OR m.generic_name ILIKE '%levocetirizine%' OR m.generic_name ILIKE '%montelukast%' OR m.generic_name ILIKE '%fexofenadine%' OR m.category ILIKE '%allergy%')",
+  'respiratory': "(m.generic_name ILIKE '%salbutamol%' OR m.generic_name ILIKE '%budesonide%' OR m.generic_name ILIKE '%ambroxol%' OR m.category ILIKE '%resp%')",
+  'gastro': "(m.generic_name ILIKE '%pantoprazole%' OR m.generic_name ILIKE '%omeprazole%' OR m.generic_name ILIKE '%rabeprazole%' OR m.generic_name ILIKE '%domperidone%' OR m.category ILIKE '%gastro%')",
+  'cold-flu': "(m.generic_name ILIKE '%paracetamol%' OR m.generic_name ILIKE '%phenylephrine%' OR m.generic_name ILIKE '%chlorpheniramine%' OR m.category ILIKE '%cold%')",
+  'supplement': "(m.generic_name ILIKE '%vitamin%' OR m.generic_name ILIKE '%zinc%' OR m.generic_name ILIKE '%calcium%' OR m.generic_name ILIKE '%multivitamin%' OR m.category ILIKE '%suppl%')",
+  'hormones': "(m.generic_name ILIKE '%thyroxine%' OR m.generic_name ILIKE '%progesterone%' OR m.generic_name ILIKE '%estrogen%' OR m.category ILIKE '%hormon%')"
+};
+
+// @desc    Get all medicines (with fast indexing, category mapping & pagination)
 // @route   GET /api/medicines
 // @access  Public
 exports.getMedicines = async (req, res) => {
   try {
     const keyword = req.query.keyword ? `%${req.query.keyword}%` : null;
-    const category = req.query.category && req.query.category !== 'all' ? req.query.category : null;
+    const category = req.query.category && req.query.category !== 'all' ? req.query.category.toLowerCase() : null;
     const sort = req.query.sort || 'name';
     const page = Math.max(1, Number(req.query.pageNumber) || 1);
     const pageSize = Math.max(1, Math.min(100, Number(req.query.pageSize) || 12));
@@ -64,14 +78,18 @@ exports.getMedicines = async (req, res) => {
     }
 
     if (category) {
-      whereClauses.push(`m.category ILIKE $${paramIndex}`);
-      params.push(`%${category}%`);
-      paramIndex++;
+      if (CATEGORY_SQL_MAP[category]) {
+        whereClauses.push(CATEGORY_SQL_MAP[category]);
+      } else {
+        whereClauses.push(`m.category ILIKE $${paramIndex}`);
+        params.push(`%${category}%`);
+        paramIndex++;
+      }
     }
 
     const whereString = whereClauses.length > 0 ? ` WHERE ${whereClauses.join(' AND ')}` : '';
 
-    // Fast Total Count Optimization
+    // Total Count
     let totalCount;
     if (!keyword && !category) {
       totalCount = await getCachedCount();

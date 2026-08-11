@@ -3,28 +3,36 @@ import { useState, useCallback, memo } from 'react';
 import styles from './MedicineCard.module.css';
 import { TestTubes, Check, Zap, Snowflake, Pill } from 'lucide-react';
 
-
 function MedicineCard({ medicine, onCompare }) {
   const { addItem } = useCart();
-  const m = medicine;
+  const m = medicine || {};
+
+  // Normalize property names from both API and static format
+  const name = m.brandName || m.name || 'Medicine';
+  const salt = m.genericName || m.salt || 'Chemical Salt Composition';
+  const strength = m.strength && m.strength !== 'Standard' ? m.strength : '';
+  const manufacturer = m.manufacturer || 'Licensed Partner Pharma';
+  const price = parseFloat(m.price || 0);
+  const mrp = m.mrp ? parseFloat(m.mrp) : Math.round(price * 1.18 * 100) / 100;
+  const coldChain = m.coldChainRequired || m.coldChain || false;
+  const rxRequired = m.requiresPrescription || m.prescriptionRequired || false;
+  const inStock = m.stock !== false && m.inventoryCount !== 0;
+  const deliveryTimes = Array.isArray(m.deliveryTimes) ? m.deliveryTimes : ['1 Hour Express', 'Same Day'];
+  const image = m.image || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400';
 
   // 'idle' | 'adding' | 'added'
   const [addState, setAddState] = useState('idle');
 
   const handleAdd = useCallback(() => {
-    if (addState !== 'idle') return;
+    if (addState !== 'idle' || !inStock) return;
 
-    // 1. Brief "adding" flash (button shrinks + spins) — 180 ms
     setAddState('adding');
-
     setTimeout(() => {
-      addItem(m);          // actually add to cart
-      setAddState('added');  // show <Check size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Added
-
-      // 2. After 900 ms reset back to idle
+      addItem({ ...m, name, price, image });
+      setAddState('added');
       setTimeout(() => setAddState('idle'), 900);
     }, 180);
-  }, [addState, addItem, m]);
+  }, [addState, inStock, addItem, m, name, price, image]);
 
   const btnClass = [
     'btn btn-sm',
@@ -36,68 +44,66 @@ function MedicineCard({ medicine, onCompare }) {
 
   return (
     <div className={`${styles.card} ${addState === 'added' ? styles.cardFlash : ''}`}>
-      {/* Ripple burst overlay — visible only during "adding" */}
       {addState === 'adding' && <span className={styles.burst} aria-hidden="true" />}
 
-      {m.image ? (
-        <div className={styles.imageWrapper}>
-          <img src={m.image} alt={m.name} className={styles.image} />
-        </div>
-      ) : (
-        <div className={styles.iconWrapper}>
-          <span className={styles.icon}><Pill size={32} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>
-        </div>
-      )}
+      <div className={styles.imageWrapper} style={{ height: '140px', overflow: 'hidden', background: '#f8fafc', position: 'relative' }}>
+        <img 
+          src={image} 
+          alt={name} 
+          className={styles.image} 
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400'; }}
+        />
+      </div>
 
-      <div className={styles.header}>
-        <div className={styles.badges}>
-          {m.coldChain           && <span className={`badge badge-blue ${styles.badge}`}><Snowflake size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Cold Chain</span>}
-          {m.prescriptionRequired && <span className={`badge badge-yellow ${styles.badge}`}>Rx Required</span>}
-          {!m.stock              && <span className={`badge badge-red ${styles.badge}`}>Out of Stock</span>}
+      <div className={styles.header} style={{ padding: '8px 12px 0 12px' }}>
+        <div className={styles.badges} style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+          {coldChain && <span className="badge badge-blue" style={{ fontSize: '0.7rem' }}><Snowflake size={12} /> Cold Chain</span>}
+          {rxRequired && <span className="badge badge-yellow" style={{ fontSize: '0.7rem' }}>Rx Required</span>}
+          {!inStock && <span className="badge badge-red" style={{ fontSize: '0.7rem' }}>Out of Stock</span>}
         </div>
       </div>
 
-      <div className={styles.body}>
-        <h4 className={styles.name}>{m.name}</h4>
-        <p className={styles.salt}>{m.salt} • {m.strength}</p>
-        <p className={styles.manufacturer}>{m.manufacturer}</p>
+      <div className={styles.body} style={{ padding: '8px 12px' }}>
+        <h4 className={styles.name} style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '2px', color: '#0f172a', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name}</h4>
+        <p className={styles.salt} style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '2px', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{salt} {strength ? `• ${strength}` : ''}</p>
+        <p className={styles.manufacturer} style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{manufacturer}</p>
       </div>
 
-      <div className={styles.delivery}>
-        {m.stock ? (
-          m.deliveryTimes.map(t => (
-            <span key={t} className={styles.deliveryTag}><Zap size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> {t}</span>
+      <div className={styles.delivery} style={{ padding: '0 12px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+        {inStock ? (
+          deliveryTimes.map(t => (
+            <span key={t} className={styles.deliveryTag} style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#f1f5f9', borderRadius: '4px', color: '#475569' }}><Zap size={12} style={{ display: 'inline', marginRight: '2px' }} /> {t}</span>
           ))
         ) : (
-          <span className={styles.unavailable}>Check alternatives</span>
+          <span className={styles.unavailable} style={{ fontSize: '0.75rem', color: '#ef4444' }}>Check alternatives</span>
         )}
       </div>
 
-      <div className={styles.footer}>
+      <div className={styles.footer} style={{ padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
         <div className={styles.pricing}>
-          <span className={styles.price}>₹{m.price}</span>
-          {m.mrp > m.price && (
-            <>
-              <span className={styles.mrp}>₹{m.mrp}</span>
-              <span className={styles.discount}>{Math.round((1 - m.price / m.mrp) * 100)}% off</span>
-            </>
+          <span className={styles.price} style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0ea5e9' }}>₹{price.toFixed(2)}</span>
+          {mrp > price && (
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <span className={styles.mrp} style={{ textDecoration: 'line-through', fontSize: '0.75rem', color: '#94a3b8' }}>₹{mrp.toFixed(2)}</span>
+              <span className={styles.discount} style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 600 }}>{Math.round((1 - price / mrp) * 100)}% off</span>
+            </div>
           )}
         </div>
-        <div className={styles.actions}>
+        <div className={styles.actions} style={{ display: 'flex', gap: '4px' }}>
           {onCompare && (
-            <button className="btn btn-ghost btn-sm" onClick={() => onCompare(m)} title="Compare">
-              <TestTubes size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
+            <button className="btn btn-ghost btn-sm" onClick={() => onCompare(m)} title="Compare Salt">
+              <TestTubes size={16} />
             </button>
           )}
           <button
             className={btnClass}
             onClick={handleAdd}
-            disabled={!m.stock || addState !== 'idle'}
-            aria-label={addState === 'added' ? 'Added to cart' : 'Add to cart'}
+            disabled={!inStock || addState !== 'idle'}
           >
-            {addState === 'added'  && <span className={styles.checkIcon}><Check size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>}
-            {addState === 'adding' && <span className={styles.spinnerIcon}>↻</span>}
-            {addState === 'added'  ? 'Added!' : addState === 'adding' ? '…' : m.stock ? '+ Add' : 'N/A'}
+            {addState === 'added'  && <Check size={16} />}
+            {addState === 'adding' && '…'}
+            {addState === 'added'  ? 'Added!' : addState === 'adding' ? '…' : inStock ? '+ Add' : 'N/A'}
           </button>
         </div>
       </div>
