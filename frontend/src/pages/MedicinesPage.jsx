@@ -1,23 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import MedicineCard from '@/components/MedicineCard';
 import styles from './MedicinesPage.module.css';
-import { AlertTriangle, Sparkles, Pill, Search, X, Database, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { 
+  AlertTriangle, Sparkles, Pill, Search, X, Database, ChevronLeft, ChevronRight, Zap, 
+  Shield, Activity, Heart, Wind, Thermometer, Flame, Award 
+} from 'lucide-react';
 
 const ITEMS_PER_PAGE = 12;
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
 const CATEGORIES = [
-  { id: 'all',         label: 'All Medicines',   icon: <Pill size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> },
-  { id: 'pain-relief', label: 'Pain Relief',      icon: '🤕' },
-  { id: 'antibiotic',  label: 'Antibiotics',      icon: '🦠' },
-  { id: 'diabetes',    label: 'Diabetes Care',    icon: '🩸' },
-  { id: 'cardiac',     label: 'Heart Care',       icon: '❤️' },
-  { id: 'allergy',     label: 'Allergy',          icon: '🤧' },
-  { id: 'respiratory', label: 'Respiratory',      icon: '🫁' },
-  { id: 'gastro',      label: 'Stomach Care',     icon: '🫃' },
-  { id: 'cold-flu',    label: 'Cold & Flu',       icon: '🤒' },
-  { id: 'supplement',  label: 'Supplements',      icon: <Sparkles size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> },
-  { id: 'hormones',    label: 'Hormones',         icon: '🎭' },
+  { id: 'all',         label: 'All Medicines',   icon: <Pill size={16} /> },
+  { id: 'pain-relief', label: 'Pain Relief',      icon: <Zap size={16} /> },
+  { id: 'antibiotic',  label: 'Antibiotics',      icon: <Shield size={16} /> },
+  { id: 'diabetes',    label: 'Diabetes Care',    icon: <Activity size={16} /> },
+  { id: 'cardiac',     label: 'Heart Care',       icon: <Heart size={16} /> },
+  { id: 'allergy',     label: 'Allergy',          icon: <Wind size={16} /> },
+  { id: 'respiratory', label: 'Respiratory',      icon: <Thermometer size={16} /> },
+  { id: 'gastro',      label: 'Stomach Care',     icon: <Pill size={16} /> },
+  { id: 'cold-flu',    label: 'Cold & Flu',       icon: <Flame size={16} /> },
+  { id: 'supplement',  label: 'Supplements',      icon: <Sparkles size={16} /> },
+  { id: 'hormones',    label: 'Hormones',         icon: <Award size={16} /> },
 ];
 
 export default function MedicinesPage() {

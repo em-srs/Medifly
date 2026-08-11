@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import styles from './LoginPage.module.css';
 import useScrollReveal from '@/hooks/useScrollReveal';
-import { Shield, Lock, TestTubes, RefreshCw, User, CheckCircle2, Zap, Bike, Lightbulb, Hospital, Mail, Key, Sparkles, AlertCircle } from 'lucide-react';
+import { Shield, Lock, TestTubes, RefreshCw, User, CheckCircle2, Zap, Bike, Lightbulb, Hospital, Mail, Key, Sparkles, AlertCircle, HeartPulse } from 'lucide-react';
 
 export default function LoginPage() {
   const [tab, setTab] = useState('email'); // 'email', 'phone', 'demo'
@@ -87,7 +87,7 @@ export default function LoginPage() {
       <div className={styles.container} ref={pageRef}>
         <div className={styles.left} data-reveal="left" data-delay="0">
           <div className={styles.branding}>
-            <span className={styles.brandIcon}>⚕️</span>
+            <span className={styles.brandIcon}><HeartPulse size={28} /></span>
             <h1>Welcome to <span className="text-gradient">MediFly</span></h1>
             <p>Medicines delivered in 30 minutes. Sign in to access your dashboard, prescriptions, and orders.</p>
           </div>
@@ -113,8 +113,8 @@ export default function LoginPage() {
               <button 
                 type="button" 
                 onClick={() => setTab('demo')} 
-                style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: 'var(--color-primary, #0ea5e9)', background: tab === 'demo' ? '#ffffff' : 'transparent', boxShadow: tab === 'demo' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
-                ⚡ Demo Roles
+                style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: 'var(--color-primary, #0ea5e9)', background: tab === 'demo' ? '#ffffff' : 'transparent', boxShadow: tab === 'demo' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                <Zap size={14} /> Demo Roles
               </button>
               <button 
                 type="button" 

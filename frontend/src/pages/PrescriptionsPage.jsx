@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import styles from './PrescriptionsPage.module.css';
 import useScrollReveal from '@/hooks/useScrollReveal';
-import { Shield, User, Eye, FileText, Home, ShoppingBag, Folder, Info, Settings, CheckCircle2, Check, AlertTriangle, Pill, Calendar, Search, Trash2, X, UserCircle2 } from 'lucide-react';
+import { Shield, User, Eye, FileText, Home, ShoppingBag, Folder, Info, Settings, CheckCircle2, Check, AlertTriangle, Pill, Calendar, Search, Trash2, X, UserCircle2, Clock, Upload, Pencil } from 'lucide-react';
 
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
@@ -26,7 +26,7 @@ const SEED_PATIENTS = [
     relation: 'Spouse',
     dob: '1993-08-22',
     bloodGroup: 'O+',
-    avatar: '👩',
+    avatar: <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />,
     prescriptions: [
       { id: 201, title: 'Dermatology Rx – Skin Clinic', doctor: 'Dr. Kavitha Nair', spec: 'Dermatologist, Fortis Hospital', date: '2026-02-09', status: 'REJECTED', meds: null, notes: 'Prescription expired or stamp missing' },
     ],
@@ -37,7 +37,7 @@ const SEED_PATIENTS = [
     relation: 'Father',
     dob: '1958-03-10',
     bloodGroup: 'A+',
-    avatar: '👴',
+    avatar: <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />,
     prescriptions: [
       { id: 301, title: 'Orthopaedic Rx – Nanavati', doctor: 'Dr. Anil Joshi', spec: 'Orthopaedic Surgeon, Nanavati Hospital', date: '2026-02-22', status: 'VERIFIED', meds: 2, notes: '' },
       { id: 302, title: 'Neurology Follow-up', doctor: 'Dr. Priya Krishnan', spec: 'Neurologist, Hinduja Hospital', date: '2026-03-07', status: 'VERIFIED', meds: 1, notes: 'Repeat prescription approved' },
@@ -47,12 +47,12 @@ const SEED_PATIENTS = [
 
 const RELATIONS = ['Self', 'Spouse', 'Father', 'Mother', 'Son', 'Daughter', 'Sibling', 'Other'];
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
-const RELATION_AVATARS = { Self:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Spouse:'👩', Father:'👴', Mother:'👵', Son:<UserCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Daughter:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Sibling:'🧒', Other:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> };
+const RELATION_AVATARS = { Self:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Spouse:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Father:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Mother:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Son:<UserCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Daughter:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Sibling:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Other:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function statusMeta(status) {
   if (status === 'VERIFIED') return { bg: styles.bgGreen,  txt: styles.textGreen,  badge: styles.badgeGreen,  icon: <Check size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> };
-  if (status === 'PENDING')  return { bg: styles.bgYellow, txt: styles.textYellow, badge: styles.badgeYellow, icon: '⏳' };
+  if (status === 'PENDING')  return { bg: styles.bgYellow, txt: styles.textYellow, badge: styles.badgeYellow, icon: <Clock size={16} /> };
   return                            { bg: styles.bgRed,    txt: styles.textRed,    badge: styles.badgeRed,    icon: '!' };
 }
 
@@ -265,7 +265,7 @@ export default function PrescriptionsPage() {
                   </div>
                   {selectedId === p.id ? (
                     <div className={styles.patientActions}>
-                      <button className={styles.pActionBtn} onClick={e => { e.stopPropagation(); openEditPatient(p); }} title="Edit">✏️</button>
+                      <button className={styles.pActionBtn} onClick={e => { e.stopPropagation(); openEditPatient(p); }} title="Edit"><Pencil size={14} /></button>
                       <button className={styles.pActionBtn} onClick={e => { e.stopPropagation(); confirmDeletePatient(p); }} title="Remove"><Trash2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></button>
                     </div>
                   ) : (
@@ -294,7 +294,7 @@ export default function PrescriptionsPage() {
                 </div>
               </div>
               <button className={`btn btn-primary ${styles.uploadBtn}`} onClick={openUpload}>
-                <span>⬆️</span> Upload Prescription
+                <Upload size={16} /> Upload Prescription
               </button>
             </div>
 
@@ -314,11 +314,11 @@ export default function PrescriptionsPage() {
             {/* Prescription grid */}
             {shownRxs.length === 0 ? (
               <div className={styles.emptyState}>
-                <div className={styles.emptyIcon}>📋</div>
+                <div className={styles.emptyIcon}><FileText size={24} /></div>
                 <h3>No prescriptions yet</h3>
                 <p>{activeTab === 'archived' ? 'No archived prescriptions for this patient.' : `Upload ${selectedPatient?.name}'s first prescription to get started.`}</p>
                 {activeTab === 'active' && (
-                  <button className="btn btn-primary" onClick={openUpload}>⬆️ Upload Prescription</button>
+                  <button className="btn btn-primary" onClick={openUpload}><Upload size={16} /> Upload Prescription</button>
                 )}
               </div>
             ) : (
@@ -337,7 +337,7 @@ export default function PrescriptionsPage() {
                         <h3>{rx.title}</h3>
                         <p>{rx.spec}</p>
                         <div className={styles.metaInfo}>
-                          <p><span><UserCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />‍⚕️</span>{rx.doctor}</p>
+                          <p><span><UserCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>{rx.doctor}</p>
                           <p><span><Calendar size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>Issued: {rx.date}</p>
                           {rx.meds  && <p><span><Pill size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>{rx.meds} medicine{rx.meds > 1 ? 's' : ''} prescribed</p>}
                           {rx.notes && <p className={rx.status === 'REJECTED' ? styles.errorText : ''}><span><FileText size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>{rx.notes}</p>}
@@ -462,7 +462,7 @@ export default function PrescriptionsPage() {
               </>
             ) : (
               <>
-                <span className={styles.dropZoneIcon}>⬆️</span>
+                <span className={styles.dropZoneIcon}><Upload size={24} /></span>
                 <p>Drag & drop or <strong>click to browse</strong></p>
                 <p className={styles.dropZoneHint}>Supports JPG, PNG, PDF (max 10 MB)</p>
               </>
@@ -470,7 +470,7 @@ export default function PrescriptionsPage() {
           </div>
           <div className={styles.modalFooter}>
             <button className="btn btn-primary" onClick={saveRx} disabled={!rxTitle.trim()}>
-              ⬆️ Upload
+              <Upload size={16} /> Upload
             </button>
             <button className={styles.cancelBtn} onClick={closeModal}>Cancel</button>
           </div>
@@ -518,7 +518,7 @@ export default function PrescriptionsPage() {
       {modal === 'deleteRx' && delRx && (
         <Modal title="Delete Prescription" onClose={closeModal}>
           <div className={styles.deleteContent}>
-            <div className={styles.deleteIcon}>📋</div>
+            <div className={styles.deleteIcon}><FileText size={24} /></div>
             <p>Delete <strong>"{delRx.title}"</strong> for {selectedPatient?.name}?</p>
             <p className={styles.deleteNote}>This cannot be undone.</p>
           </div>

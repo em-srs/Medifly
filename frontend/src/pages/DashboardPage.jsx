@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { sampleOrders } from '@/data/mockData';
 import styles from './DashboardPage.module.css';
 import useScrollReveal from '@/hooks/useScrollReveal';
-import { Lock, TestTubes, RefreshCw, Package, CheckCircle2, Sparkles, Pill, Search, Bike } from 'lucide-react';
+import { Lock, TestTubes, RefreshCw, Package, CheckCircle2, Sparkles, Pill, Search, Bike, Clock, FileText } from 'lucide-react';
 
 
 export default function DashboardPage() {
@@ -54,7 +54,7 @@ export default function DashboardPage() {
   const statusIcon = (s) => {
     if (s === 'Delivered') return <CheckCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />;
     if (s === 'In Transit') return <Bike size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />;
-    if (s === 'Processing') return '⏳';
+    if (s === 'Processing') return <Clock size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />;
     return <Package size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />;
   };
 
@@ -62,7 +62,7 @@ export default function DashboardPage() {
     <div className={styles.page}>
       <div className="container" ref={pageRef}>
         <div className={styles.greeting} data-reveal="true" data-delay="0">
-          <h1>Welcome back, <span className="text-gradient">{user.name || 'User'}</span> 👋</h1>
+          <h1>Welcome back, <span className="text-gradient">{user.name || 'User'}</span></h1>
           <p>Manage your orders, prescriptions, and subscriptions from here.</p>
         </div>
 
@@ -101,7 +101,7 @@ export default function DashboardPage() {
             <small>Browse & order</small>
           </Link>
           <Link to="/prescriptions" className={styles.actionCard} data-reveal="scale" data-delay="80">
-            <span className={styles.actionIcon}>📋</span>
+            <span className={styles.actionIcon}><FileText size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>
             <strong>Upload Prescription</strong>
             <small>Quick upload</small>
           </Link>

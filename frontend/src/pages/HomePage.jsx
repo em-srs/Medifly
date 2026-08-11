@@ -179,8 +179,8 @@ export default function HomePage() {
               <div className={styles.heroSocial} data-reveal="true" data-delay="320">
                 <div className={styles.avatars}>
                   <div className={styles.avatar}><UserCircle2 size={24} /></div>
-                  <div className={styles.avatar}>👩‍⚕️</div>
-                  <div className={styles.avatar}>👨‍⚕️</div>
+                  <div className={styles.avatar}><HeartPulse size={20} /></div>
+                  <div className={styles.avatar}><Hospital size={20} /></div>
                 </div>
                 <div className={styles.ratingText}>
                   <strong>1 Lakh+ Patients Served</strong>

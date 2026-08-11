@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import styles from './PrescriptionsPage.module.css';
 import useScrollReveal from '@/hooks/useScrollReveal';
-import { Map, Home, ShoppingBag, Folder, ShoppingCart, User, Settings, Snowflake, MapPin } from 'lucide-react';
+import { Map, Home, ShoppingBag, Folder, ShoppingCart, User, Settings, Snowflake, MapPin, Truck, RefreshCw } from 'lucide-react';
 
 
 const ORDERS = [
@@ -96,8 +96,8 @@ export default function OrdersPage() {
                   <MapPin size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> {order.address}
                 </p>
                 {order.rider && (
-                  <p style={{ margin: '0 0 1rem 0', color: 'var(--teal-700)', fontSize: '0.82rem', fontWeight: '600' }}>
-                    🛵 {order.rider}
+                  <p style={{ margin: '0 0 1rem 0', color: 'var(--teal-700)', fontSize: '0.82rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Truck size={16} /> {order.rider}
                   </p>
                 )}
 
@@ -107,7 +107,7 @@ export default function OrdersPage() {
                   )}
                   <button className="btn btn-outline" style={{ padding: '0.5rem 1.1rem', fontSize: '0.85rem' }}>View Receipt</button>
                   {order.status === 'DELIVERED' && (
-                    <button className="btn btn-outline" style={{ padding: '0.5rem 1.1rem', fontSize: '0.85rem' }}>🔁 Reorder</button>
+                    <button className="btn btn-outline" style={{ padding: '0.5rem 1.1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><RefreshCw size={14} /> Reorder</button>
                   )}
                 </div>
               </div>

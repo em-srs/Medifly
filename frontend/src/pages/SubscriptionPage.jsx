@@ -4,7 +4,7 @@ import useScrollReveal from '@/hooks/useScrollReveal';
 import { 
   Info, Settings, Package, CheckCircle2, Check, AlertTriangle, Pill, Calendar, 
   Lightbulb, Trash2, X, Star, PartyPopper, Bell, Hospital, Zap, ArrowRight, 
-  ShieldCheck, RefreshCw, Clock, Plus, Search, ChevronRight, Download
+  ShieldCheck, RefreshCw, Clock, Plus, Search, ChevronRight, Download, Play, Pause, SkipForward
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
@@ -232,7 +232,7 @@ export default function SubscriptionPage() {
 
           {isPaused && (
             <div className={styles.pausedBanner}>
-              ⏸️ Subscription is currently paused &nbsp;·&nbsp;
+              <Pause size={16} /> Subscription is currently paused &nbsp;·&nbsp;
               <button className={styles.resumeLink} onClick={() => { setIsPaused(false); showToast('Subscription resumed!'); }}>
                 Resume now
               </button>
@@ -287,7 +287,7 @@ export default function SubscriptionPage() {
                     <Settings size={18} /> Manage Subscription
                   </button>
                   <button className={styles.pauseBtn} onClick={() => setModal('pause')}>
-                    {isPaused ? '▶️ Resume Auto-Refill' : '⏸️ Pause Auto-Refill'}
+                    {isPaused ? <><Play size={16} /> Resume Auto-Refill</> : <><Pause size={16} /> Pause Auto-Refill</>}
                   </button>
                 </div>
               </div>
@@ -563,7 +563,7 @@ export default function SubscriptionPage() {
       {modal === 'pause' && (
         <Modal title={isPaused ? 'Resume Auto-Refill' : 'Pause Auto-Refill Subscription'} onClose={closeModal}>
           <div className={styles.pauseContent}>
-            <div className={styles.pauseIcon}>{isPaused ? '▶️' : '⏸️'}</div>
+            <div className={styles.pauseIcon}>{isPaused ? <Play size={32} /> : <Pause size={32} />}</div>
             {isPaused ? (
               <p>Your subscription is currently paused. Resume to restart automatic 30-minute deliveries from your next cycle.</p>
             ) : (
@@ -812,7 +812,7 @@ export default function SubscriptionPage() {
       {modal === 'skipRefill' && (
         <Modal title="Skip Next Auto-Refill Cycle" onClose={closeModal}>
           <div className={styles.pauseContent}>
-            <div className={styles.pauseIcon}>⏭️</div>
+            <div className={styles.pauseIcon}><SkipForward size={32} /></div>
             <p>Your next refill on <strong>Mar 24, 2026</strong> will be skipped. Your subscription will resume automatically in <strong>April 2026</strong>.</p>
             <div className={styles.pauseInfo}>
               <CheckCircle2 size={16} /> Zero charges or penalties for skipped cycles.
