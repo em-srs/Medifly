@@ -1,3 +1,4 @@
+import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -116,6 +117,20 @@ export default function Header() {
               {totalItems > 0 && <span className={styles.badge}>{totalItems}</span>}
             </button>
 
+            {/* Clerk Authentication Controls */}
+            <Show when="signed-out">
+              <SignInButton mode="modal">
+                <button className="btn btn-outline btn-sm" style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>Sign In</button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className="btn btn-primary btn-sm" style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>Sign Up</button>
+              </SignUpButton>
+            </Show>
+
+            <Show when="signed-in">
+              <UserButton showName />
+            </Show>
+
             {/* User Menu */}
             <div className={styles.userMenuWrap} ref={menuRef}>
               <button
@@ -165,7 +180,7 @@ export default function Header() {
                       </div>
                       <div className={styles.dropdownDivider}></div>
                       <Link to="/login" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
-                        <Key size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Login / Register
+                        <Key size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Demo / OTP Login
                       </Link>
                     </>
                   )}
