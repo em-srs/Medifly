@@ -4,12 +4,46 @@
 [![Express Version](https://img.shields.io/badge/express-v5.2.1-blue.svg)](https://expressjs.com/)
 [![React Version](https://img.shields.io/badge/react-v19.0.0-61dafb.svg)](https://react.dev/)
 [![Vite Version](https://img.shields.io/badge/vite-v6.2.0-646cff.svg)](https://vitejs.dev/)
+[![Clerk Auth](https://img.shields.io/badge/auth-Clerk%20SSO%20%26%20Multi--Tenancy-6C47FF.svg)](https://clerk.com/)
 [![PostgreSQL](https://img.shields.io/badge/database-PostgreSQL%20Supabase-blue.svg)](https://supabase.com/)
 [![Socket.io](https://img.shields.io/badge/socket.io-v4.8.3-black.svg)](https://socket.io/)
-[![JWT Auth](https://img.shields.io/badge/auth-JWT%20Bearer-orange.svg)](https://jwt.io/)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
 
-> **Medifly** is an enterprise-grade, real-time emergency healthcare delivery & prescription auto-refill platform built on Node.js Express v5, React 19, Vite 6, and **PostgreSQL (Supabase)**. Medifly hosts over **254,000+ authentic medicines** and **11,800+ bioequivalent chemical salts**, featuring **30-Minute Ultra-Express Delivery**, GIN trigram indexed SQL search, salt comparison matching engine, cold-chain handling, automated subscription refills, and role-based access portals for Patients, Pharmacists, Delivery Riders, and System Administrators.
+> **Medifly** is an enterprise-grade, real-time emergency healthcare delivery & prescription auto-refill platform built on Node.js Express v5, React 19, Vite 6, **Clerk Authentication & Multi-Tenancy**, and **PostgreSQL (Supabase)**. Medifly hosts over **254,000+ authentic medicines** and **11,800+ bioequivalent chemical salts**, featuring **30-Minute Ultra-Express Delivery**, GIN trigram indexed SQL search, salt comparison matching engine, cold-chain handling, automated subscription refills, and role-based access portals for Patients, Pharmacists, Delivery Riders, and System Administrators.
+
+---
+
+## 📌 Current Project Stage & Tech Stack Overview
+
+### 🚀 Current Project Stage: **Phase 4 — Production-Ready Core Platform & Clerk SSO Multi-Tenancy**
+
+| Milestone / Feature | Stage / Status | Description |
+| :--- | :--- | :--- |
+| **Database Architecture** | **Completed** | PostgreSQL on Supabase with 254,000+ indexed medicines (`pg_trgm` GIN trigram indexing) |
+| **Authentication & RBAC** | **Completed** | **Clerk Authentication & Multi-Tenancy** (`@clerk/react` v6, `<SignIn />`, `<SignUp />`, `<UserButton />`, `<Show>`) with role metadata |
+| **Delivery SLA Engine** | **Completed** | **30-Minute Ultra-Express Delivery SLA**, Dynamic Multi-Tier Pricing Engine (`PricingService`), Cold-Chain Insulated Logistics |
+| **Real-Time Dispatch** | **Completed** | WebSockets (`Socket.io`) for live rider GPS location streaming & order status notifications |
+| **Salt Matching Engine** | **Completed** | Bioequivalent chemical salt matching & cost savings sorting (up to 70% cheaper generic alternatives) |
+| **Prescription Vault** | **Completed** | Rx document upload & Pharmacist verification workflow (`PENDING` -> `VERIFIED` / `REJECTED`) |
+| **Auto-Refill Engine** | **Completed** | Automated recurring monthly subscription refills (`CronService`) |
+| **Orders & Invoicing** | **Completed** | Uniform order tracking layout, status badges, and interactive "View Receipt" tax invoice modal popup |
+| **Security & Privacy** | **Completed** | Excluded raw database CSV dumps & sensitive log files from Git tracking with strict `.gitignore` protection |
+
+---
+
+### 🛠️ Comprehensive Tech Stack Summary
+
+| Technology Layer | Stack / Library | Role & Responsibilities |
+| :--- | :--- | :--- |
+| **Frontend Framework** | **React 19, Vite 6, React Router v7** | Single Page Application UI with modular components, smooth page routing, and instant hot-reloading |
+| **UI Styling & Icons** | **Vanilla CSS Modules, Lucide React** | Scoped component styling, vibrant dark/light themes, compact responsive layouts, and icon set |
+| **Authentication & SSO** | **Clerk CLI (v3.1.0), `@clerk/react` v6** | Primary single sign-on authentication provider with Clerk `<SignIn />` / `<SignUp />` widgets & multi-tenancy role switching |
+| **Backend Server** | **Node.js, Express v5.2.1** | REST API web server hosting pricing engines, dispatch logic, and database query handlers |
+| **Database Engine** | **PostgreSQL (Supabase Cloud)** | Relational database hosting 254k+ medicines, 11k+ salts, orders, prescriptions, and users with GIN trigram indexing |
+| **Real-Time WebSockets**| **Socket.io v4.8.3** | Bidirectional real-time WebSocket communication for live rider location streaming and instant order updates |
+| **Background Automation**| **Node-cron** | Automated daily subscription scanner and zero-touch recurring order generation |
+
+---
 
 ---
 
