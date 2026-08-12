@@ -1,108 +1,86 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { useUser, useClerk } from '@clerk/react';
 
 const AuthContext = createContext(null);
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const { user: clerkUser, isLoaded: clerkLoaded, isSignedIn: clerkIsSignedIn } = useUser();
+  const { signOut: clerkSignOut } = useClerk();
+
+  const [localUser, setLocalUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('medifly_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [token, setToken] = useState(localStorage.getItem('medifly_token') || null);
-  const [loading, setLoading] = useState(true);
+  const [activeRole, setActiveRole] = useState(() => {
+    return localStorage.getItem('medifly_active_role') || 'user';
+  });
 
-  // Helper for API requests
-  const apiCall = useCallback(async (endpoint, options = {}) => {
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    };
+  // Derived effective user from Clerk or local fallback
+  const user = useMemo(() => {
+    if (clerkIsSignedIn && clerkUser) {
+      const email = clerkUser.primaryEmailAddress?.emailAddress || `${clerkUser.id}@medifly.com`;
+      const name = clerkUser.fullName || clerkUser.firstName || email.split('@')[0];
+      const roleFromMeta = clerkUser.unsafeMetadata?.role || clerkUser.publicMetadata?.role || localStorage.getItem('medifly_active_role') || 'user';
 
-    const currentToken = localStorage.getItem('medifly_token');
-    if (currentToken) {
-      headers['Authorization'] = `Bearer ${currentToken}`;
+      return {
+        id: clerkUser.id,
+        _id: clerkUser.id,
+        name: name,
+        email: email,
+        phone: clerkUser.primaryPhoneNumber?.phoneNumber || '9876543210',
+        role: roleFromMeta,
+        isSubscribed: true,
+        clerkUser: clerkUser
+      };
     }
+    return localUser;
+  }, [clerkIsSignedIn, clerkUser, localUser]);
 
-    const res = await fetch(`${API_BASE}${endpoint}`, {
-      ...options,
-      headers,
-    });
+  const switchRole = async (newRole) => {
+    localStorage.setItem('medifly_active_role', newRole);
+    setActiveRole(newRole);
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'API Request failed');
-    }
-    return data;
-  }, []);
-
-  // Fetch profile on initial load if token exists
-  useEffect(() => {
-    const initAuth = async () => {
-      const savedToken = localStorage.getItem('medifly_token');
-      const savedUser = localStorage.getItem('medifly_user');
-
-      if (savedToken) {
-        try {
-          const profile = await apiCall('/api/auth/profile');
-          const userData = { ...profile, token: savedToken };
-          setUser(userData);
-          setToken(savedToken);
-          localStorage.setItem('medifly_user', JSON.stringify(userData));
-        } catch (err) {
-          console.warn('Session verification failed, falling back to local user:', err.message);
-          if (savedUser) {
-            setUser(JSON.parse(savedUser));
+    if (clerkUser) {
+      try {
+        await clerkUser.update({
+          unsafeMetadata: {
+            ...clerkUser.unsafeMetadata,
+            role: newRole
           }
-        }
-      } else if (savedUser) {
-        setUser(JSON.parse(savedUser));
+        });
+      } catch (err) {
+        console.warn('Clerk metadata role update:', err.message);
       }
-      setLoading(false);
-    };
+    }
 
-    initAuth();
-  }, [apiCall]);
-
-  const loginWithEmail = async (email, password) => {
-    const data = await apiCall('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-
-    const userData = {
-      id: data._id || data.id,
-      _id: data._id || data.id,
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      token: data.token,
-    };
-
-    setUser(userData);
-    setToken(data.token);
-    localStorage.setItem('medifly_token', data.token);
-    localStorage.setItem('medifly_user', JSON.stringify(userData));
-    return userData;
+    if (localUser) {
+      const updated = { ...localUser, role: newRole };
+      setLocalUser(updated);
+      localStorage.setItem('medifly_user', JSON.stringify(updated));
+    }
   };
 
-  const registerWithEmail = async ({ name, email, password, phone }) => {
-    const data = await apiCall('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ name, email, password, phone }),
-    });
-
-    const userData = {
-      id: data._id || data.id,
-      _id: data._id || data.id,
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      token: data.token,
-    };
-
-    setUser(userData);
-    setToken(data.token);
-    localStorage.setItem('medifly_token', data.token);
-    localStorage.setItem('medifly_user', JSON.stringify(userData));
-    return userData;
+  const logout = async () => {
+    if (clerkIsSignedIn) {
+      try {
+        await clerkSignOut();
+      } catch (err) {
+        console.warn('Clerk signOut error:', err.message);
+      }
+    }
+    setLocalUser(null);
+    setToken(null);
+    localStorage.removeItem('medifly_user');
+    localStorage.removeItem('medifly_token');
+    localStorage.removeItem('medifly_active_role');
   };
 
   const demoLogin = (role = 'user', phone = '9876543210') => {
@@ -126,57 +104,43 @@ export function AuthProvider({ children }) {
       joinedAt: new Date().toISOString()
     };
 
-    setUser(userData);
+    setLocalUser(userData);
     localStorage.setItem('medifly_user', JSON.stringify(userData));
+    localStorage.setItem('medifly_active_role', role);
     return userData;
   };
 
-  const login = (phone, role = 'user') => {
-    return demoLogin(role, phone);
-  };
-
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('medifly_user');
-    localStorage.removeItem('medifly_token');
-  };
-
-  const subscribe = (plan) => {
-    const expiry = new Date();
-    if (plan === 'monthly') {
-      expiry.setMonth(expiry.getMonth() + 1);
-    } else {
-      expiry.setFullYear(expiry.getFullYear() + 1);
-    }
-    const updated = {
-      ...user,
-      isSubscribed: true,
-      subscriptionPlan: plan,
-      subscriptionExpiry: expiry.toISOString()
+  const apiCall = useCallback(async (endpoint, options = {}) => {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
     };
-    setUser(updated);
-    localStorage.setItem('medifly_user', JSON.stringify(updated));
-  };
 
-  const updateUser = (data) => {
-    const updated = { ...user, ...data };
-    setUser(updated);
-    localStorage.setItem('medifly_user', JSON.stringify(updated));
-  };
+    const currentToken = localStorage.getItem('medifly_token');
+    if (currentToken) {
+      headers['Authorization'] = `Bearer ${currentToken}`;
+    }
+
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'API Request failed');
+    }
+    return data;
+  }, []);
 
   return (
     <AuthContext.Provider value={{
       user,
       token,
-      loading,
-      login,
-      loginWithEmail,
-      registerWithEmail,
-      demoLogin,
+      loading: !clerkLoaded,
       logout,
-      subscribe,
-      updateUser,
+      demoLogin,
+      switchRole,
       apiCall
     }}>
       {children}
