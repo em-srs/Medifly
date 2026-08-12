@@ -564,3 +564,111 @@
   cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 .toastClose:hover { background: rgba(255,255,255,0.3); }
+
+/* ─── Orders Tab & Status Chips ──────────────────────────────────────────── */
+.ordersGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.orderCard {
+  background: white;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-xl);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.orderCard:hover {
+  border-color: var(--teal-300);
+  box-shadow: var(--shadow-md);
+}
+
+.orderCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.orderId {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--slate-900);
+}
+
+.orderDate {
+  font-size: 0.8rem;
+  color: var(--slate-500);
+  margin-left: 0.5rem;
+}
+
+.orderStatusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.statusVerified { background: #dcfce7; color: #15803d; }
+.statusProcessing { background: #fef3c7; color: #b45309; }
+.statusTransit { background: #e0f2fe; color: #0369a1; }
+.statusDelivered { background: #d1fae5; color: #047857; }
+
+.orderItems {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.orderItemRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--slate-700);
+}
+
+.orderFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--slate-200);
+}
+
+.orderTotal {
+  font-weight: 700;
+  color: var(--teal-600);
+  font-size: 1.05rem;
+}
+
+.statusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--teal-50);
+  color: var(--teal-700);
+  border: 1px solid var(--teal-200);
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.statusChip:hover {
+  background: var(--teal-100);
+  border-color: var(--teal-300);
+}
+

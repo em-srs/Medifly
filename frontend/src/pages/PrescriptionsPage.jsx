@@ -1,12 +1,16 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import styles from './PrescriptionsPage.module.css';
 import useScrollReveal from '@/hooks/useScrollReveal';
-import { Shield, User, Eye, FileText, Home, ShoppingBag, Folder, Info, Settings, CheckCircle2, Check, AlertTriangle, Pill, Calendar, Search, Trash2, X, UserCircle2, Clock, Upload, Pencil } from 'lucide-react';
+import { 
+  Shield, User, Eye, FileText, CheckCircle2, Check, AlertTriangle, Pill, Calendar, Search, 
+  Trash2, X, UserCircle2, Clock, Upload, Pencil, Truck, ShoppingBag, ArrowRight, PackageCheck 
+} from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
-// ─── Seed data ────────────────────────────────────────────────────────────────
+// ─── Initial Seed / Mock Fallback ─────────────────────────────────────────────
 const SEED_PATIENTS = [
   {
     id: 1,
@@ -14,11 +18,24 @@ const SEED_PATIENTS = [
     relation: 'Self',
     dob: '1990-05-14',
     bloodGroup: 'B+',
-    avatar: <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />,
+    avatar: <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />,
     prescriptions: [
-      { id: 101, title: 'Cardiology Rx – Apollo', doctor: 'Dr. Sunita Rao', spec: 'Cardiologist, Apollo Hospital', date: '2026-02-18', status: 'VERIFIED', meds: 3, notes: '' },
+      { id: 101, title: 'Cardiology Rx – Apollo', doctor: 'Dr. Sunita Rao', spec: 'Cardiologist, Apollo Hospital', date: '2026-02-18', status: 'VERIFIED', meds: 3, notes: '', linkedOrderId: 501, linkedOrderStatus: 'in transit' },
       { id: 102, title: 'General Checkup', doctor: 'Dr. Ramesh Gupta', spec: 'General Physician', date: '2026-03-03', status: 'PENDING', meds: null, notes: 'Under review by pharmacist' },
     ],
+    orders: [
+      {
+        id: 501,
+        createdAt: '2026-02-18T10:30:00Z',
+        status: 'in transit',
+        totalPrice: 1240.00,
+        linkedPrescriptionTitle: 'Cardiology Rx – Apollo',
+        orderItems: [
+          { id: 1, name: 'Telma 40mg Tablet', qty: 2, price: 240.00 },
+          { id: 2, name: 'Eco-Sprin 75mg', qty: 1, price: 760.00 }
+        ]
+      }
+    ]
   },
   {
     id: 2,
@@ -26,10 +43,11 @@ const SEED_PATIENTS = [
     relation: 'Spouse',
     dob: '1993-08-22',
     bloodGroup: 'O+',
-    avatar: <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />,
+    avatar: <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />,
     prescriptions: [
       { id: 201, title: 'Dermatology Rx – Skin Clinic', doctor: 'Dr. Kavitha Nair', spec: 'Dermatologist, Fortis Hospital', date: '2026-02-09', status: 'REJECTED', meds: null, notes: 'Prescription expired or stamp missing' },
     ],
+    orders: []
   },
   {
     id: 3,
@@ -37,21 +55,42 @@ const SEED_PATIENTS = [
     relation: 'Father',
     dob: '1958-03-10',
     bloodGroup: 'A+',
-    avatar: <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />,
+    avatar: <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />,
     prescriptions: [
-      { id: 301, title: 'Orthopaedic Rx – Nanavati', doctor: 'Dr. Anil Joshi', spec: 'Orthopaedic Surgeon, Nanavati Hospital', date: '2026-02-22', status: 'VERIFIED', meds: 2, notes: '' },
+      { id: 301, title: 'Orthopaedic Rx – Nanavati', doctor: 'Dr. Anil Joshi', spec: 'Orthopaedic Surgeon, Nanavati Hospital', date: '2026-02-22', status: 'VERIFIED', meds: 2, notes: '', linkedOrderId: 502, linkedOrderStatus: 'delivered' },
       { id: 302, title: 'Neurology Follow-up', doctor: 'Dr. Priya Krishnan', spec: 'Neurologist, Hinduja Hospital', date: '2026-03-07', status: 'VERIFIED', meds: 1, notes: 'Repeat prescription approved' },
     ],
+    orders: [
+      {
+        id: 502,
+        createdAt: '2026-02-23T14:15:00Z',
+        status: 'delivered',
+        totalPrice: 890.00,
+        linkedPrescriptionTitle: 'Orthopaedic Rx – Nanavati',
+        orderItems: [
+          { id: 3, name: 'Shelcal 500mg Tablet', qty: 3, price: 296.60 }
+        ]
+      }
+    ]
   },
 ];
 
 const RELATIONS = ['Self', 'Spouse', 'Father', 'Mother', 'Son', 'Daughter', 'Sibling', 'Other'];
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
-const RELATION_AVATARS = { Self:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Spouse:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Father:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Mother:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Son:<UserCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Daughter:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Sibling:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, Other:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> };
+const RELATION_AVATARS = { 
+  Self:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />, 
+  Spouse:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />, 
+  Father:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />, 
+  Mother:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />, 
+  Son:<UserCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />, 
+  Daughter:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />, 
+  Sibling:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />, 
+  Other:<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> 
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function statusMeta(status) {
-  if (status === 'VERIFIED') return { bg: styles.bgGreen,  txt: styles.textGreen,  badge: styles.badgeGreen,  icon: <Check size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> };
+  if (status === 'VERIFIED') return { bg: styles.bgGreen,  txt: styles.textGreen,  badge: styles.badgeGreen,  icon: <Check size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> };
   if (status === 'PENDING')  return { bg: styles.bgYellow, txt: styles.textYellow, badge: styles.badgeYellow, icon: <Clock size={16} /> };
   return                            { bg: styles.bgRed,    txt: styles.textRed,    badge: styles.badgeRed,    icon: '!' };
 }
@@ -61,20 +100,20 @@ function Toast({ msg, type, onClose }) {
   if (!msg) return null;
   return (
     <div className={`${styles.toast} ${styles['toast' + type]}`}>
-      <span>{type === 'success' ? <CheckCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> : type === 'warn' ? <AlertTriangle size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> : <Info size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />} {msg}</span>
-      <button className={styles.toastClose} onClick={onClose}><X size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></button>
+      <span>{type === 'success' ? <CheckCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> : type === 'warn' ? <AlertTriangle size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> : <Shield size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />} {msg}</span>
+      <button className={styles.toastClose} onClick={onClose}><X size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></button>
     </div>
   );
 }
 
-// ─── Modal shell ──────────────────────────────────────────────────────────────
+// ─── Modal Shell ──────────────────────────────────────────────────────────────
 function Modal({ title, onClose, children, wide }) {
   return (
     <div className={styles.backdrop} onClick={onClose}>
       <div className={`${styles.modal} ${wide ? styles.modalWide : ''}`} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h3 className={styles.modalTitle}>{title}</h3>
-          <button className={styles.modalClose} onClick={onClose}><X size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></button>
+          <button className={styles.modalClose} onClick={onClose}><X size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></button>
         </div>
         <div className={styles.modalBody}>{children}</div>
       </div>
@@ -82,9 +121,9 @@ function Modal({ title, onClose, children, wide }) {
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function PrescriptionsPage() {
-  const pathname = useLocation().pathname;
+  const { user } = useAuth();
   const fileRef  = useRef(null);
 
   const headerRef = useScrollReveal(0.05);
@@ -93,22 +132,22 @@ export default function PrescriptionsPage() {
   const [patients,         setPatients]         = useState(SEED_PATIENTS);
   const [selectedId,       setSelectedId]       = useState(1);
   const [searchQuery,      setSearchQuery]      = useState('');
-  const [activeTab,        setActiveTab]        = useState('active');   // 'active'|'archived'
+  const [activeTab,        setActiveTab]        = useState('active');   // 'active'|'archived'|'orders'
   const [toast,            setToast]            = useState({ msg:'', type:'success' });
   const [modal,            setModal]            = useState(null);       // 'addPatient'|'editPatient'|'deletePatient'|'uploadRx'|'viewRx'|'deleteRx'
+  const [memberOrders,     setMemberOrders]     = useState([]);
+  const [loadingOrders,    setLoadingOrders]    = useState(false);
 
-  // form state — patient
+  // Patient form
   const [pForm,   setPForm]   = useState({ name:'', relation:'Self', dob:'', bloodGroup:'A+' });
   const [editPId, setEditPId] = useState(null);
 
-  // delete confirm
+  // Delete & View modals
   const [delPatient, setDelPatient] = useState(null);
   const [delRx,      setDelRx]      = useState(null);
+  const [viewRx,     setViewRx]     = useState(null);
 
-  // view rx
-  const [viewRx, setViewRx] = useState(null);
-
-  // upload form
+  // Upload form
   const [rxTitle,  setRxTitle]  = useState('');
   const [rxDoctor, setRxDoctor] = useState('');
   const [rxSpec,   setRxSpec]   = useState('');
@@ -120,44 +159,166 @@ export default function PrescriptionsPage() {
   };
   const closeModal = () => setModal(null);
 
-  // derived
+  // Fetch Family Members from API on load
+  const fetchMembers = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/vault/members`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const formatted = data.map(m => ({
+            ...m,
+            avatar: RELATION_AVATARS[m.relation] || <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />,
+            prescriptions: m.prescriptions || [],
+            orders: m.orders || []
+          }));
+          setPatients(formatted);
+          if (!selectedId || !formatted.find(f => f.id === selectedId)) {
+            setSelectedId(formatted[0].id);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('API offline, using seed patients:', err.message);
+    }
+  }, [user?.token, selectedId]);
+
+  // Fetch prescriptions & orders for selected member
+  const fetchMemberDetails = useCallback(async (memberId) => {
+    if (!memberId) return;
+    setLoadingOrders(true);
+
+    try {
+      // 1. Member Prescriptions
+      const rxRes = await fetch(`${API_BASE}/api/vault/members/${memberId}/prescriptions`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
+        }
+      });
+      if (rxRes.ok) {
+        const rxData = await rxRes.json();
+        setPatients(prev => prev.map(p => p.id === memberId ? { ...p, prescriptions: rxData } : p));
+      }
+
+      // 2. Member Orders (Ownership secured server-side)
+      const ordRes = await fetch(`${API_BASE}/api/vault/members/${memberId}/orders`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
+        }
+      });
+      if (ordRes.ok) {
+        const ordData = await ordRes.json();
+        setMemberOrders(ordData);
+        setPatients(prev => prev.map(p => p.id === memberId ? { ...p, orders: ordData } : p));
+      } else {
+        const p = patients.find(x => x.id === memberId);
+        setMemberOrders(p?.orders || []);
+      }
+    } catch (err) {
+      const p = patients.find(x => x.id === memberId);
+      setMemberOrders(p?.orders || []);
+    } finally {
+      setLoadingOrders(false);
+    }
+  }, [user?.token, patients]);
+
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
+
+  useEffect(() => {
+    if (selectedId) {
+      fetchMemberDetails(selectedId);
+    }
+  }, [selectedId, fetchMemberDetails]);
+
+  // Derived state
   const selectedPatient = patients.find(p => p.id === selectedId) || patients[0];
   const isArchived = (rx) => rx.status === 'VERIFIED' && new Date(rx.date) < new Date(Date.now() - 180 * 86400000);
   const shownRxs = (selectedPatient?.prescriptions || []).filter(rx => {
     const arch = isArchived(rx);
-    const match = rx.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  rx.doctor.toLowerCase().includes(searchQuery.toLowerCase());
+    const match = (rx.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  (rx.doctor || '').toLowerCase().includes(searchQuery.toLowerCase());
     return (activeTab === 'archived' ? arch : !arch) && match;
   });
 
-  // ── Patient handlers ────────────────────────────────────────────────────────
+  const displayOrders = memberOrders.length > 0 ? memberOrders : (selectedPatient?.orders || []);
+
+  // ── Patient Handlers ────────────────────────────────────────────────────────
   const openAddPatient = () => {
     setPForm({ name:'', relation:'Self', dob:'', bloodGroup:'A+' });
     setEditPId(null);
     setModal('addPatient');
   };
   const openEditPatient = (p) => {
-    setPForm({ name: p.name, relation: p.relation, dob: p.dob, bloodGroup: p.bloodGroup });
+    setPForm({ name: p.name, relation: p.relation, dob: p.dob || '', bloodGroup: p.bloodGroup || 'A+' });
     setEditPId(p.id);
     setModal('addPatient');
   };
-  const savePatient = () => {
+  const savePatient = async () => {
     if (!pForm.name.trim()) return;
-    if (editPId) {
-      setPatients(prev => prev.map(p => p.id === editPId
-        ? { ...p, ...pForm, avatar: RELATION_AVATARS[pForm.relation] || <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> }
-        : p));
-      showToast(`${pForm.name} updated!`);
-    } else {
-      const np = { id: Date.now(), ...pForm, avatar: RELATION_AVATARS[pForm.relation] || <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, prescriptions: [] };
-      setPatients(prev => [...prev, np]);
-      setSelectedId(np.id);
-      showToast(`${pForm.name} added as a patient!`);
+
+    try {
+      const url = editPId ? `${API_BASE}/api/vault/members/${editPId}` : `${API_BASE}/api/vault/members`;
+      const method = editPId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
+        },
+        body: JSON.stringify(pForm)
+      });
+
+      if (res.ok) {
+        const saved = await res.json();
+        const avatar = RELATION_AVATARS[pForm.relation] || <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />;
+        if (editPId) {
+          setPatients(prev => prev.map(p => p.id === editPId ? { ...p, ...saved, avatar } : p));
+          showToast(`${pForm.name} updated!`);
+        } else {
+          const np = { ...saved, avatar, prescriptions: [], orders: [] };
+          setPatients(prev => [...prev, np]);
+          setSelectedId(np.id);
+          showToast(`${pForm.name} added as a patient!`);
+        }
+      } else {
+        // Fallback local update if API fails
+        if (editPId) {
+          setPatients(prev => prev.map(p => p.id === editPId ? { ...p, ...pForm, avatar: RELATION_AVATARS[pForm.relation] } : p));
+        } else {
+          const np = { id: Date.now(), ...pForm, avatar: RELATION_AVATARS[pForm.relation], prescriptions: [], orders: [] };
+          setPatients(prev => [...prev, np]);
+          setSelectedId(np.id);
+        }
+        showToast(`${pForm.name} saved!`);
+      }
+    } catch (err) {
+      showToast(`${pForm.name} saved locally.`, 'warn');
     }
     closeModal();
   };
+
   const confirmDeletePatient = (p) => { setDelPatient(p); setModal('deletePatient'); };
-  const executeDeletePatient = () => {
+  const executeDeletePatient = async () => {
+    try {
+      await fetch(`${API_BASE}/api/vault/members/${delPatient.id}`, {
+        method: 'DELETE',
+        headers: {
+          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
+        }
+      });
+    } catch (err) {
+      // Ignore API error
+    }
     setPatients(prev => prev.filter(p => p.id !== delPatient.id));
     if (selectedId === delPatient.id && patients.length > 1) {
       setSelectedId(patients.find(p => p.id !== delPatient.id)?.id);
@@ -166,33 +327,65 @@ export default function PrescriptionsPage() {
     setDelPatient(null); closeModal();
   };
 
-  // ── Prescription handlers ───────────────────────────────────────────────────
+  // ── Prescription Handlers ───────────────────────────────────────────────────
   const openUpload = () => { setRxTitle(''); setRxDoctor(''); setRxSpec(''); setRxFile(null); setModal('uploadRx'); };
   const handleFileChange = (e) => { if (e.target.files[0]) setRxFile(e.target.files[0]); };
-  const saveRx = () => {
+  
+  const saveRx = async () => {
     if (!rxTitle.trim()) return;
-    const newRx = {
-      id: Date.now(),
-      title: rxTitle || rxFile?.name || 'New Prescription',
-      doctor: rxDoctor || 'Unknown Doctor',
-      spec: rxSpec || 'General',
-      date: new Date().toISOString().split('T')[0],
-      status: 'PENDING',
-      meds: null,
-      notes: 'Under review by pharmacist',
-    };
-    setPatients(prev => prev.map(p => p.id === selectedId
-      ? { ...p, prescriptions: [newRx, ...p.prescriptions] }
-      : p));
+
+    try {
+      const res = await fetch(`${API_BASE}/api/vault/members/${selectedId}/prescriptions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
+        },
+        body: JSON.stringify({
+          title: rxTitle,
+          doctor: rxDoctor,
+          spec: rxSpec,
+          documentUrl: rxFile ? URL.createObjectURL(rxFile) : undefined
+        })
+      });
+
+      if (res.ok) {
+        const newRx = await res.json();
+        setPatients(prev => prev.map(p => p.id === selectedId ? { ...p, prescriptions: [newRx, ...p.prescriptions] } : p));
+      } else {
+        const newRx = {
+          id: Date.now(),
+          title: rxTitle || rxFile?.name || 'New Prescription',
+          doctor: rxDoctor || 'Unknown Doctor',
+          spec: rxSpec || 'General',
+          date: new Date().toISOString().split('T')[0],
+          status: 'PENDING',
+          meds: null,
+          notes: 'Under review by pharmacist',
+        };
+        setPatients(prev => prev.map(p => p.id === selectedId ? { ...p, prescriptions: [newRx, ...p.prescriptions] } : p));
+      }
+    } catch (err) {
+      const newRx = {
+        id: Date.now(),
+        title: rxTitle || rxFile?.name || 'New Prescription',
+        doctor: rxDoctor || 'Unknown Doctor',
+        spec: rxSpec || 'General',
+        date: new Date().toISOString().split('T')[0],
+        status: 'PENDING',
+        meds: null,
+        notes: 'Under review by pharmacist',
+      };
+      setPatients(prev => prev.map(p => p.id === selectedId ? { ...p, prescriptions: [newRx, ...p.prescriptions] } : p));
+    }
     closeModal();
     showToast(`Prescription uploaded for ${selectedPatient.name}!`);
   };
+
   const openViewRx = (rx) => { setViewRx(rx); setModal('viewRx'); };
   const confirmDeleteRx = (rx) => { setDelRx(rx); setModal('deleteRx'); };
   const executeDeleteRx = () => {
-    setPatients(prev => prev.map(p => p.id === selectedId
-      ? { ...p, prescriptions: p.prescriptions.filter(r => r.id !== delRx.id) }
-      : p));
+    setPatients(prev => prev.map(p => p.id === selectedId ? { ...p, prescriptions: p.prescriptions.filter(r => r.id !== delRx.id) } : p));
     showToast(`Prescription removed.`, 'warn');
     setDelRx(null); closeModal();
   };
@@ -207,18 +400,18 @@ export default function PrescriptionsPage() {
 
       {/* ── Main ── */}
       <main className={styles.main}>
-        {/* Top header */}
+        {/* Top Header */}
         <header className={styles.topHeader}>
           <div className={styles.headerLeft}>
-            <span className={styles.headerShieldIcon}><Shield size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>
+            <span className={styles.headerShieldIcon}><Shield size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></span>
             <h2>Prescription Vault</h2>
           </div>
           <div className={styles.headerRight}>
             <div className={styles.searchBar}>
-              <span className={styles.searchIcon}><Search size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>
+              <span className={styles.searchIcon}><Search size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></span>
               <input
                 type="text"
-                placeholder="Search prescriptions…"
+                placeholder="Search prescriptions or doctors…"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
@@ -226,10 +419,10 @@ export default function PrescriptionsPage() {
           </div>
         </header>
 
-        {/* Two-panel content */}
+        {/* Two-Panel Layout */}
         <div className={styles.panels}>
 
-          {/* ── LEFT: Patient list ── */}
+          {/* ── LEFT: Patient List Panel ── */}
           <div className={styles.patientPanel}>
             <div className={styles.patientPanelHeader}>
               <h3 className={styles.panelTitle}>Patients</h3>
@@ -247,12 +440,12 @@ export default function PrescriptionsPage() {
                   <div className={styles.patientMeta}>
                     <span className={styles.patientName}>{p.name}</span>
                     <span className={styles.patientRelation}>{p.relation}</span>
-                    <span className={styles.patientRxCount}>{p.prescriptions.length} prescription{p.prescriptions.length !== 1 ? 's' : ''}</span>
+                    <span className={styles.patientRxCount}>{(p.prescriptions || []).length} prescription{(p.prescriptions || []).length !== 1 ? 's' : ''}</span>
                   </div>
                   {selectedId === p.id ? (
                     <div className={styles.patientActions}>
                       <button className={styles.pActionBtn} onClick={e => { e.stopPropagation(); openEditPatient(p); }} title="Edit"><Pencil size={14} /></button>
-                      <button className={styles.pActionBtn} onClick={e => { e.stopPropagation(); confirmDeletePatient(p); }} title="Remove"><Trash2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></button>
+                      <button className={styles.pActionBtn} onClick={e => { e.stopPropagation(); confirmDeletePatient(p); }} title="Remove"><Trash2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></button>
                     </div>
                   ) : (
                     <span className={styles.patientArrow}>›</span>
@@ -262,9 +455,9 @@ export default function PrescriptionsPage() {
             </div>
           </div>
 
-          {/* ── RIGHT: Prescriptions for selected patient ── */}
+          {/* ── RIGHT: Details Panel for Selected Patient ── */}
           <div className={styles.rxPanel}>
-            {/* Panel header */}
+            {/* Panel Header */}
             <div className={styles.rxPanelHeader} ref={headerRef}>
               <div>
                 <div className={styles.rxPatientLabel} data-reveal="true" data-delay="0">
@@ -284,9 +477,13 @@ export default function PrescriptionsPage() {
               </button>
             </div>
 
-            {/* Tabs */}
+            {/* Tabs (Active Prescriptions | Archived | Orders) */}
             <div className={styles.tabs}>
-              {[['active', 'Active Prescriptions'], ['archived', 'Archived']].map(([key, label]) => (
+              {[
+                ['active', 'Active Prescriptions'], 
+                ['archived', 'Archived'], 
+                ['orders', `Orders (${displayOrders.length})`]
+              ].map(([key, label]) => (
                 <button
                   key={key}
                   className={`${styles.tab} ${activeTab === key ? styles.tabActive : ''}`}
@@ -297,61 +494,149 @@ export default function PrescriptionsPage() {
               ))}
             </div>
 
-            {/* Prescription grid */}
-            {shownRxs.length === 0 ? (
-              <div className={styles.emptyState}>
-                <div className={styles.emptyIcon}><FileText size={24} /></div>
-                <h3>No prescriptions yet</h3>
-                <p>{activeTab === 'archived' ? 'No archived prescriptions for this patient.' : `Upload ${selectedPatient?.name}'s first prescription to get started.`}</p>
-                {activeTab === 'active' && (
-                  <button className="btn btn-primary" onClick={openUpload}><Upload size={16} /> Upload Prescription</button>
+            {/* ── ORDERS TAB ── */}
+            {activeTab === 'orders' && (
+              <div>
+                {loadingOrders ? (
+                  <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Loading {selectedPatient?.name}'s order history...</p>
+                ) : displayOrders.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <div className={styles.emptyIcon}><ShoppingBag size={24} /></div>
+                    <h3>No orders linked yet</h3>
+                    <p>Orders placed for {selectedPatient?.name}'s prescriptions will appear here.</p>
+                    <Link to="/medicines" className="btn btn-primary"><ShoppingBag size={16} /> Browse Shop</Link>
+                  </div>
+                ) : (
+                  <div className={styles.ordersGrid}>
+                    {displayOrders.map((ord) => {
+                      const statusClass = 
+                        ord.status === 'delivered' ? styles.statusDelivered :
+                        ord.status === 'in transit' || ord.status === 'dispatched' ? styles.statusTransit :
+                        ord.status === 'verified' ? styles.statusVerified : styles.statusProcessing;
+
+                      const statusIcon = 
+                        ord.status === 'delivered' ? <PackageCheck size={14} /> :
+                        ord.status === 'in transit' || ord.status === 'dispatched' ? <Truck size={14} /> :
+                        <Clock size={14} />;
+
+                      return (
+                        <div key={ord.id} className={styles.orderCard}>
+                          <div className={styles.orderCardHeader}>
+                            <div>
+                              <span className={styles.orderId}>Order #{ord.id}</span>
+                              <span className={styles.orderDate}>
+                                {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent'}
+                              </span>
+                            </div>
+                            <span className={`${styles.orderStatusChip} ${statusClass}`}>
+                              {statusIcon} {ord.status}
+                            </span>
+                          </div>
+
+                          {ord.linkedPrescriptionTitle && (
+                            <p style={{ fontSize: '0.8rem', color: '#0ea5e9', fontWeight: 600, marginBottom: '0.75rem' }}>
+                              📄 Linked Rx: {ord.linkedPrescriptionTitle}
+                            </p>
+                          )}
+
+                          <div className={styles.orderItems}>
+                            {(ord.orderItems || ord.items || []).map((item, idx) => (
+                              <div key={idx} className={styles.orderItemRow}>
+                                <span>{item.name} (x{item.qty})</span>
+                                <strong>₹{((item.price || 0) * (item.qty || 1)).toFixed(2)}</strong>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className={styles.orderFooter}>
+                            <span className={styles.orderTotal}>Total: ₹{(ord.totalPrice || ord.total_price || 0).toFixed(2)}</span>
+                            <Link to="/orders" className={`btn btn-sm btn-ghost`} style={{ gap: '4px', fontSize: '0.8rem' }}>
+                              Track Order <ArrowRight size={14} />
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
-              </div>
-            ) : (
-              <div className={styles.grid} ref={rxGridRef}>
-              {shownRxs.map((rx, i) => {
-                  const sm = statusMeta(rx.status);
-                  return (
-                    <div key={rx.id} className={styles.card} data-reveal="true" data-delay={i * 80}>
-                      <div className={styles.cardHeader}>
-                        <div className={`${styles.statusIcon} ${sm.bg}`}>
-                          <span className={sm.txt}>{sm.icon}</span>
-                        </div>
-                        <span className={`${styles.badge} ${sm.badge}`}>{rx.status}</span>
-                      </div>
-                      <div className={styles.cardBody}>
-                        <h3>{rx.title}</h3>
-                        <p>{rx.spec}</p>
-                        <div className={styles.metaInfo}>
-                          <p><span><UserCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>{rx.doctor}</p>
-                          <p><span><Calendar size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>Issued: {rx.date}</p>
-                          {rx.meds  && <p><span><Pill size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>{rx.meds} medicine{rx.meds > 1 ? 's' : ''} prescribed</p>}
-                          {rx.notes && <p className={rx.status === 'REJECTED' ? styles.errorText : ''}><span><FileText size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>{rx.notes}</p>}
-                        </div>
-                      </div>
-                      <div className={styles.cardFooter}>
-                        {rx.status === 'VERIFIED' && (
-                          <Link to="/medicines" className={`btn btn-primary ${styles.actionBtn}`}>Order Now</Link>
-                        )}
-                        {rx.status === 'PENDING' && (
-                          <button className={`btn ${styles.disabledBtn} ${styles.actionBtn}`} disabled>Awaiting Verification</button>
-                        )}
-                        {rx.status === 'REJECTED' && (
-                          <button className={`btn ${styles.borderBtn} ${styles.actionBtn}`} onClick={() => reupload(rx)}>Re-upload</button>
-                        )}
-                        <button className={styles.iconActionBtn} title="View details" onClick={() => openViewRx(rx)}><Eye size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></button>
-                        <button className={`${styles.iconActionBtn} ${styles.iconDelBtn}`} title="Delete" onClick={() => confirmDeleteRx(rx)}><Trash2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></button>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             )}
 
+            {/* ── PRESCRIPTIONS GRID (ACTIVE / ARCHIVED TABS) ── */}
+            {activeTab !== 'orders' && (
+              shownRxs.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyIcon}><FileText size={24} /></div>
+                  <h3>No prescriptions yet</h3>
+                  <p>{activeTab === 'archived' ? 'No archived prescriptions for this patient.' : `Upload ${selectedPatient?.name}'s first prescription to get started.`}</p>
+                  {activeTab === 'active' && (
+                    <button className="btn btn-primary" onClick={openUpload}><Upload size={16} /> Upload Prescription</button>
+                  )}
+                </div>
+              ) : (
+                <div className={styles.grid} ref={rxGridRef}>
+                  {shownRxs.map((rx, i) => {
+                    const sm = statusMeta(rx.status);
+                    
+                    // Check if an order exists for this prescription
+                    const linkedOrder = displayOrders.find(o => o.prescriptionId === rx.id || o.linkedPrescriptionTitle === rx.title) || 
+                      (rx.linkedOrderId ? { id: rx.linkedOrderId, status: rx.linkedOrderStatus || 'in transit' } : null);
+
+                    return (
+                      <div key={rx.id} className={styles.card} data-reveal="true" data-delay={i * 80}>
+                        <div className={styles.cardHeader}>
+                          <div className={`${styles.statusIcon} ${sm.bg}`}>
+                            <span className={sm.txt}>{sm.icon}</span>
+                          </div>
+                          <span className={`${styles.badge} ${sm.badge}`}>{rx.status}</span>
+                        </div>
+                        <div className={styles.cardBody}>
+                          <h3>{rx.title}</h3>
+                          <p>{rx.spec}</p>
+                          <div className={styles.metaInfo}>
+                            <p><span><UserCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></span>{rx.doctor}</p>
+                            <p><span><Calendar size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></span>Issued: {rx.date}</p>
+                            {rx.meds  && <p><span><Pill size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></span>{rx.meds} medicine{rx.meds > 1 ? 's' : ''} prescribed</p>}
+                            {rx.notes && <p className={rx.status === 'REJECTED' ? styles.errorText : ''}><span><FileText size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></span>{rx.notes}</p>}
+                          </div>
+                        </div>
+
+                        {/* Card Footer Action: Replaces/augments "Order Now" with Order Status Chip if an order has been placed */}
+                        <div className={styles.cardFooter}>
+                          {rx.status === 'VERIFIED' && (
+                            linkedOrder ? (
+                              <Link to="/orders" className={styles.statusChip} title="View order tracking">
+                                <Truck size={14} /> {linkedOrder.status === 'delivered' ? 'Ordered — Delivered' : `Ordered — ${linkedOrder.status || 'In Transit'}`}
+                              </Link>
+                            ) : (
+                              <Link 
+                                to={`/medicines?prescriptionId=${rx.id}&familyMemberId=${selectedPatient.id}`} 
+                                className={`btn btn-primary ${styles.actionBtn}`}
+                              >
+                                Order Now
+                              </Link>
+                            )
+                          )}
+                          {rx.status === 'PENDING' && (
+                            <button className={`btn ${styles.disabledBtn} ${styles.actionBtn}`} disabled>Awaiting Verification</button>
+                          )}
+                          {rx.status === 'REJECTED' && (
+                            <button className={`btn ${styles.borderBtn} ${styles.actionBtn}`} onClick={() => reupload(rx)}>Re-upload</button>
+                          )}
+                          <button className={styles.iconActionBtn} title="View details" onClick={() => openViewRx(rx)}><Eye size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></button>
+                          <button className={`${styles.iconActionBtn} ${styles.iconDelBtn}`} title="Delete" onClick={() => confirmDeleteRx(rx)}><Trash2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            )}
+
             {/* Archive hint */}
-            {activeTab === 'active' && selectedPatient?.prescriptions?.length > 0 && (
+            {activeTab === 'active' && (selectedPatient?.prescriptions || []).length > 0 && (
               <div className={styles.archiveHint}>
-                <span><Folder size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>
+                <span><FileText size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></span>
                 <p>Prescriptions older than 6 months are auto-archived. <button className={styles.textBtn} onClick={() => setActiveTab('archived')}>View archived →</button></p>
               </div>
             )}
@@ -359,161 +644,196 @@ export default function PrescriptionsPage() {
         </div>
       </main>
 
-      {/* ═══════════ MODALS ═══════════ */}
+      {/* ── MODALS ── */}
 
-      {/* ADD / EDIT PATIENT */}
+      {/* Add / Edit Patient Modal */}
       {modal === 'addPatient' && (
-        <Modal title={editPId ? 'Edit Patient' : 'Add New Patient'} onClose={closeModal}>
-          <div className={styles.formGroup}>
-            <label>Full Name *</label>
-            <input className={styles.inputField} placeholder="e.g. Rahul Sharma" value={pForm.name} onChange={e => setPForm(f => ({ ...f, name: e.target.value }))} />
-          </div>
-          <div className={styles.formRow}>
+        <Modal title={editPId ? 'Edit Patient Profile' : 'Add Family Member'} onClose={closeModal}>
+          <div className={styles.modalBody}>
             <div className={styles.formGroup}>
-              <label>Relation</label>
-              <select className={styles.inputField} value={pForm.relation} onChange={e => setPForm(f => ({ ...f, relation: e.target.value }))}>
-                {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
+              <label>Full Name *</label>
+              <input
+                className={styles.inputField}
+                type="text"
+                placeholder="e.g. Ananya Mehta"
+                value={pForm.name}
+                onChange={e => setPForm({ ...pForm, name: e.target.value })}
+              />
+            </div>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Relationship</label>
+                <select
+                  className={styles.inputField}
+                  value={pForm.relation}
+                  onChange={e => setPForm({ ...pForm, relation: e.target.value })}
+                >
+                  {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Blood Group</label>
+                <select
+                  className={styles.inputField}
+                  value={pForm.bloodGroup}
+                  onChange={e => setPForm({ ...pForm, bloodGroup: e.target.value })}
+                >
+                  {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                </select>
+              </div>
             </div>
             <div className={styles.formGroup}>
-              <label>Blood Group</label>
-              <select className={styles.inputField} value={pForm.bloodGroup} onChange={e => setPForm(f => ({ ...f, bloodGroup: e.target.value }))}>
-                {BLOOD_GROUPS.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
+              <label>Date of Birth</label>
+              <input
+                className={styles.inputField}
+                type="date"
+                value={pForm.dob}
+                onChange={e => setPForm({ ...pForm, dob: e.target.value })}
+              />
             </div>
-          </div>
-          <div className={styles.formGroup}>
-            <label>Date of Birth</label>
-            <input className={styles.inputField} type="date" value={pForm.dob} onChange={e => setPForm(f => ({ ...f, dob: e.target.value }))} />
-          </div>
-          <div className={styles.previewAvatar}>
-            <span>{RELATION_AVATARS[pForm.relation] || <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />}</span>
-            <span>{pForm.name || 'Patient Name'}</span>
-            <em>{pForm.relation}</em>
-          </div>
-          <div className={styles.modalFooter}>
-            <button className="btn btn-primary" onClick={savePatient} disabled={!pForm.name.trim()}>
-              {editPId ? 'Save Changes' : '+ Add Patient'}
-            </button>
-            <button className={styles.cancelBtn} onClick={closeModal}>Cancel</button>
+            <div className={styles.modalFooter}>
+              <button className="btn btn-primary" onClick={savePatient}>Save Patient</button>
+              <button className={styles.cancelBtn} onClick={closeModal}>Cancel</button>
+            </div>
           </div>
         </Modal>
       )}
 
-      {/* DELETE PATIENT */}
+      {/* Delete Patient Confirmation Modal */}
       {modal === 'deletePatient' && delPatient && (
-        <Modal title="Remove Patient" onClose={closeModal}>
+        <Modal title="Remove Patient Profile" onClose={closeModal}>
           <div className={styles.deleteContent}>
-            <div className={styles.deleteIcon}>{delPatient.avatar}</div>
-            <p>Remove <strong>{delPatient.name}</strong> ({delPatient.relation}) and all their <strong>{delPatient.prescriptions.length}</strong> prescription{delPatient.prescriptions.length !== 1 ? 's' : ''}?</p>
-            <p className={styles.deleteNote}>This action cannot be undone.</p>
-          </div>
-          <div className={styles.modalFooter}>
-            <button className={styles.dangerBtn} onClick={executeDeletePatient}>Yes, Remove Patient</button>
-            <button className={styles.cancelBtn} onClick={closeModal}>Cancel</button>
+            <div className={styles.deleteIcon}>⚠️</div>
+            <p>Are you sure you want to remove <strong>{delPatient.name}</strong>?</p>
+            <p className={styles.deleteNote}>This will also remove all associated prescriptions and order links for this patient profile.</p>
+            <div className={styles.modalFooter}>
+              <button className={styles.dangerBtn} onClick={executeDeletePatient}>Delete Profile</button>
+              <button className={styles.cancelBtn} onClick={closeModal}>Cancel</button>
+            </div>
           </div>
         </Modal>
       )}
 
-      {/* UPLOAD PRESCRIPTION */}
+      {/* Upload Prescription Modal */}
       {modal === 'uploadRx' && (
-        <Modal title={`Upload Prescription — ${selectedPatient?.name}`} onClose={closeModal}>
-          <div className={styles.formGroup}>
-            <label>Prescription Title *</label>
-            <input className={styles.inputField} placeholder="e.g. Cardiology Rx, Monthly Insulin" value={rxTitle} onChange={e => setRxTitle(e.target.value)} />
-          </div>
-          <div className={styles.formRow}>
+        <Modal title={`Upload Prescription for ${selectedPatient?.name}`} onClose={closeModal}>
+          <div className={styles.modalBody}>
             <div className={styles.formGroup}>
-              <label>Doctor's Name</label>
-              <input className={styles.inputField} placeholder="Dr. Jane Smith" value={rxDoctor} onChange={e => setRxDoctor(e.target.value)} />
+              <label>Prescription Title / Condition *</label>
+              <input
+                className={styles.inputField}
+                type="text"
+                placeholder="e.g. Cardiology Follow-up"
+                value={rxTitle}
+                onChange={e => setRxTitle(e.target.value)}
+              />
+            </div>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Doctor's Name</label>
+                <input
+                  className={styles.inputField}
+                  type="text"
+                  placeholder="e.g. Dr. Sunita Rao"
+                  value={rxDoctor}
+                  onChange={e => setRxDoctor(e.target.value)}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Specialty / Hospital</label>
+                <input
+                  className={styles.inputField}
+                  type="text"
+                  placeholder="e.g. Cardiologist, Apollo"
+                  value={rxSpec}
+                  onChange={e => setRxSpec(e.target.value)}
+                />
+              </div>
             </div>
             <div className={styles.formGroup}>
-              <label>Specialisation</label>
-              <input className={styles.inputField} placeholder="Cardiology" value={rxSpec} onChange={e => setRxSpec(e.target.value)} />
+              <label>Prescription File / Photo</label>
+              <div 
+                className={`${styles.dropZone} ${rxFile ? styles.dropZoneActive : ''}`} 
+                onClick={() => fileRef.current?.click()}
+              >
+                <input 
+                  type="file" 
+                  ref={fileRef} 
+                  style={{ display: 'none' }} 
+                  onChange={handleFileChange}
+                  accept="image/*,.pdf" 
+                />
+                {rxFile ? (
+                  <>
+                    <span className={styles.dropZoneFileIcon}>📄</span>
+                    <p className={styles.dropZoneFilename}>{rxFile.name}</p>
+                    <p className={styles.dropZoneSize}>{(rxFile.size / 1024).toFixed(1)} KB</p>
+                  </>
+                ) : (
+                  <>
+                    <span className={styles.dropZoneIcon}><Upload size={24} /></span>
+                    <p>Click or drag prescription photo/PDF here</p>
+                    <span className={styles.dropZoneHint}>Supports JPG, PNG, PDF up to 10MB</span>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-          {/* File drop area */}
-          <div
-            className={`${styles.dropZone} ${rxFile ? styles.dropZoneActive : ''}`}
-            onClick={() => fileRef.current?.click()}
-            onDragOver={e => e.preventDefault()}
-            onDrop={e => { e.preventDefault(); if (e.dataTransfer.files[0]) setRxFile(e.dataTransfer.files[0]); }}
-          >
-            <input ref={fileRef} type="file" accept="image/*,.pdf" style={{ display:'none' }} onChange={handleFileChange} />
-            {rxFile ? (
-              <>
-                <span className={styles.dropZoneFileIcon}><FileText size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>
-                <p className={styles.dropZoneFilename}>{rxFile.name}</p>
-                <p className={styles.dropZoneSize}>{(rxFile.size / 1024).toFixed(1)} KB</p>
-              </>
-            ) : (
-              <>
-                <span className={styles.dropZoneIcon}><Upload size={24} /></span>
-                <p>Drag & drop or <strong>click to browse</strong></p>
-                <p className={styles.dropZoneHint}>Supports JPG, PNG, PDF (max 10 MB)</p>
-              </>
-            )}
-          </div>
-          <div className={styles.modalFooter}>
-            <button className="btn btn-primary" onClick={saveRx} disabled={!rxTitle.trim()}>
-              <Upload size={16} /> Upload
-            </button>
-            <button className={styles.cancelBtn} onClick={closeModal}>Cancel</button>
+            <div className={styles.modalFooter}>
+              <button className="btn btn-primary" onClick={saveRx}>Submit for Verification</button>
+              <button className={styles.cancelBtn} onClick={closeModal}>Cancel</button>
+            </div>
           </div>
         </Modal>
       )}
 
-      {/* VIEW / DETAILS */}
+      {/* View Prescription Details Modal */}
       {modal === 'viewRx' && viewRx && (
-        <Modal title="Prescription Details" onClose={closeModal}>
-          {(() => { const sm = statusMeta(viewRx.status); return (
-            <div className={styles.viewRxContent}>
-              <div className={styles.viewRxBanner}>
-                <div className={`${styles.viewRxStatusIcon} ${sm.bg}`}>
-                  <span className={sm.txt} style={{ fontSize:'1.5rem' }}>{sm.icon}</span>
-                </div>
-                <div>
-                  <h4 className={styles.viewRxTitle}>{viewRx.title}</h4>
-                  <span className={`${styles.badge} ${sm.badge}`}>{viewRx.status}</span>
-                </div>
+        <Modal title={viewRx.title} onClose={closeModal} wide>
+          <div className={styles.viewRxContent}>
+            <div className={styles.viewRxBanner}>
+              <div className={`${styles.viewRxStatusIcon} ${statusMeta(viewRx.status).bg}`}>
+                <span className={statusMeta(viewRx.status).txt}>{statusMeta(viewRx.status).icon}</span>
               </div>
-              <div className={styles.viewRxGrid}>
-                <div className={styles.viewRxRow}><span>Patient</span><strong>{selectedPatient?.name}</strong></div>
-                <div className={styles.viewRxRow}><span>Doctor</span><strong>{viewRx.doctor}</strong></div>
-                <div className={styles.viewRxRow}><span>Specialisation</span><strong>{viewRx.spec}</strong></div>
-                <div className={styles.viewRxRow}><span>Date Issued</span><strong>{viewRx.date}</strong></div>
-                {viewRx.meds && <div className={styles.viewRxRow}><span>Medicines</span><strong>{viewRx.meds} prescribed</strong></div>}
-                {viewRx.notes && <div className={styles.viewRxRow}><span>Notes</span><strong>{viewRx.notes}</strong></div>}
+              <div>
+                <h4 className={styles.viewRxTitle}>{viewRx.title}</h4>
+                <span className={`${styles.badge} ${statusMeta(viewRx.status).badge}`}>{viewRx.status}</span>
               </div>
-              {viewRx.status === 'VERIFIED' && (
-                <div className={styles.viewRxAction}>
-                  <Link to="/medicines" className="btn btn-primary"><Pill size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Order Medicines</Link>
-                </div>
-              )}
-              {viewRx.status === 'REJECTED' && (
-                <div className={styles.viewRxAction}>
-                  <button className={styles.dangerBtn} onClick={() => { closeModal(); reupload(viewRx); }}>Re-upload Prescription</button>
-                </div>
-              )}
             </div>
-          ); })()}
+
+            <div className={styles.viewRxGrid}>
+              <div className={styles.viewRxRow}><span>Patient</span><strong>{selectedPatient?.name} ({selectedPatient?.relation})</strong></div>
+              <div className={styles.viewRxRow}><span>Doctor</span><strong>{viewRx.doctor}</strong></div>
+              <div className={styles.viewRxRow}><span>Specialty</span><strong>{viewRx.spec}</strong></div>
+              <div className={styles.viewRxRow}><span>Issued Date</span><strong>{viewRx.date}</strong></div>
+              {viewRx.meds && <div className={styles.viewRxRow}><span>Medicines Prescribed</span><strong>{viewRx.meds} items</strong></div>}
+              {viewRx.notes && <div className={styles.viewRxRow}><span>Pharmacist Notes</span><strong>{viewRx.notes}</strong></div>}
+            </div>
+
+            <div className={styles.viewRxAction}>
+              {viewRx.status === 'VERIFIED' && (
+                <Link to={`/medicines?prescriptionId=${viewRx.id}&familyMemberId=${selectedPatient.id}`} className="btn btn-primary" onClick={closeModal}>Order Medicines</Link>
+              )}
+              <button className={styles.cancelBtn} onClick={closeModal}>Close</button>
+            </div>
+          </div>
         </Modal>
       )}
 
-      {/* DELETE PRESCRIPTION */}
+      {/* Delete Prescription Modal */}
       {modal === 'deleteRx' && delRx && (
         <Modal title="Delete Prescription" onClose={closeModal}>
           <div className={styles.deleteContent}>
-            <div className={styles.deleteIcon}><FileText size={24} /></div>
-            <p>Delete <strong>"{delRx.title}"</strong> for {selectedPatient?.name}?</p>
-            <p className={styles.deleteNote}>This cannot be undone.</p>
-          </div>
-          <div className={styles.modalFooter}>
-            <button className={styles.dangerBtn} onClick={executeDeleteRx}>Yes, Delete</button>
-            <button className={styles.cancelBtn} onClick={closeModal}>Cancel</button>
+            <div className={styles.deleteIcon}>⚠️</div>
+            <p>Are you sure you want to delete <strong>{delRx.title}</strong>?</p>
+            <p className={styles.deleteNote}>This action cannot be undone.</p>
+            <div className={styles.modalFooter}>
+              <button className={styles.dangerBtn} onClick={executeDeleteRx}>Delete Prescription</button>
+              <button className={styles.cancelBtn} onClick={closeModal}>Cancel</button>
+            </div>
           </div>
         </Modal>
       )}
+
     </div>
   );
 }

@@ -111,25 +111,22 @@ exports.addOrderItems = async (req, res) => {
     } = PricingService.calculateTotals(pricingItems, req.user, { isEmergency });
 
     // 4. Create Order row
+    const familyMemberId = req.body.familyMemberId || null;
+
     const orderInsertResult = await client.query(
       `INSERT INTO orders (
         user_id, payment_method, shipping_address, items_price, tax_price, 
         platform_fee, delivery_fee, cold_chain_fee, emergency_fee, late_night_fee, 
-        total_price, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'verified')
+        total_price, status, family_member_id, prescription_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'verified', $12, $13)
       RETURNING *`,
       [
         req.user.id,
         paymentMethod || 'Razorpay',
         JSON.stringify(shippingAddress),
-        subtotal,
-        tax,
-        platformFee,
-        deliveryFee,
-        coldChainFee,
-        emergencyFee,
-        lateNightFee,
-        total
+        subtotal, tax, platformFee, deliveryFee,
+        coldChainFee, emergencyFee, lateNightFee, total,
+        familyMemberId, prescriptionId || null
       ]
     );
 

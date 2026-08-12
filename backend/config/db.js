@@ -189,6 +189,20 @@ const initDb = async () => {
       status VARCHAR(50) DEFAULT 'PENDING',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS family_members (
+      id SERIAL PRIMARY KEY,
+      account_owner_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      relation VARCHAR(50) NOT NULL DEFAULT 'Self',
+      dob VARCHAR(50),
+      blood_group VARCHAR(10) DEFAULT 'A+',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS family_member_id INTEGER REFERENCES family_members(id) ON DELETE CASCADE;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS family_member_id INTEGER REFERENCES family_members(id) ON DELETE SET NULL;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS prescription_id INTEGER REFERENCES prescriptions(id) ON DELETE SET NULL;
   `;
   try {
     await pool.query(schemaSql);
