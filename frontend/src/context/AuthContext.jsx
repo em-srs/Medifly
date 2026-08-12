@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
     if (clerkIsSignedIn && clerkUser) {
       const email = clerkUser.primaryEmailAddress?.emailAddress || `${clerkUser.id}@medifly.com`;
       const name = clerkUser.fullName || clerkUser.firstName || email.split('@')[0];
-      const roleFromMeta = clerkUser.unsafeMetadata?.role || clerkUser.publicMetadata?.role || localStorage.getItem('medifly_active_role') || 'user';
+      const roleFromMeta = clerkUser.publicMetadata?.role || clerkUser.unsafeMetadata?.role || 'user';
 
       return {
         id: clerkUser.id,

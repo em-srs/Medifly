@@ -205,20 +205,6 @@ export default function PrescriptionsPage() {
     <div className={styles.layout}>
       <Toast msg={toast.msg} type={toast.type} onClose={() => setToast({ msg:'', type:'success' })} />
 
-      {/* ── Sidebar ── */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarLogo}>
-          <h2 style={{ fontSize:'1.2rem', color:'var(--slate-800)', margin:'0' }}>Dashboard</h2>
-        </div>
-        <nav className={styles.sidebarNav}>
-          {[['/', <Home size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, 'Home'], ['/prescriptions',<Folder size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />,'Vault'], ['/orders',<ShoppingBag size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />,'Orders'], ['/profile',<User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />,'Profile'], ['/settings',<Settings size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />,'Settings']].map(([href, icon, label]) => (
-            <Link key={href} to={href} className={`${styles.navItem} ${pathname === href ? styles.navActive : ''}`}>
-              <span className={styles.navIcon}>{icon}</span>{label}
-            </Link>
-          ))}
-        </nav>
-      </aside>
-
       {/* ── Main ── */}
       <main className={styles.main}>
         {/* Top header */}
