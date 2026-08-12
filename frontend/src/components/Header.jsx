@@ -12,8 +12,6 @@ const NAV_LINKS = [
   { href: '/salt-compare', icon: <TestTubes size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'Salt Comparison' },
   { href: '/subscription', icon: <RefreshCw size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'Auto Refill' },
   { href: '/prescriptions',icon: <Folder size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'Prescription Vault' },
-  { href: '/about',        icon: <Info size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'About' },
-  { href: '/contact',      icon: <Phone size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'Contact' },
 ];
 
 export default function Header() {
@@ -31,8 +29,7 @@ export default function Header() {
   const displayNavLinks = isAuthPage
     ? [
         { href: '/',             icon: <Home size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'Home' },
-        { href: '/about',        icon: <Info size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'About' },
-        { href: '/contact',      icon: <Phone size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'Contact' },
+        { href: '/about',        icon: <Info size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'About & Contact' },
       ]
     : NAV_LINKS;
 

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider }   from '@/context/AuthContext';
 import { CartProvider }   from '@/context/CartContext';
 import { SocketProvider } from '@/context/SocketContext';
@@ -11,7 +11,6 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import HomePage         from '@/pages/HomePage';
 import MedicinesPage    from '@/pages/MedicinesPage';
 import AboutPage        from '@/pages/AboutPage';
-import ContactPage      from '@/pages/ContactPage';
 import LoginPage        from '@/pages/LoginPage';
 import PartnerApplyPage from '@/pages/PartnerApplyPage';
 import RiderApplyPage   from '@/pages/RiderApplyPage';
@@ -52,7 +51,7 @@ export default function App() {
                 <Route path="/"              element={<HomePage />} />
                 <Route path="/medicines"     element={<MedicinesPage />} />
                 <Route path="/about"         element={<AboutPage />} />
-                <Route path="/contact"       element={<ContactPage />} />
+                <Route path="/contact"       element={<Navigate to="/about#contact" replace />} />
                 <Route path="/login"         element={<LoginPage />} />
                 <Route path="/salt-compare"  element={<SaltComparePage />} />
                 <Route path="/partner/apply" element={<PartnerApplyPage />} />

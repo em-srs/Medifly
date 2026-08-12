@@ -30,8 +30,9 @@ export default function Footer() {
           <div className={styles.linksBlock}>
             <div className={styles.links}>
               <h4>Company</h4>
-              <Link to="/about">About Us</Link>
-              <Link to="/pharmacy">Partner Pharmacies</Link>
+              <Link to="/about">About MediFly</Link>
+              <Link to="/partner/apply">Partner Application</Link>
+              <Link to="/rider/apply">Fleet Rider Application</Link>
             </div>
 
             <div className={styles.links}>
@@ -43,10 +44,9 @@ export default function Footer() {
             </div>
 
             <div className={styles.links}>
-              <h4>Support</h4>
-              <Link to="/contact">Contact Us</Link>
-              <Link to="#">Privacy Policy</Link>
-              <Link to="#">Terms of Service</Link>
+              <h4>Support & Contact</h4>
+              <Link to="/about#contact">Contact & Help Center</Link>
+              <Link to="/about">About Us & Mission</Link>
             </div>
           </div>
         </div>

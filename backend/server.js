@@ -35,6 +35,7 @@ app.use('/api/subscriptions', require('./routes/subscriptionRoutes'));
 app.use('/api/pharmacy', require('./routes/pharmacyRoutes'));
 app.use('/api/riders', require('./routes/riderRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/support', require('./routes/supportRoutes'));
 
 // Start Auto-Refill Cron Jobs
 const startCronJobs = require('./services/cronService');

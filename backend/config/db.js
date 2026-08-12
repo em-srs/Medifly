@@ -179,6 +179,16 @@ const initDb = async () => {
       medicine_id INTEGER REFERENCES medicines(id) ON DELETE CASCADE,
       quantity INTEGER DEFAULT 1
     );
+
+    CREATE TABLE IF NOT EXISTS support_requests (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      category VARCHAR(100) NOT NULL,
+      message TEXT NOT NULL,
+      status VARCHAR(50) DEFAULT 'PENDING',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   `;
   try {
     await pool.query(schemaSql);
