@@ -25,6 +25,17 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef(null);
 
+  const isAuthPage = pathname === '/login' || pathname === '/login/';
+
+  // Simplified pre-auth nav links for auth page
+  const displayNavLinks = isAuthPage
+    ? [
+        { href: '/',             icon: <Home size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'Home' },
+        { href: '/about',        icon: <Info size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'About' },
+        { href: '/contact',      icon: <Phone size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />, label: 'Contact' },
+      ]
+    : NAV_LINKS;
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -81,7 +92,7 @@ export default function Header() {
 
           {/* Desktop Nav */}
           <nav className={styles.nav}>
-            {NAV_LINKS.map(({ href, icon, label }) => (
+            {displayNavLinks.map(({ href, icon, label }) => (
               <Link
                 key={href}
                 to={href}
@@ -111,82 +122,73 @@ export default function Header() {
 
           {/* Actions */}
           <div className={styles.actions}>
-            {/* Cart */}
-            <button className={styles.iconBtn} onClick={() => setIsOpen(true)} aria-label="Open cart">
-              <ShoppingCart size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
-              {totalItems > 0 && <span className={styles.badge}>{totalItems}</span>}
-            </button>
+            {/* Cart - hidden on auth page or when unauthenticated & empty */}
+            {!isAuthPage && (user || totalItems > 0) && (
+              <button className={styles.iconBtn} onClick={() => setIsOpen(true)} aria-label="Open cart">
+                <ShoppingCart size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
+                {totalItems > 0 && <span className={styles.badge}>{totalItems}</span>}
+              </button>
+            )}
 
-            {/* Clerk Authentication Controls */}
-            <Show when="signed-out">
-              <SignInButton mode="modal">
-                <button className="btn btn-outline btn-sm" style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>Sign In</button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button className="btn btn-primary btn-sm" style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>Sign Up</button>
-              </SignUpButton>
-            </Show>
+            {/* Clerk Authentication Controls - hidden on /login page */}
+            {!isAuthPage && (
+              <Show when="signed-out">
+                <SignInButton mode="modal">
+                  <button className="btn btn-outline btn-sm" style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>Sign In</button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="btn btn-primary btn-sm" style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>Sign Up</button>
+                </SignUpButton>
+              </Show>
+            )}
 
             <Show when="signed-in">
               <UserButton showName />
             </Show>
 
-            {/* User Menu */}
-            <div className={styles.userMenuWrap} ref={menuRef}>
-              <button
-                className={`${styles.iconBtn} ${user ? styles.userLoggedIn : ''}`}
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                id="user-menu-btn"
-                aria-label="User menu"
-              >
-                <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
-                {user && <span className={styles.userDot}></span>}
-              </button>
+            {/* User Menu - shown when authenticated */}
+            {user && (
+              <div className={styles.userMenuWrap} ref={menuRef}>
+                <button
+                  className={`${styles.iconBtn} ${user ? styles.userLoggedIn : ''}`}
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  id="user-menu-btn"
+                  aria-label="User menu"
+                >
+                  <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
+                  {user && <span className={styles.userDot}></span>}
+                </button>
 
-              {userMenuOpen && (
-                <div className={styles.userDropdown}>
-                  {user ? (
-                    <>
-                      <div className={styles.dropdownHeader}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <strong>{user.name}</strong>
-                          {getRoleBadge(user.role)}
-                        </div>
-                        <span className={styles.dropdownRole}>{user.email || user.phone}</span>
+                {userMenuOpen && (
+                  <div className={styles.userDropdown}>
+                    <div className={styles.dropdownHeader}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <strong>{user.name}</strong>
+                        {getRoleBadge(user.role)}
                       </div>
-                      <div className={styles.dropdownDivider}></div>
-                      <Link to="/profile" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
-                        <User size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Profile
-                      </Link>
-                      <Link to={getRoleDashboardLink()} className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
-                        <BarChart3 size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Portal Dashboard
-                      </Link>
-                      <Link to="/orders" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
-                        <Package size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> My Orders
-                      </Link>
-                      <Link to="/settings" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
-                        <Settings size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Settings
-                      </Link>
-                      <div className={styles.dropdownDivider}></div>
-                      <button className={styles.dropdownLogout} onClick={handleLogout}>
-                        <LogOut size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Logout
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className={styles.dropdownHeader}>
-                        <strong>Welcome to MediFly</strong>
-                        <span className={styles.dropdownRole}>Sign in to access your portal</span>
-                      </div>
-                      <div className={styles.dropdownDivider}></div>
-                      <Link to="/login" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
-                        <Key size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Demo / OTP Login
-                      </Link>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+                      <span className={styles.dropdownRole}>{user.email || user.phone}</span>
+                    </div>
+                    <div className={styles.dropdownDivider}></div>
+                    <Link to="/profile" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
+                      <User size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Profile
+                    </Link>
+                    <Link to={getRoleDashboardLink()} className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
+                      <BarChart3 size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Portal Dashboard
+                    </Link>
+                    <Link to="/orders" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
+                      <Package size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> My Orders
+                    </Link>
+                    <Link to="/settings" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>
+                      <Settings size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Settings
+                    </Link>
+                    <div className={styles.dropdownDivider}></div>
+                    <button className={styles.dropdownLogout} onClick={handleLogout}>
+                      <LogOut size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} /> Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Hamburger — mobile only */}
             <button
@@ -220,7 +222,7 @@ export default function Header() {
         </div>
 
         <div className={styles.mobileNavLinks}>
-          {NAV_LINKS.map(({ href, icon, label }) => (
+          {displayNavLinks.map(({ href, icon, label }) => (
             <Link
               key={href}
               to={href}

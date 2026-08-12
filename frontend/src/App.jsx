@@ -13,6 +13,8 @@ import MedicinesPage    from '@/pages/MedicinesPage';
 import AboutPage        from '@/pages/AboutPage';
 import ContactPage      from '@/pages/ContactPage';
 import LoginPage        from '@/pages/LoginPage';
+import PartnerApplyPage from '@/pages/PartnerApplyPage';
+import RiderApplyPage   from '@/pages/RiderApplyPage';
 import DashboardPage    from '@/pages/DashboardPage';
 import ProfilePage      from '@/pages/ProfilePage';
 import CheckoutPage     from '@/pages/CheckoutPage';
@@ -47,12 +49,14 @@ export default function App() {
             <Layout>
               <Routes>
                 {/* Public Routes */}
-                <Route path="/"             element={<HomePage />} />
-                <Route path="/medicines"    element={<MedicinesPage />} />
-                <Route path="/about"        element={<AboutPage />} />
-                <Route path="/contact"      element={<ContactPage />} />
-                <Route path="/login"        element={<LoginPage />} />
-                <Route path="/salt-compare" element={<SaltComparePage />} />
+                <Route path="/"              element={<HomePage />} />
+                <Route path="/medicines"     element={<MedicinesPage />} />
+                <Route path="/about"         element={<AboutPage />} />
+                <Route path="/contact"       element={<ContactPage />} />
+                <Route path="/login"         element={<LoginPage />} />
+                <Route path="/salt-compare"  element={<SaltComparePage />} />
+                <Route path="/partner/apply" element={<PartnerApplyPage />} />
+                <Route path="/rider/apply"   element={<RiderApplyPage />} />
 
                 {/* Patient / Authenticated User Protected Routes */}
                 <Route path="/dashboard"    element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin']}><DashboardPage /></ProtectedRoute>} />
