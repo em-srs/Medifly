@@ -108,7 +108,8 @@ export default function MedicinesPage() {
 
       if (sort === 'price-low')       results.sort((a, b) => a.price - b.price);
       else if (sort === 'price-high') results.sort((a, b) => b.price - a.price);
-      else                            results.sort((a, b) => a.name.localeCompare(b.name));
+      else if (sort === 'name-desc')  results.sort((a, b) => (b.brandName || b.name || '').localeCompare(a.brandName || a.name || ''));
+      else                            results.sort((a, b) => (a.brandName || a.name || '').localeCompare(b.brandName || b.name || ''));
 
       const totalItems = results.length;
       const startIndex = (page - 1) * ITEMS_PER_PAGE;
@@ -223,6 +224,7 @@ export default function MedicinesPage() {
             id="sort-select"
           >
             <option value="name">Sort: A–Z</option>
+            <option value="name-desc">Sort: Z–A</option>
             <option value="price-low">Price: Low to High</option>
             <option value="price-high">Price: High to Low</option>
           </select>
