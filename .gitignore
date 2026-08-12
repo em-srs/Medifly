@@ -57,3 +57,16 @@ pids
 .cache
 .parcel-cache
 .eslintcache
+
+# Database & Data Dumps
+backend/data/
+*.csv
+*.db
+*.sqlite
+*.sql
+
+# Build Outputs & Logs
+frontend/dist/
+frontend/build_error.txt
+*.log
+
