@@ -1,0 +1,338 @@
+/* ─── Orders Page Layout ──────────────────────────────────────────────────── */
+.layout {
+  display: flex;
+  height: calc(100vh - 71px);
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+}
+
+/* ─── Sidebar ────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: 220px;
+  background-color: white;
+  border-right: 1px solid var(--slate-100);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 0;
+  flex-shrink: 0;
+}
+.sidebarLogo {
+  padding: 0 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.sidebarNav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0 0.75rem;
+}
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-md);
+  color: var(--slate-700);
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all var(--transition-fast);
+}
+.navItem:hover  { background: var(--slate-50); color: var(--teal-700); }
+.navActive      { background: var(--teal-50); color: var(--teal-700); font-weight: 600; }
+.navIcon        { font-size: 1.1rem; opacity: 0.85; display: inline-flex; }
+.navActive .navIcon { opacity: 1; color: var(--teal-600); }
+
+/* ─── Main Content Container ───────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.topHeader {
+  height: 64px;
+  background: white;
+  border-bottom: 1px solid var(--slate-100);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.headerLeft h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--slate-900);
+}
+.headerShieldIcon {
+  color: var(--teal-500);
+  display: inline-flex;
+}
+
+/* ─── Scrollable Content Area ──────────────────────────────────────────────── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background-color: var(--bg-secondary);
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 0.25rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: var(--slate-900);
+  font-family: var(--font-display);
+}
+.pageSubtitle {
+  font-size: 0.85rem;
+  color: var(--slate-500);
+  margin: 0;
+}
+
+/* ─── Filter Tabs & Summary Badges ────────────────────────────────────────── */
+.statsSummary {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.statBadge {
+  background: white;
+  border: 1px solid var(--slate-200);
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--slate-700);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ─── Orders List Container ──────────────────────────────────────────────── */
+.ordersList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ─── Uniform Order Card ─────────────────────────────────────────────────── */
+.orderCard {
+  background: white;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+}
+.orderCard:hover {
+  border-color: var(--teal-300);
+  box-shadow: var(--shadow-md), 0 0 0 3px rgba(13, 148, 136, 0.05);
+  transform: translateY(-1px);
+}
+
+/* Card Header */
+.orderCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--slate-100);
+}
+.orderMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.orderIdRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.orderId {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--slate-900);
+}
+.orderDate {
+  font-size: 0.82rem;
+  color: var(--slate-500);
+}
+.orderTotal {
+  font-weight: 700;
+  color: var(--teal-700);
+}
+
+/* Status Badges */
+.statusBadge {
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+.statusDelivered {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.statusOutForDelivery {
+  background-color: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.statusProcessing {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+/* Card Body */
+.orderBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.orderDetailRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+  color: var(--slate-700);
+}
+.detailIcon {
+  color: var(--teal-600);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.detailText {
+  flex: 1;
+  line-height: 1.45;
+}
+
+/* Rider Tracking Banner */
+.riderBanner {
+  background: linear-gradient(135deg, #f0fdf4, #e0f2fe);
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+.riderInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--teal-900);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.etaBadge {
+  background: white;
+  color: var(--teal-700);
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Card Footer Actions */
+.orderFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--slate-100);
+}
+
+/* Receipt Modal Styles */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.modalCard {
+  background: white;
+  border-radius: var(--radius-2xl);
+  width: 100%;
+  max-width: 480px;
+  padding: 2rem;
+  box-shadow: var(--shadow-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: relative;
+  animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modalPop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+    height: auto;
+  }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--slate-100);
+    padding: 0.75rem 1rem;
+  }
+  .content {
+    padding: 1.25rem 1rem;
+  }
+  .orderFooter {
+    justify-content: stretch;
+  }
+  .orderFooter button {
+    flex: 1;
+  }
+}
