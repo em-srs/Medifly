@@ -6,11 +6,11 @@
 
 ## 30-Second Elevator Pitch
 
-"**Medifly** is an enterprise-grade emergency healthcare delivery and automated prescription refill platform built using the MERN stack with **Express v5** and **React 19**. 
+"**Medifly** is an enterprise-grade emergency healthcare delivery and automated prescription refill platform built using Node.js **Express v5**, **React 19**, **Vite 6**, **Clerk Authentication & Multi-Tenancy**, and **PostgreSQL (Supabase)**. 
 
-Designed for high-concurrency real-time logistics, Medifly incorporates a bioequivalent **Salt Comparison Engine** that automatically matches branded medications with cheaper generic alternatives, a **Multi-Tier Dynamic Pricing Engine** that computes subscriber discounts, cold-chain handling, emergency surcharges, and late-night fees, and an automated **Cron Refill Engine** that manages recurring subscriptions. 
+Designed for high-concurrency real-time logistics, Medifly hosts over **254,000+ authentic medicines** with `pg_trgm` GIN trigram indexing, a bioequivalent **Salt Comparison Engine** that automatically matches branded medications with cheaper generic alternatives, a **Prescription Vault** with family member profiles and server-side ownership security checks (`account_owner_id`), a **Multi-Tier Dynamic Pricing Engine** that computes subscriber discounts, cold-chain handling, emergency surcharges, and late-night fees, and an automated **Cron Refill Engine** that manages recurring subscriptions. 
 
-Medifly uses **Socket.io** for real-time inventory alerts, order status tracking, and fleet rider GPS updates, backed by stateless **JWT authentication** and strict **Role-Based Access Control (RBAC)**. Core business logic (`PricingService`, salt matching, cron refills) is written as isolated, dependency-free functions specifically so it's straightforward to unit test — that test suite is the next thing on the roadmap."
+Medifly uses **Socket.io** for real-time inventory alerts, order status tracking, and fleet rider GPS updates, backed by Clerk multi-tenancy authentication and strict **Role-Based Access Control (RBAC)**."
 
 ---
 

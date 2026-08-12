@@ -21,10 +21,13 @@
 | :--- | :--- | :--- |
 | **Database Architecture** | **Completed** | PostgreSQL on Supabase with 254,000+ indexed medicines (`pg_trgm` GIN trigram indexing) |
 | **Authentication & RBAC** | **Completed** | **Clerk Authentication & Multi-Tenancy** (`@clerk/react` v6, `<SignIn />`, `<SignUp />`, `<UserButton />`, `<Show>`) with role metadata |
+| **Prescription Vault** | **Completed** | Family-member profiles (`Self`, `Spouse`, `Father`), member-scoped order history tab, server-side ownership security (`account_owner_id`), & order tracking chips |
+| **Merged About & Contact** | **Completed** | Consolidated `/about` page with auto-redirect from `/contact`, contact form posting to `support_requests`, helpline SLAs, and partner/rider onboarding |
+| **Search Relevance Engine**| **Completed** | Ranked SQL search prioritizing brand name prefix matches (e.g. `Telma`, `Telmikind`) ahead of generic salt composition matches |
+| **Dosage Form Visuals** | **Completed** | Physical appearance image resolver (`getMedicineImage.js`) mapping `dosage_form` (tablet/capsule/injection/syrup/inhaler/topical/cold_chain) to assets |
 | **Delivery SLA Engine** | **Completed** | **30-Minute Ultra-Express Delivery SLA**, Dynamic Multi-Tier Pricing Engine (`PricingService`), Cold-Chain Insulated Logistics |
 | **Real-Time Dispatch** | **Completed** | WebSockets (`Socket.io`) for live rider GPS location streaming & order status notifications |
 | **Salt Matching Engine** | **Completed** | Bioequivalent chemical salt matching & cost savings sorting (up to 70% cheaper generic alternatives) |
-| **Prescription Vault** | **Completed** | Rx document upload & Pharmacist verification workflow (`PENDING` -> `VERIFIED` / `REJECTED`) |
 | **Auto-Refill Engine** | **Completed** | Automated recurring monthly subscription refills (`CronService`) |
 | **Orders & Invoicing** | **Completed** | Uniform order tracking layout, status badges, and interactive "View Receipt" tax invoice modal popup |
 | **Security & Privacy** | **Completed** | Excluded raw database CSV dumps & sensitive log files from Git tracking with strict `.gitignore` protection |
@@ -264,10 +267,15 @@ flowchart TD
 ```mermaid
 erDiagram
     users ||--o{ orders : "places"
+    users ||--o{ orders : "places"
     users ||--o{ prescriptions : "uploads"
     users ||--o{ subscriptions : "subscribes"
+    users ||--o{ family_members : "owns"
     users ||--o| pharmacies : "operates"
     users ||--o| riders : "drives"
+
+    family_members ||--o{ prescriptions : "belongs_to"
+    family_members ||--o{ orders : "tagged_in"
 
     salts ||--o{ medicines : "composes"
     medicines ||--o{ order_items : "contained_in"
@@ -291,6 +299,16 @@ erDiagram
         VARCHAR zip_code
         FLOAT lat
         FLOAT lng
+        TIMESTAMP created_at
+    }
+
+    family_members {
+        SERIAL id PK
+        INTEGER account_owner_id FK
+        VARCHAR name
+        VARCHAR relation "Self, Spouse, Father, Mother, etc."
+        VARCHAR dob
+        VARCHAR blood_group
         TIMESTAMP created_at
     }
 
@@ -328,6 +346,8 @@ erDiagram
         SERIAL id PK
         INTEGER user_id FK
         INTEGER rider_id FK
+        INTEGER family_member_id FK
+        INTEGER prescription_id FK
         VARCHAR payment_method
         JSONB payment_result
         NUMERIC items_price
@@ -360,12 +380,23 @@ erDiagram
     prescriptions {
         SERIAL id PK
         INTEGER user_id FK
+        INTEGER family_member_id FK
         TEXT document_url
         TIMESTAMP upload_date
         VARCHAR status "PENDING, VERIFIED, REJECTED"
         TEXT reviewer_notes
         INTEGER pharmacist_id FK
         TIMESTAMP verified_at
+        TIMESTAMP created_at
+    }
+
+    support_requests {
+        SERIAL id PK
+        VARCHAR name
+        VARCHAR email
+        VARCHAR category
+        TEXT message
+        VARCHAR status "PENDING, RESOLVED"
         TIMESTAMP created_at
     }
 
@@ -503,7 +534,9 @@ medifly-mern/
 │   │   ├── pharmacyController.js      # Pharmacy Registration & Store Management
 │   │   ├── prescriptionController.js  # Prescription Document Upload & Pharmacist Verification
 │   │   ├── riderController.js         # Rider Registration, Dispatch Status & Live GPS Coordinates
-│   │   └── subscriptionController.js  # Refill Subscription Creation & Management
+│   │   ├── subscriptionController.js  # Refill Subscription Creation & Management
+│   │   ├── supportController.js       # Support Request Form Processing & Table Handler
+│   │   └── vaultController.js         # Family Member Profiles & Per-Member Prescription/Order Queries
 │   ├── data/                          # Seed Datasets
 │   │   ├── medicines.csv              # Initial Medicine Sample Dataset
 │   │   └── meds_dB_original.csv       # Enterprise 254,023 Medicine Master Dataset
@@ -527,7 +560,9 @@ medifly-mern/
 │   │   ├── pharmacyRoutes.js          # /api/pharmacy Endpoints
 │   │   ├── prescriptionRoutes.js      # /api/prescriptions Endpoints
 │   │   ├── riderRoutes.js             # /api/riders Endpoints
-│   │   └── subscriptionRoutes.js      # /api/subscriptions Endpoints
+│   │   ├── subscriptionRoutes.js      # /api/subscriptions Endpoints
+│   │   ├── supportRoutes.js           # /api/support Endpoints
+│   │   └── vaultRoutes.js             # /api/vault Endpoints
 │   ├── scripts/                       # Database Management & Seeding Scripts
 │   │   ├── seedMedicines.js           # 254k Dataset High-Performance PostgreSQL Seeder
 │   │   ├── initDatabase.js            # Table Initialization Script
@@ -550,6 +585,8 @@ medifly-mern/
         ├── main.jsx                   # React Application Entrypoint
         ├── App.jsx                    # Router v7 Component Tree & Layout Shell
         ├── index.css                  # Modern Design System (Glassmorphism, CSS Variables, Animations)
+        ├── utils/
+        │   └── getMedicineImage.js    # Physical dosage-form image resolver
         ├── components/                # Reusable UI Components
         │   ├── Header.jsx             # Top Navbar with Live Search & Navigation
         │   ├── Footer.jsx             # Platform Footer with Quick Links & Motto
@@ -563,7 +600,7 @@ medifly-mern/
         └── pages/                     # Application Pages
             ├── HomePage.jsx           # Landing Page with Hero Banner, Search & SLA Matrix
             ├── MedicinesPage.jsx      # 254k+ Medicine Search Browser with Filters
-            ├── PrescriptionsPage.jsx  # Prescription Upload & Pharmacist Review Status
+            ├── PrescriptionsPage.jsx  # Prescription Vault (Family Profiles & Per-Member Orders)
             ├── SubscriptionPage.jsx   # Chronic Refill Subscription Management
             ├── CheckoutPage.jsx       # 30-Min Order Checkout & Multi-Tier Surcharge Review
             ├── OrdersPage.jsx         # User Order History & Live GPS Dispatch Tracker Map
@@ -572,10 +609,11 @@ medifly-mern/
             ├── AdminPage.jsx          # Admin Revenue Metrics & Stock Alerts Dashboard
             ├── PharmacyPage.jsx       # Pharmacist Verification Terminal Page
             ├── RiderPage.jsx          # Rider Dispatch & GPS Broadcast Terminal Page
+            ├── PartnerApplyPage.jsx   # Pharmacy Partner Application Page
+            ├── RiderApplyPage.jsx     # Fleet Rider Application Page
             ├── ProfilePage.jsx        # User Profile Management
             ├── SettingsPage.jsx       # User Account & Notification Settings
-            ├── AboutPage.jsx          # About Medifly & SLA Commitment Page
-            ├── ContactPage.jsx        # Support & Emergency Helpline Contact Page
+            ├── AboutPage.jsx          # Merged About & Contact Page
             └── LoginPage.jsx          # User Login & Account Registration Page
 ```
 
@@ -591,6 +629,13 @@ medifly-mern/
 | **Auth** | `POST` | `/api/auth/register` | Public | All | Register a new user account |
 | **Auth** | `POST` | `/api/auth/login` | Public | All | Authenticate user & return JWT token |
 | **Auth** | `GET` | `/api/auth/profile` | Private | All Logged In | Get current authenticated user profile |
+| **Vault** | `GET` | `/api/vault/members` | Private | `user` | List user's family member profiles (auto-seeds defaults if empty) |
+| **Vault** | `POST` | `/api/vault/members` | Private | `user` | Add a new family member profile |
+| **Vault** | `PUT` | `/api/vault/members/:id` | Private | `user` | Update family member profile (ownership checked) |
+| **Vault** | `DELETE` | `/api/vault/members/:id` | Private | `user` | Delete family member profile (ownership checked) |
+| **Vault** | `GET` | `/api/vault/members/:id/prescriptions` | Private | `user` | Fetch family member's prescriptions (ownership checked) |
+| **Vault** | `GET` | `/api/vault/members/:id/orders` | Private | `user` | Fetch family member's order history (ownership checked) |
+| **Support**| `POST` | `/api/support` | Public | All | Submit contact form request to `support_requests` table |
 | **Medicines** | `GET` | `/api/medicines` | Public | All | Search 254k+ meds with keyword, category, page & sort |
 | **Medicines** | `GET` | `/api/medicines/:id` | Public | All | Fetch single medicine details |
 | **Medicines** | `GET` | `/api/medicines/salt-comparison/:id` | Public | All | Compare bioequivalent salts & generic alternatives |

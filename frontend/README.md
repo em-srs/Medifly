@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Medifly Frontend — Single Page Application (SPA)
 
-## Getting Started
+This is the frontend single-page application for **Medifly**, built with **React 19**, **Vite 6**, **React Router v7**, **Clerk Authentication**, and **Vanilla CSS Modules**.
 
-First, run the development server:
+## 🚀 Key Features & Components
+
+- **254k+ Medicine Browser (`/medicines`)**: Sub-second search, category filtering, dosage-form-driven placeholder image resolution (`getMedicineImage.js`), and relevance-ranked results.
+- **Prescription Vault (`/prescriptions`)**: Multi-patient family member profiles (`Self`, `Spouse`, `Father`, etc.), prescription upload, pharmacist review status, and per-family-member order history tab with order status tracking chips.
+- **Bioequivalent Salt Matcher (`/salt-compare`)**: Smart chemical composition comparison for cost savings on generic alternatives.
+- **Auto-Refill Subscriptions (`/subscription`)**: Chronic care recurring delivery management.
+- **Checkout & Multi-Tier Pricing (`/checkout`)**: 30-Minute Ultra Express SLA, dynamic GST/delivery/cold-chain/emergency fee calculator.
+- **Live Order & Rider GPS Tracker (`/orders`)**: Real-time order progress stepper and WebSocket rider map updates.
+- **Merged About & Contact Page (`/about` & `/about#contact`)**: Platform mission, 30-min SLA details, partner/rider onboarding links, and direct contact form connected to PostgreSQL `support_requests`.
+- **Clerk Authentication & Multi-Tenancy**: Custom branded Clerk widget (`<SignIn />` / `<SignUp />`) with role-based navigation.
+
+## 📦 Project Setup
 
 ```bash
+# Install frontend dependencies
+npm install
+
+# Start Vite development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build production bundle
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Dev Server**: `http://localhost:5173`
+- **Build Output**: `dist/`
