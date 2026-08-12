@@ -103,8 +103,6 @@ exports.getMedicines = async (req, res) => {
     let orderClause = 'ORDER BY m.id ASC';
     if (sort === 'name') {
       orderClause = 'ORDER BY m.brand_name ASC, m.id ASC';
-    } else if (sort === 'name-desc') {
-      orderClause = 'ORDER BY m.brand_name DESC, m.id ASC';
     } else if (sort === 'price-low') {
       orderClause = 'ORDER BY m.price ASC, m.id ASC';
     } else if (sort === 'price-high') {
