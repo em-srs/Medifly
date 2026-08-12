@@ -98,18 +98,38 @@ export default function MedicinesPage() {
       if (searchQuery) {
         results = results.filter(
           (med) =>
-            med.name.toLowerCase().includes(searchQuery) ||
-            med.salt.toLowerCase().includes(searchQuery) ||
-            med.manufacturer.toLowerCase().includes(searchQuery)
+            (med.name || med.brandName || '').toLowerCase().includes(searchQuery) ||
+            (med.salt || med.genericName || '').toLowerCase().includes(searchQuery) ||
+            (med.manufacturer || '').toLowerCase().includes(searchQuery)
         );
-      } else if (category && category !== 'all') {
-        results = results.filter((med) => med.category === category);
-      }
 
-      if (sort === 'price-low')       results.sort((a, b) => a.price - b.price);
-      else if (sort === 'price-high') results.sort((a, b) => b.price - a.price);
-      else if (sort === 'name-desc')  results.sort((a, b) => (b.brandName || b.name || '').localeCompare(a.brandName || a.name || ''));
-      else                            results.sort((a, b) => (a.brandName || a.name || '').localeCompare(b.brandName || b.name || ''));
+        const getRank = (med) => {
+          const brand = (med.name || med.brandName || '').toLowerCase();
+          const salt = (med.salt || med.genericName || '').toLowerCase();
+          if (brand.startsWith(searchQuery)) return 1;
+          if (brand.includes(searchQuery)) return 2;
+          if (salt.startsWith(searchQuery)) return 3;
+          return 4;
+        };
+
+        results.sort((a, b) => {
+          const rA = getRank(a);
+          const rB = getRank(b);
+          if (rA !== rB) return rA - rB;
+          if (sort === 'price-low')       return a.price - b.price;
+          if (sort === 'price-high')      return b.price - a.price;
+          if (sort === 'name-desc')       return (b.brandName || b.name || '').localeCompare(a.brandName || a.name || '');
+          return (a.brandName || a.name || '').localeCompare(b.brandName || b.name || '');
+        });
+      } else {
+        if (category && category !== 'all') {
+          results = results.filter((med) => med.category === category);
+        }
+        if (sort === 'price-low')       results.sort((a, b) => a.price - b.price);
+        else if (sort === 'price-high') results.sort((a, b) => b.price - a.price);
+        else if (sort === 'name-desc')  results.sort((a, b) => (b.brandName || b.name || '').localeCompare(a.brandName || a.name || ''));
+        else                            results.sort((a, b) => (a.brandName || a.name || '').localeCompare(b.brandName || b.name || ''));
+      }
 
       const totalItems = results.length;
       const startIndex = (page - 1) * ITEMS_PER_PAGE;

@@ -60,7 +60,7 @@ const CATEGORY_SQL_MAP = {
 // @access  Public
 exports.getMedicines = async (req, res) => {
   try {
-    const keyword = req.query.keyword ? `%${req.query.keyword}%` : null;
+    const rawKeyword = req.query.keyword ? req.query.keyword.trim() : '';
     const category = req.query.category && req.query.category !== 'all' ? req.query.category.toLowerCase() : null;
     const sort = req.query.sort || 'name';
     const page = Math.max(1, Number(req.query.pageNumber) || 1);
@@ -68,12 +68,14 @@ exports.getMedicines = async (req, res) => {
     const offset = (page - 1) * pageSize;
 
     let whereClauses = [];
-    let params = [];
+    let whereParams = [];
     let paramIndex = 1;
 
-    if (keyword) {
+    let keywordIdx = null;
+    if (rawKeyword) {
+      keywordIdx = paramIndex;
       whereClauses.push(`(m.brand_name ILIKE $${paramIndex} OR m.generic_name ILIKE $${paramIndex} OR m.manufacturer ILIKE $${paramIndex})`);
-      params.push(keyword);
+      whereParams.push(`%${rawKeyword}%`);
       paramIndex++;
     }
 
@@ -82,7 +84,7 @@ exports.getMedicines = async (req, res) => {
         whereClauses.push(CATEGORY_SQL_MAP[category]);
       } else {
         whereClauses.push(`m.category ILIKE $${paramIndex}`);
-        params.push(`%${category}%`);
+        whereParams.push(`%${category}%`);
         paramIndex++;
       }
     }
@@ -91,37 +93,62 @@ exports.getMedicines = async (req, res) => {
 
     // Total Count
     let totalCount;
-    if (!keyword && !category) {
+    if (!rawKeyword && !category) {
       totalCount = await getCachedCount();
     } else {
       const countQuery = `SELECT COUNT(*) FROM medicines m${whereString}`;
-      const countResult = await query(countQuery, params);
+      const countResult = await query(countQuery, whereParams);
       totalCount = parseInt(countResult.rows[0].count, 10);
     }
 
-    // Fast Sorting Clause
-    let orderClause = 'ORDER BY m.id ASC';
-    if (sort === 'name') {
-      orderClause = 'ORDER BY m.brand_name ASC, m.id ASC';
-    } else if (sort === 'name-desc') {
-      orderClause = 'ORDER BY m.brand_name DESC, m.id ASC';
+    // Fast & Relevant Sorting Clause
+    let dataParams = [...whereParams];
+    let relevancePrefixIdx = null;
+
+    if (rawKeyword) {
+      relevancePrefixIdx = paramIndex;
+      dataParams.push(`${rawKeyword}%`);
+      paramIndex++;
+    }
+
+    let primarySort = 'm.brand_name ASC, m.id ASC';
+    if (sort === 'name-desc') {
+      primarySort = 'm.brand_name DESC, m.id ASC';
     } else if (sort === 'price-low') {
-      orderClause = 'ORDER BY m.price ASC, m.id ASC';
+      primarySort = 'm.price ASC, m.id ASC';
     } else if (sort === 'price-high') {
-      orderClause = 'ORDER BY m.price DESC, m.id ASC';
+      primarySort = 'm.price DESC, m.id ASC';
+    }
+
+    let orderClause = `ORDER BY ${primarySort}`;
+    if (rawKeyword && relevancePrefixIdx && keywordIdx) {
+      // Prioritize:
+      // 1. Brand name starts with search term (e.g. "Telmikind" for "telm")
+      // 2. Brand name contains search term
+      // 3. Generic salt name starts with search term
+      // 4. Other matches
+      orderClause = `ORDER BY CASE 
+        WHEN m.brand_name ILIKE $${relevancePrefixIdx} THEN 1 
+        WHEN m.brand_name ILIKE $${keywordIdx} THEN 2 
+        WHEN m.generic_name ILIKE $${relevancePrefixIdx} THEN 3 
+        ELSE 4 
+      END ASC, ${primarySort}`;
     }
 
     // Data Query
+    const limitIdx = paramIndex;
+    const offsetIdx = paramIndex + 1;
+    dataParams.push(pageSize, offset);
+
     const dataQuery = `
       SELECT m.*, s.salt_name 
       FROM medicines m 
       LEFT JOIN salts s ON m.salt_id = s.id 
       ${whereString} 
       ${orderClause} 
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}
     `;
 
-    const dataParams = [...params, pageSize, offset];
     const dataResult = await query(dataQuery, dataParams);
     const medicines = dataResult.rows.map(formatMedicine);
 
