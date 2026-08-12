@@ -39,7 +39,7 @@ function MedicineCard({ medicine, onCompare }) {
     styles.addBtn,
     addState === 'adding' ? styles.addBtnAdding : '',
     addState === 'added'  ? styles.addBtnAdded  : '',
-    addState === 'idle'   ? 'btn-primary'        : '',
+    addState === 'idle'   ? (inStock ? 'btn-primary' : styles.addBtnDisabled) : '',
   ].filter(Boolean).join(' ');
 
   return (
@@ -103,7 +103,7 @@ function MedicineCard({ medicine, onCompare }) {
           >
             {addState === 'added'  && <Check size={16} />}
             {addState === 'adding' && '…'}
-            {addState === 'added'  ? 'Added!' : addState === 'adding' ? '…' : inStock ? '+ Add' : 'N/A'}
+            {addState === 'added'  ? 'Added!' : addState === 'adding' ? '…' : inStock ? '+ Add' : 'Out of Stock'}
           </button>
         </div>
       </div>

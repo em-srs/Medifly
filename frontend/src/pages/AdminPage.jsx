@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { adminStats as mockStats, pharmacies, riders, sampleOrders } from '@/data/mockData';
+import { adminStats, pharmacies, riders, sampleOrders } from '@/data/mockData';
 import styles from './AdminPage.module.css';
 import { useAuth } from '@/context/AuthContext';
 import { Shield, Package, CheckCircle2, AlertTriangle, Zap, BarChart3, Users, IndianRupee, Bike, Star, Hospital } from 'lucide-react';
@@ -20,14 +20,14 @@ export default function AdminPage() {
   }, [apiCall]);
 
   const stats = {
-    totalUsers: liveStats?.users || mockStats.totalUsers,
-    totalOrders: liveStats?.orders || mockStats.totalOrders,
-    totalRevenue: liveStats?.revenue || mockStats.totalRevenue,
-    activePharmacies: mockStats.activePharmacies,
-    activeRiders: mockStats.activeRiders,
-    avgDeliveryTime: mockStats.avgDeliveryTime,
-    slaCompliance: mockStats.slaCompliance,
-    customerSatisfaction: mockStats.customerSatisfaction
+    totalUsers: liveStats?.users || adminStats.totalUsers,
+    totalOrders: liveStats?.orders || adminStats.totalOrders,
+    totalRevenue: liveStats?.revenue || adminStats.totalRevenue,
+    activePharmacies: adminStats.activePharmacies,
+    activeRiders: adminStats.activeRiders,
+    avgDeliveryTime: adminStats.avgDeliveryTime,
+    slaCompliance: adminStats.slaCompliance,
+    customerSatisfaction: adminStats.customerSatisfaction
   };
 
   return (

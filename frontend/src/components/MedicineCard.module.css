@@ -148,6 +148,16 @@
 /* Pressed shrink */
 .addBtn:active { transform: scale(0.92); }
 
+/* Out of Stock disabled state */
+.addBtnDisabled {
+  background: #f1f5f9 !important;
+  color: #94a3b8 !important;
+  border: 1px solid #cbd5e1 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  opacity: 0.85;
+}
+
 /* ↻ Spinning state */
 .addBtnAdding {
   background: var(--teal-400) !important;

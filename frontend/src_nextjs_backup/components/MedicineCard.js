@@ -87,7 +87,7 @@ function MedicineCard({ medicine, onCompare }) {
           >
             {addState === 'added'  && <span className={styles.checkIcon}>✓</span>}
             {addState === 'adding' && <span className={styles.spinnerIcon}>↻</span>}
-            {addState === 'added'  ? 'Added!' : addState === 'adding' ? '…' : m.stock ? '+ Add' : 'N/A'}
+            {addState === 'added'  ? 'Added!' : addState === 'adding' ? '…' : m.stock ? '+ Add' : 'Out of Stock'}
           </button>
         </div>
       </div>
