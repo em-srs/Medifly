@@ -25,7 +25,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef(null);
 
-  const isAuthPage = pathname === '/login' || pathname === '/login/';
+  const isAuthPage = ['/login', '/login/', '/sign-in', '/sign-in/', '/signup', '/signup/'].includes(pathname.toLowerCase());
 
   // Simplified pre-auth nav links for auth page
   const displayNavLinks = isAuthPage
@@ -122,8 +122,8 @@ export default function Header() {
 
           {/* Actions */}
           <div className={styles.actions}>
-            {/* Cart - hidden on auth page or when unauthenticated & empty */}
-            {!isAuthPage && (user || totalItems > 0) && (
+            {/* Cart - visible on all pages except auth pages */}
+            {!isAuthPage && (
               <button className={styles.iconBtn} onClick={() => setIsOpen(true)} aria-label="Open cart">
                 <ShoppingCart size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
                 {totalItems > 0 && <span className={styles.badge}>{totalItems}</span>}
