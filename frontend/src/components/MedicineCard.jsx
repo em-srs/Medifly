@@ -2,6 +2,7 @@ import { useCart } from '@/context/CartContext';
 import { useState, useCallback, memo } from 'react';
 import styles from './MedicineCard.module.css';
 import { TestTubes, Check, Zap, Snowflake, Pill } from 'lucide-react';
+import { getMedicineImage, getDosageFormLabel, getCategoryLabel } from '@/utils/getMedicineImage';
 
 function MedicineCard({ medicine, onCompare }) {
   const { addItem } = useCart();
@@ -18,7 +19,11 @@ function MedicineCard({ medicine, onCompare }) {
   const rxRequired = m.requiresPrescription || m.prescriptionRequired || false;
   const inStock = m.stock !== false && m.inventoryCount !== 0;
   const deliveryTimes = Array.isArray(m.deliveryTimes) ? m.deliveryTimes : ['1 Hour Express', 'Same Day'];
-  const image = m.image || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400';
+
+  // ── Image: driven by dosage form, not by therapeutic category ──────────────
+  const image = getMedicineImage(m);
+  const formLabel = getDosageFormLabel(m);
+  const categoryLabel = getCategoryLabel(m);
 
   // 'idle' | 'adding' | 'added'
   const [addState, setAddState] = useState('idle');
@@ -46,18 +51,36 @@ function MedicineCard({ medicine, onCompare }) {
     <div className={`${styles.card} ${addState === 'added' ? styles.cardFlash : ''}`}>
       {addState === 'adding' && <span className={styles.burst} aria-hidden="true" />}
 
+      {/* ── Product image (dosage-form driven) ── */}
       <div className={styles.imageWrapper} style={{ height: '140px', overflow: 'hidden', background: '#f8fafc', position: 'relative' }}>
-        <img 
-          src={image} 
-          alt={name} 
-          className={styles.image} 
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-          onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400'; }}
+        <img
+          src={image}
+          alt={`${formLabel} – ${name}`}
+          className={styles.image}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={(e) => { e.currentTarget.src = '/src/assets/medicine-placeholders/other.png'; }}
         />
+        {/* Dosage-form pill badge overlaid bottom-left of image */}
+        {formLabel && formLabel !== 'Medicine' && (
+          <span style={{
+            position: 'absolute', bottom: '6px', left: '8px',
+            background: 'rgba(15,23,42,0.68)', color: '#fff',
+            fontSize: '0.65rem', fontWeight: 600, padding: '2px 7px',
+            borderRadius: '20px', backdropFilter: 'blur(4px)',
+            letterSpacing: '0.03em', textTransform: 'capitalize'
+          }}>
+            <Pill size={10} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '3px' }} />
+            {formLabel}
+          </span>
+        )}
       </div>
 
       <div className={styles.header} style={{ padding: '8px 12px 0 12px' }}>
         <div className={styles.badges} style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+          {/* Therapeutic category badge — separate from dosage form */}
+          {categoryLabel && (
+            <span className="badge badge-teal" style={{ fontSize: '0.65rem' }}>{categoryLabel}</span>
+          )}
           {coldChain && <span className="badge badge-blue" style={{ fontSize: '0.7rem' }}><Snowflake size={12} /> Cold Chain</span>}
           {rxRequired && <span className="badge badge-yellow" style={{ fontSize: '0.7rem' }}>Rx Required</span>}
           {!inStock && <span className="badge badge-red" style={{ fontSize: '0.7rem' }}>Out of Stock</span>}

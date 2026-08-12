@@ -73,7 +73,10 @@ export default function MedicinesPage() {
           manufacturer: med.manufacturer || 'Licensed Partner Pharma',
           requiresPrescription: med.requiresPrescription || false,
           coldChainRequired: med.coldChainRequired || false,
-          image: med.image || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300'
+          // Dosage form & category — drive image selection via getMedicineImage()
+          dosageForm: med.dosageForm || med.dosage_form || med.form || 'Tablet',
+          category: med.category || 'allopathy',
+          // Do NOT set image here — let getMedicineImage() resolve it in MedicineCard
         })));
         setTotal(data.totalCount !== undefined ? data.totalCount : results.length);
         setTotalPages(data.pages || 1);
