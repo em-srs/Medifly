@@ -17,7 +17,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (user && (isSignedIn || user.id)) {
       const targetRole = user.role || 'user';
-      if (targetRole === 'admin') navigate('/admin', { replace: true });
+      if (targetRole === 'admin' || targetRole === 'super_admin') navigate('/admin', { replace: true });
       else if (targetRole === 'pharmacy') navigate('/pharmacy', { replace: true });
       else if (targetRole === 'rider') navigate('/rider', { replace: true });
       else navigate('/dashboard', { replace: true });

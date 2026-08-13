@@ -12,6 +12,7 @@ import HomePage         from '@/pages/HomePage';
 import MedicinesPage    from '@/pages/MedicinesPage';
 import AboutPage        from '@/pages/AboutPage';
 import LoginPage        from '@/pages/LoginPage';
+import OnboardingPage   from '@/pages/OnboardingPage';
 import PartnerApplyPage from '@/pages/PartnerApplyPage';
 import RiderApplyPage   from '@/pages/RiderApplyPage';
 import DashboardPage    from '@/pages/DashboardPage';
@@ -57,19 +58,22 @@ export default function App() {
                 <Route path="/partner/apply" element={<PartnerApplyPage />} />
                 <Route path="/rider/apply"   element={<RiderApplyPage />} />
 
+                {/* Onboarding Route (Authenticated users) */}
+                <Route path="/onboarding"    element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin', 'super_admin']}><OnboardingPage /></ProtectedRoute>} />
+
                 {/* Patient / Authenticated User Protected Routes */}
-                <Route path="/dashboard"    element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin']}><DashboardPage /></ProtectedRoute>} />
-                <Route path="/profile"      element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin']}><ProfilePage /></ProtectedRoute>} />
-                <Route path="/checkout"     element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin']}><CheckoutPage /></ProtectedRoute>} />
-                <Route path="/subscription" element={<ProtectedRoute allowedRoles={['user', 'admin']}><SubscriptionPage /></ProtectedRoute>} />
-                <Route path="/prescriptions" element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'admin']}><PrescriptionsPage /></ProtectedRoute>} />
-                <Route path="/orders"       element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin']}><OrdersPage /></ProtectedRoute>} />
-                <Route path="/settings"     element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin']}><SettingsPage /></ProtectedRoute>} />
+                <Route path="/dashboard"    element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin', 'super_admin']}><DashboardPage /></ProtectedRoute>} />
+                <Route path="/profile"      element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin', 'super_admin']}><ProfilePage /></ProtectedRoute>} />
+                <Route path="/checkout"     element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin', 'super_admin']}><CheckoutPage /></ProtectedRoute>} />
+                <Route path="/subscription" element={<ProtectedRoute allowedRoles={['user', 'admin', 'super_admin']}><SubscriptionPage /></ProtectedRoute>} />
+                <Route path="/prescriptions" element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'admin', 'super_admin']}><PrescriptionsPage /></ProtectedRoute>} />
+                <Route path="/orders"       element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin', 'super_admin']}><OrdersPage /></ProtectedRoute>} />
+                <Route path="/settings"     element={<ProtectedRoute allowedRoles={['user', 'pharmacy', 'rider', 'admin', 'super_admin']}><SettingsPage /></ProtectedRoute>} />
 
                 {/* Role-Specific Protected Dashboards */}
-                <Route path="/admin"        element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
-                <Route path="/pharmacy"     element={<ProtectedRoute allowedRoles={['pharmacy', 'admin']}><PharmacyPage /></ProtectedRoute>} />
-                <Route path="/rider"        element={<ProtectedRoute allowedRoles={['rider', 'admin']}><RiderPage /></ProtectedRoute>} />
+                <Route path="/admin"        element={<ProtectedRoute allowedRoles={['admin', 'super_admin']}><AdminPage /></ProtectedRoute>} />
+                <Route path="/pharmacy"     element={<ProtectedRoute allowedRoles={['pharmacy', 'admin', 'super_admin']}><PharmacyPage /></ProtectedRoute>} />
+                <Route path="/rider"        element={<ProtectedRoute allowedRoles={['rider', 'admin', 'super_admin']}><RiderPage /></ProtectedRoute>} />
               </Routes>
             </Layout>
           </CartProvider>

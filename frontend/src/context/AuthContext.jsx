@@ -23,7 +23,14 @@ export function AuthProvider({ children }) {
     return localStorage.getItem('medifly_active_role') || 'user';
   });
 
-  const [dbUser, setDbUser] = useState(null);
+  const [dbUser, setDbUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('medifly_db_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Sync Clerk user with PostgreSQL backend
   useEffect(() => {
@@ -50,6 +57,7 @@ export function AuthProvider({ children }) {
             localStorage.setItem('medifly_token', data.token);
             if (data.user) {
               setDbUser(data.user);
+              localStorage.setItem('medifly_db_user', JSON.stringify(data.user));
             }
           }
         })
@@ -110,6 +118,7 @@ export function AuthProvider({ children }) {
     setDbUser(null);
     setToken(null);
     localStorage.removeItem('medifly_user');
+    localStorage.removeItem('medifly_db_user');
     localStorage.removeItem('medifly_token');
     localStorage.removeItem('medifly_active_role');
   };

@@ -11,8 +11,12 @@ export default function CheckoutPage() {
   const { items, subtotal, hasColdChain, hasRx, clearCart } = useCart();
   const { user } = useAuth();
   const isSub = user?.isSubscriber;
-  const [step, setStep] = useState('review');
-  const [address, setAddress] = useState('123, Sector 5, Andheri West, Mumbai 400058');
+  const [address, setAddress] = useState(() => {
+    if (user?.street || user?.city) {
+      return [user.street, user.city, user.zipCode].filter(Boolean).join(', ');
+    }
+    return '';
+  });
   const [deliveryType, setDeliveryType] = useState('standard');
   const [orderPlaced, setOrderPlaced] = useState(false);
 
@@ -34,6 +38,10 @@ export default function CheckoutPage() {
   const [orderError, setOrderError] = useState('');
 
   const handlePlaceOrder = async () => {
+    if (!address || !address.trim()) {
+      setOrderError('Delivery address is required to place an order. Please enter your delivery address below.');
+      return;
+    }
     setPlacing(true);
     setOrderError('');
     try {

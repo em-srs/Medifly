@@ -60,6 +60,7 @@ export default function Header() {
   };
 
   const getRoleBadge = (role) => {
+    if (role === 'super_admin') return <span style={{ background: '#f3e8ff', color: '#6b21a8', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '8px', fontWeight: 700 }}>SUPER ADMIN</span>;
     if (role === 'admin') return <span style={{ background: '#fee2e2', color: '#991b1b', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '8px', fontWeight: 700 }}>ADMIN</span>;
     if (role === 'pharmacy') return <span style={{ background: '#e0e7ff', color: '#3730a3', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '8px', fontWeight: 700 }}>PHARMACY</span>;
     if (role === 'rider') return <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '8px', fontWeight: 700 }}>RIDER</span>;
@@ -68,7 +69,7 @@ export default function Header() {
 
   const getRoleDashboardLink = () => {
     if (!user) return '/dashboard';
-    if (user.role === 'admin') return '/admin';
+    if (user.role === 'admin' || user.role === 'super_admin') return '/admin';
     if (user.role === 'pharmacy') return '/pharmacy';
     if (user.role === 'rider') return '/rider';
     return '/dashboard';
@@ -100,7 +101,7 @@ export default function Header() {
             ))}
 
             {/* Quick role-specific navigation portal links */}
-            {user?.role === 'admin' && (
+            {(user?.role === 'admin' || user?.role === 'super_admin') && (
               <Link to="/admin" className={`${styles.navLink} ${pathname === '/admin' ? styles.active : ''}`} style={{ color: '#dc2626', fontWeight: 600 }}>
                 <Shield size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '2px' }} /> Admin Portal
               </Link>
@@ -231,7 +232,7 @@ export default function Header() {
             </Link>
           ))}
 
-          {user?.role === 'admin' && (
+          {(user?.role === 'admin' || user?.role === 'super_admin') && (
             <Link to="/admin" className={styles.mobileNavLink} onClick={() => setMobileOpen(false)} style={{ color: '#dc2626' }}>
               <span className={styles.mobileNavIcon}><Shield size={18} /></span>
               <span>Admin Portal</span>
