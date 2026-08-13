@@ -21,6 +21,9 @@
 | :--- | :--- | :--- |
 | **Database Architecture** | **Completed** | PostgreSQL on Supabase with 254,000+ indexed medicines (`pg_trgm` GIN trigram indexing) |
 | **Authentication & RBAC** | **Completed** | **Clerk Authentication & Multi-Tenancy** (`@clerk/react` v6, `<SignIn />`, `<SignUp />`, `<UserButton />`, `<Show>`) with role metadata |
+| **Data Reset & Purge** | **Completed** | 100% mock data purge from `frontend/src`. All views connect directly to real PostgreSQL DB endpoints |
+| **Role Hierarchy & Isolation**| **Completed** | Dual-tier `admin` & `super_admin` system with SQL-level visibility isolation (`WHERE role != 'super_admin'`) |
+| **Post-Signup Onboarding** | **Completed** | Dedicated `/onboarding` screen collecting mandatory 10-digit phone number & delivery address upon signup |
 | **Prescription Vault** | **Completed** | Family-member profiles (`Self`, `Spouse`, `Father`), member-scoped order history tab, server-side ownership security (`account_owner_id`), & order tracking chips |
 | **Merged About & Contact** | **Completed** | Consolidated `/about` page with auto-redirect from `/contact`, contact form posting to `support_requests`, helpline SLAs, and partner/rider onboarding |
 | **Search Relevance Engine**| **Completed** | Ranked SQL search prioritizing brand name prefix matches (e.g. `Telma`, `Telmikind`) ahead of generic salt composition matches |
@@ -28,9 +31,9 @@
 | **Delivery SLA Engine** | **Completed** | **30-Minute Ultra-Express Delivery SLA**, Dynamic Multi-Tier Pricing Engine (`PricingService`), Cold-Chain Insulated Logistics |
 | **Real-Time Dispatch** | **Completed** | WebSockets (`Socket.io`) for live rider GPS location streaming & order status notifications |
 | **Salt Matching Engine** | **Completed** | Bioequivalent chemical salt matching & cost savings sorting (up to 70% cheaper generic alternatives) |
-| **Auto-Refill Engine** | **Completed** | Automated recurring monthly subscription refills (`CronService`) |
 | **Orders & Invoicing** | **Completed** | Uniform order tracking layout, status badges, and interactive "View Receipt" tax invoice modal popup |
 | **Security & Privacy** | **Completed** | Excluded raw database CSV dumps & sensitive log files from Git tracking with strict `.gitignore` protection |
+
 
 ---
 

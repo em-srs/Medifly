@@ -430,7 +430,7 @@ const generateToken = (id) => {
 > Medifly is configured for cloud deployment across modern hosting services:
 > - **Frontend SPA**: Deployed to Vercel or Netlify via Vite build (`npm run build`), producing optimized static assets in `dist/`.
 > - **Backend Server**: Containerized with Docker and hosted on Render or Railway with WebSocket support enabled.
-> - **Database**: Hosted on MongoDB Atlas with multi-region replica sets and automatic index optimization.
+> - **Database**: Hosted on Supabase (PostgreSQL) with multi-region replica sets and GIN trigram indexing (`pg_trgm`).
 > - **Containerization (Docker)**:
 > ```dockerfile
 > FROM node:18-alpine
@@ -441,3 +441,27 @@ const generateToken = (id) => {
 > EXPOSE 5000
 > CMD ["node", "server.js"]
 > ```
+
+---
+
+## 8. Recent Production Architecture Upgrades
+
+### 1. Data Sanitization & Mock Data Purge
+- **Full Sweeping Purge**: All hardcoded seed patients (`SEED_PATIENTS`), fake order IDs (`#MF-2026-9378`), mock riders (`Vikram Chavan`), and hardcoded profile objects (`Arjun Mehta`) were completely purged from `frontend/src`.
+- **Real PostgreSQL Endpoints**: Every primary UI view (`/profile`, `/orders`, `/prescriptions`, `/dashboard`) now connects to authentic Express/PostgreSQL backend controllers.
+
+### 2. Phone Field Fix & Schema Relaxation
+- **Root Cause**: The string `'9876543210'` was hardcoded across 5 fallback locations in `AuthContext.jsx`, `userController.js`, and `authMiddleware.js` due to a `NOT NULL` constraint on `users.phone`.
+- **Fix**: Relaxed `users.phone` to allow `NULL` via `ALTER TABLE users ALTER COLUMN phone DROP NOT NULL`, replaced all fallback chains with `null`/`''`, and added null-safety guards across controllers and components.
+
+### 3. Admin & Super Admin Role Hierarchy & SQL Isolation
+- **Role Source**: Roles are strictly assigned server-side in PostgreSQL (via manual DB UPDATE) and fetched via `dbUser.role`. Client-side role switching is permanently disabled.
+- **SQL-Layer Isolation**: Rather than relying on fragile frontend array filtering:
+  - `GET /api/admin/users`: Excludes `super_admin` accounts directly in SQL (`WHERE role != 'super_admin'`) when queried by an `admin`.
+  - `GET /api/admin/users/:id`: Returns `404 Not Found` if an `admin` attempts to view a `super_admin` user ID.
+
+### 4. Post-Signup Onboarding Flow (`/onboarding`)
+- **Conversion-Optimized Flow**: When a standard patient signs up via Clerk, [ProtectedRoute.jsx](file:///d:/CODINGBRO/medifly%20mern/frontend/src/components/ProtectedRoute.jsx) detects missing required profile fields (`phone` is NULL/empty) and redirects to `/onboarding`.
+- **Mandatory Phone Collection**: Collects Full Name, **Required 10-digit Phone Number**, and optional Delivery Address/City/Pincode.
+- **Persistence & Single-Execution**: Submits via `PUT /api/users/profile`, saving the user to DB and `localStorage`. Once completed, users are never prompted again.
+
