@@ -1,9 +1,8 @@
 /* ─── Orders Page Layout ──────────────────────────────────────────────────── */
 .layout {
   display: flex;
-  height: calc(100vh - 71px);
+  min-height: calc(100vh - 71px);
   background-color: var(--bg-secondary);
-  overflow: hidden;
 }
 
 /* ─── Sidebar ────────────────────────────────────────────────────────────── */
@@ -15,6 +14,10 @@
   flex-direction: column;
   padding: 1.5rem 0;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 71px);
+  overflow-y: auto;
 }
 .sidebarLogo {
   padding: 0 1.5rem;
@@ -48,8 +51,6 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: hidden;
   min-width: 0;
 }
 
@@ -85,7 +86,6 @@
 /* ─── Scrollable Content Area ──────────────────────────────────────────────── */
 .content {
   flex: 1;
-  overflow-y: auto;
   padding: 2rem 2.5rem;
   display: flex;
   flex-direction: column;
