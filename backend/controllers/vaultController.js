@@ -81,6 +81,8 @@ const checkMemberOwnership = async (memberId, userId) => {
   return member;
 };
 
+exports.checkMemberOwnership = checkMemberOwnership;
+
 // @desc    Get all family members for logged in user (auto-seeds defaults if empty)
 // @route   GET /api/vault/members
 // @access  Private

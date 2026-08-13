@@ -80,3 +80,37 @@ exports.updateLocation = async (req, res) => {
     res.status(500).json({ message: 'Server Error', error: error.message });
   }
 };
+
+exports.getRiderDeliveries = async (req, res) => {
+  try {
+    const riderResult = await query('SELECT * FROM riders WHERE user_id = $1', [req.user.id]);
+    const activeOrderId = riderResult.rows[0]?.active_order_id;
+
+    const ordersResult = await query(
+      `SELECT o.*, u.name as customer_name
+       FROM orders o
+       JOIN users u ON o.user_id = u.id
+       WHERE o.rider_name = $1 OR o.id = $2
+       ORDER BY o.created_at DESC`,
+      [req.user.name, activeOrderId || 0]
+    );
+
+    const formatted = ordersResult.rows.map(o => ({
+      id: `DEL-${o.id}`,
+      orderId: `MF-${o.id}`,
+      customer: o.customer_name || 'Customer',
+      address: o.shipping_address || 'Registered Address',
+      items: ['Prescription Medicines'],
+      coldChain: parseFloat(o.cold_chain_fee || 0) > 0,
+      status: o.is_delivered ? 'Delivered' : 'In Transit',
+      pharmacy: 'MediFly Partner Pharmacy',
+      est: '20 min',
+      earnings: 50
+    }));
+
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+};
+
