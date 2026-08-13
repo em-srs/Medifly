@@ -144,13 +144,14 @@ export default function Header() {
             {user && (
               <div className={styles.userMenuWrap} ref={menuRef}>
                 <button
-                  className={`${styles.iconBtn} ${user ? styles.userLoggedIn : ''}`}
+                  className={styles.userBtn}
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   id="user-menu-btn"
                   aria-label="User menu"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.4rem 0.75rem', borderRadius: '20px' }}
                 >
-                  <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+                  <div className={styles.userAvatarIcon}>
+                    <User size={16} />
+                  </div>
                   <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--slate-800)' }}>
                     {user.name?.split(' ')[0] || 'Account'}
                   </span>

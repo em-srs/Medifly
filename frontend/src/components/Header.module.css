@@ -130,12 +130,45 @@
 .userMenuWrap { position: relative; }
 .userLoggedIn { color: var(--teal-600) !important; }
 
+.userBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.35rem 0.85rem 0.35rem 0.45rem;
+  border-radius: var(--radius-full);
+  background: var(--slate-100);
+  border: 1.5px solid var(--slate-200);
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition-fast);
+  color: var(--slate-800);
+  height: 40px;
+  width: auto;
+}
+
+.userBtn:hover {
+  background: var(--slate-200);
+  border-color: var(--teal-500);
+}
+
+.userAvatarIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
 .userDot {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
-  width: 8px;
-  height: 8px;
+  bottom: 2px;
+  right: 2px;
+  width: 9px;
+  height: 9px;
   background: var(--success);
   border-radius: 50%;
   border: 2px solid white;
