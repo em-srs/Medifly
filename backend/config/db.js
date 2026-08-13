@@ -44,7 +44,7 @@ const initDb = async () => {
       name VARCHAR(255) NOT NULL,
       email VARCHAR(255) UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
-      phone VARCHAR(50) NOT NULL,
+      phone VARCHAR(50),
       role VARCHAR(20) DEFAULT 'user',
       is_subscribed BOOLEAN DEFAULT false,
       subscription_plan VARCHAR(20) DEFAULT 'none',
@@ -210,6 +210,12 @@ const initDb = async () => {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS allergies TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS primary_doctor VARCHAR(255);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS upi_id VARCHAR(100);
+
+    -- Allow phone to be NULL (was previously NOT NULL with hardcoded '9876543210' default)
+    ALTER TABLE users ALTER COLUMN phone DROP NOT NULL;
+
+    -- Expand role column to support 'super_admin' (was VARCHAR(20), needs room)
+    ALTER TABLE users ALTER COLUMN role TYPE VARCHAR(30);
   `;
   try {
     await pool.query(schemaSql);

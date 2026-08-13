@@ -127,24 +127,24 @@ exports.syncUser = async (req, res) => {
 
     if (result.rows.length > 0) {
       userRow = result.rows[0];
-      // Update name or clerk_id if missing
+      // Update name, clerk_id, and phone only if Clerk provides a real value
       const updated = await query(
         `UPDATE users
          SET clerk_id = COALESCE($1, clerk_id),
              name = COALESCE($2, name),
-             phone = CASE WHEN phone = '9876543210' AND $3::text IS NOT NULL AND $3::text != '' THEN $3 ELSE phone END
+             phone = CASE WHEN (phone IS NULL OR phone = '') AND $3::text IS NOT NULL AND $3::text != '' THEN $3 ELSE phone END
          WHERE id = $4
          RETURNING id, clerk_id, name, email, phone, alt_phone, blood_group, allergies, primary_doctor, upi_id, role, is_subscribed, subscription_plan, subscription_expiry, street, city, state, zip_code, created_at`,
         [clerkId || userRow.clerk_id, name || userRow.name, phone || null, userRow.id]
       );
       userRow = updated.rows[0];
     } else {
-      // Create new user in PostgreSQL
+      // Create new user in PostgreSQL — phone is NULL if not provided by Clerk
       const newUser = await query(
         `INSERT INTO users (name, email, password, phone, role, clerk_id)
          VALUES ($1, $2, 'clerk_sso_nopassword', $3, 'user', $4)
          RETURNING id, clerk_id, name, email, phone, alt_phone, blood_group, allergies, primary_doctor, upi_id, role, is_subscribed, subscription_plan, subscription_expiry, street, city, state, zip_code, created_at`,
-        [name || email.split('@')[0], email, phone || '9876543210', clerkId || email]
+        [name || email.split('@')[0], email, phone || null, clerkId || email]
       );
       userRow = newUser.rows[0];
     }

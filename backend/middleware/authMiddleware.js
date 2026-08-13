@@ -53,12 +53,12 @@ const protect = async (req, res, next) => {
     }
 
     if (!result || result.rows.length === 0) {
-      // If user isn't in PostgreSQL yet, check if we have enough info to auto-create
+      // If user isn't in PostgreSQL yet, auto-create with NULL phone (no hardcoded default)
       if (userEmail) {
         const userName = req.headers['x-user-name'] || userEmail.split('@')[0];
         const newRes = await query(
           `INSERT INTO users (name, email, password, phone, role, clerk_id)
-           VALUES ($1, $2, 'clerk_sso_nopassword', '9876543210', 'user', $3)
+           VALUES ($1, $2, 'clerk_sso_nopassword', NULL, 'user', $3)
            RETURNING ${selectFields}`,
           [userName, userEmail, clerkIdHeader || userId || userEmail]
         );
@@ -82,12 +82,22 @@ const protect = async (req, res, next) => {
   }
 };
 
+// Requires admin OR super_admin role
 const admin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
+  if (req.user && (req.user.role === 'admin' || req.user.role === 'super_admin')) {
     next();
   } else {
-    res.status(401).json({ message: 'Not authorized as an admin' });
+    res.status(403).json({ message: 'Not authorized — admin access required' });
   }
 };
 
-module.exports = { protect, admin };
+// Requires super_admin role exclusively
+const superAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'super_admin') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Not authorized — super_admin access required' });
+  }
+};
+
+module.exports = { protect, admin, superAdmin };

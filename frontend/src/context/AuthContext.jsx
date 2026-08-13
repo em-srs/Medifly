@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
     if (clerkIsSignedIn && clerkUser) {
       const email = clerkUser.primaryEmailAddress?.emailAddress || `${clerkUser.id}@medifly.com`;
       const name = clerkUser.fullName || clerkUser.firstName || email.split('@')[0];
-      const phone = clerkUser.primaryPhoneNumber?.phoneNumber || '9876543210';
+      const phone = clerkUser.primaryPhoneNumber?.phoneNumber || null;
 
       fetch(`${API_BASE}/api/users/sync`, {
         method: 'POST',
@@ -59,11 +59,11 @@ export function AuthProvider({ children }) {
   }, [clerkIsSignedIn, clerkUser]);
 
   // Derived effective user from Clerk or local fallback
+  // IMPORTANT: role comes from dbUser (server-sourced via DB), never from client Clerk metadata
   const user = useMemo(() => {
     if (clerkIsSignedIn && clerkUser) {
       const email = clerkUser.primaryEmailAddress?.emailAddress || `${clerkUser.id}@medifly.com`;
       const name = clerkUser.fullName || clerkUser.firstName || email.split('@')[0];
-      const roleFromMeta = clerkUser.publicMetadata?.role || clerkUser.unsafeMetadata?.role || 'user';
 
       return {
         id: dbUser?.id || clerkUser.id,
@@ -71,19 +71,19 @@ export function AuthProvider({ children }) {
         patientId: dbUser?.patientId || `MF-${String(dbUser?.id || '1').padStart(5, '0')}-A`,
         name: dbUser?.name || name,
         email: dbUser?.email || email,
-        phone: dbUser?.phone || clerkUser.primaryPhoneNumber?.phoneNumber || '9876543210',
+        phone: dbUser?.phone || clerkUser.primaryPhoneNumber?.phoneNumber || '',
         altPhone: dbUser?.altPhone || '',
-        bloodGroup: dbUser?.bloodGroup || 'Not specified',
-        allergies: dbUser?.allergies || 'None reported',
-        primaryDoctor: dbUser?.primaryDoctor || 'Not specified',
+        bloodGroup: dbUser?.bloodGroup || '',
+        allergies: dbUser?.allergies || '',
+        primaryDoctor: dbUser?.primaryDoctor || '',
         street: dbUser?.street || '',
         city: dbUser?.city || '',
         state: dbUser?.state || '',
         zipCode: dbUser?.zipCode || '',
         upiId: dbUser?.upiId || '',
-        role: roleFromMeta,
-        isSubscribed: dbUser ? dbUser.isSubscribed : true,
-        subscriptionPlan: dbUser?.subscriptionPlan || 'monthly',
+        role: dbUser?.role || 'user',
+        isSubscribed: dbUser ? dbUser.isSubscribed : false,
+        subscriptionPlan: dbUser?.subscriptionPlan || 'none',
         createdAt: dbUser?.createdAt || clerkUser.createdAt,
         token: token,
         clerkUser: clerkUser
@@ -92,28 +92,10 @@ export function AuthProvider({ children }) {
     return localUser ? { ...localUser, token } : null;
   }, [clerkIsSignedIn, clerkUser, dbUser, localUser, token]);
 
-  const switchRole = async (newRole) => {
-    localStorage.setItem('medifly_active_role', newRole);
-    setActiveRole(newRole);
-
-    if (clerkUser) {
-      try {
-        await clerkUser.update({
-          unsafeMetadata: {
-            ...clerkUser.unsafeMetadata,
-            role: newRole
-          }
-        });
-      } catch (err) {
-        console.warn('Clerk metadata role update:', err.message);
-      }
-    }
-
-    if (localUser) {
-      const updated = { ...localUser, role: newRole };
-      setLocalUser(updated);
-      localStorage.setItem('medifly_user', JSON.stringify(updated));
-    }
+  // switchRole is intentionally removed — roles are assigned server-side
+  // in PostgreSQL only (via direct DB UPDATE), never client-switchable.
+  const switchRole = () => {
+    console.warn('Role switching is disabled. Roles are assigned server-side only.');
   };
 
   const logout = async () => {
@@ -132,7 +114,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('medifly_active_role');
   };
 
-  const demoLogin = (role = 'user', phone = '9876543210') => {
+  const demoLogin = (role = 'user', phone = '') => {
     const roleNames = {
       admin: 'Platform Admin',
       pharmacy: 'MediFly Partner Pharmacy',
