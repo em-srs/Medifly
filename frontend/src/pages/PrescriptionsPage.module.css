@@ -672,3 +672,246 @@
   border-color: var(--teal-300);
 }
 
+/* ─── Vault Patient Panel Layout ─────────────────────────────────────────── */
+.vaultPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  background: var(--bg-secondary);
+}
+
+.memberHeaderCard {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem 2rem;
+  background: white;
+  border-bottom: 1px solid var(--slate-100);
+  flex-shrink: 0;
+}
+
+.memberAvatarLarge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--teal-50);
+  color: var(--teal-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  border: 2px solid var(--teal-200);
+}
+
+.memberHeaderMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.memberTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.memberTitleRow h3 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--slate-900);
+  margin: 0;
+}
+
+.memberRelationBadge {
+  background: var(--teal-50);
+  color: var(--teal-700);
+  border: 1px solid var(--teal-200);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.patientIdChip {
+  background: var(--slate-100);
+  color: var(--slate-700);
+  border: 1px solid var(--slate-200);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.65rem;
+  border-radius: 12px;
+  letter-spacing: 0.03em;
+}
+
+.memberSubDetails {
+  font-size: 0.85rem;
+  color: var(--slate-500);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Tabs Bar */
+.tabsRow {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--slate-200);
+  padding: 0 2rem;
+  background: white;
+  flex-shrink: 0;
+}
+
+.tabBtn {
+  background: none;
+  border: none;
+  padding: 0.85rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--slate-500);
+  cursor: pointer;
+  position: relative;
+  transition: color var(--transition-fast);
+}
+
+.tabBtn:hover {
+  color: var(--teal-600);
+}
+
+.tabBtnActive {
+  color: var(--teal-600);
+  font-weight: 700;
+}
+
+.tabBtnActive::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--teal-500);
+  border-radius: 2px;
+}
+
+/* Prescription Grid & Card */
+.rxGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1.25rem;
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+  flex: 1;
+  align-content: start;
+}
+
+.rxCard {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 1.35rem;
+  border: 1px solid var(--slate-200);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: all var(--transition-base);
+}
+
+.rxCard:hover {
+  border-color: var(--teal-300);
+  box-shadow: var(--shadow-md);
+}
+
+.rxCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.rxCardTitleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.rxTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--slate-900);
+  margin: 0;
+}
+
+.rxCardActions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.rxMetaList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  background: var(--slate-50);
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-md);
+}
+
+.rxMetaItem {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--slate-600);
+}
+
+.rxMetaItem span {
+  color: var(--slate-400);
+}
+
+.rxCardFooter {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.pendingText {
+  font-size: 0.8rem;
+  color: #d97706;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+/* Patient List Left Panel */
+.patientNameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.patientName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.relationTag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--teal-700);
+  background: var(--teal-50);
+  padding: 0.1rem 0.4rem;
+  border-radius: 8px;
+}
+
+.patientSub {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--slate-500);
+  margin-top: 0.2rem;
+}
+
