@@ -161,3 +161,35 @@ exports.syncUser = async (req, res) => {
     res.status(500).json({ message: 'Server Error syncing user', error: error.message });
   }
 };
+
+// @desc    Get real user dashboard stats (SQL aggregates)
+// @route   GET /api/users/stats
+// @access  Private
+exports.getUserStats = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const ordersRes = await query(
+      'SELECT COUNT(*) as total_orders, COALESCE(SUM(total_price), 0.00) as total_spent FROM orders WHERE user_id = $1',
+      [userId]
+    );
+
+    const rxRes = await query(
+      'SELECT COUNT(*) as total_prescriptions FROM prescriptions WHERE user_id = $1',
+      [userId]
+    );
+
+    const totalOrders = parseInt(ordersRes.rows[0]?.total_orders || 0, 10);
+    const totalSpent = parseFloat(ordersRes.rows[0]?.total_spent || 0);
+    const totalPrescriptions = parseInt(rxRes.rows[0]?.total_prescriptions || 0, 10);
+
+    res.json({
+      totalOrders,
+      totalSpent,
+      totalPrescriptions
+    });
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    res.status(500).json({ message: 'Server error fetching stats', error: error.message });
+  }
+};

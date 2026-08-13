@@ -33,31 +33,40 @@ export default function ProfilePage() {
     upiId: ''
   });
 
-  // Fetch authentic user profile from GET /api/users/me
+  // Keep profile synced with authUser
+  useEffect(() => {
+    if (authUser) {
+      setProfile(authUser);
+      setLoading(false);
+    }
+  }, [authUser]);
+
+  // Fetch authentic user profile from GET /api/users/me on mount
   useEffect(() => {
     let isMounted = true;
+    const timeoutId = setTimeout(() => {
+      if (isMounted) setLoading(false);
+    }, 3500);
 
     async function fetchProfile() {
       try {
-        setLoading(true);
         const data = await apiCall('/api/users/me');
-        if (isMounted) {
+        if (isMounted && data) {
           setProfile(data);
-          if (setDbUser) setDbUser(data);
         }
       } catch (err) {
         console.warn('Could not fetch profile from GET /api/users/me:', err.message);
-        if (isMounted && authUser) {
-          setProfile(authUser);
-        }
       } finally {
         if (isMounted) setLoading(false);
       }
     }
 
     fetchProfile();
-    return () => { isMounted = false; };
-  }, [apiCall, authUser, setDbUser]);
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [apiCall]);
 
   const openEditModal = () => {
     if (!profile) return;

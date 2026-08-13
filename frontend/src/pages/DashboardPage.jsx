@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { sampleOrders } from '@/data/mockData';
 import styles from './DashboardPage.module.css';
 import useScrollReveal from '@/hooks/useScrollReveal';
-import { Lock, TestTubes, RefreshCw, Package, CheckCircle2, Sparkles, Pill, Search, Bike, Clock, FileText } from 'lucide-react';
-
+import { Lock, TestTubes, RefreshCw, Package, CheckCircle2, Pill, Search, Bike, Clock, FileText, ShoppingBag } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
-  const [searchQuery,   setSearchQuery]   = useState('');
+  const { user, apiCall } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [userStats, setUserStats] = useState({ totalOrders: 0, totalSpent: 0, totalPrescriptions: 0 });
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const debounceRef = useRef(null);
 
   // Debounced medicine search via static JSON
@@ -32,6 +33,36 @@ export default function DashboardPage() {
     return () => clearTimeout(debounceRef.current);
   }, [searchQuery]);
 
+  // Fetch real authenticated user orders & stats from backend
+  useEffect(() => {
+    let isMounted = true;
+    if (user) {
+      setLoadingOrders(true);
+
+      // 1. Fetch authenticated orders
+      apiCall('/api/orders/myorders')
+        .then(data => {
+          if (isMounted && Array.isArray(data)) {
+            setRecentOrders(data.slice(0, 5));
+          }
+        })
+        .catch(err => console.warn('Could not fetch recent orders:', err.message))
+        .finally(() => {
+          if (isMounted) setLoadingOrders(false);
+        });
+
+      // 2. Fetch authenticated SQL aggregate stats
+      apiCall('/api/users/stats')
+        .then(data => {
+          if (isMounted && data) {
+            setUserStats(data);
+          }
+        })
+        .catch(err => console.warn('Could not fetch user stats:', err.message));
+    }
+    return () => { isMounted = false; };
+  }, [user, apiCall]);
+
   const pageRef    = useScrollReveal(0.05);
   const actionsRef = useScrollReveal(0.1);
   const ordersRef  = useScrollReveal(0.08);
@@ -52,10 +83,10 @@ export default function DashboardPage() {
   }
 
   const statusIcon = (s) => {
-    if (s === 'Delivered') return <CheckCircle2 size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />;
-    if (s === 'In Transit') return <Bike size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />;
-    if (s === 'Processing') return <Clock size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />;
-    return <Package size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />;
+    const status = (s || '').toLowerCase();
+    if (status.includes('delivered')) return <CheckCircle2 size={16} />;
+    if (status.includes('transit') || status.includes('dispatched')) return <Bike size={16} />;
+    return <Clock size={16} />;
   };
 
   return (
@@ -63,7 +94,7 @@ export default function DashboardPage() {
       <div className="container" ref={pageRef}>
         <div className={styles.greeting} data-reveal="true" data-delay="0">
           <h1>Welcome back, <span className="text-gradient">{user.name || 'User'}</span></h1>
-          <p>Manage your orders, prescriptions, and subscriptions from here.</p>
+          <p>Manage your orders, prescriptions, and auto-refill subscriptions from here.</p>
         </div>
 
         {/* Quick Search */}
@@ -113,7 +144,7 @@ export default function DashboardPage() {
           <Link to="/subscription" className={styles.actionCard} data-reveal="scale" data-delay="240">
             <span className={styles.actionIcon}><RefreshCw size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>
             <strong>Auto-Refill</strong>
-            <small>{user.isSubscriber ? 'Manage refills' : 'Subscribe now'}</small>
+            <small>{user.isSubscribed ? 'Manage refills' : 'Set up auto-refill'}</small>
           </Link>
         </div>
 
@@ -122,70 +153,59 @@ export default function DashboardPage() {
           <div className={styles.section} ref={ordersRef}>
             <div className={styles.sectionHeader} data-reveal="true" data-delay="0">
               <h2><Package size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Recent Orders</h2>
-              <Link to="/medicines" className={styles.viewAll}>View All →</Link>
+              <Link to="/orders" className={styles.viewAll}>View All →</Link>
             </div>
+            
             <div className={styles.orderList}>
-              {sampleOrders.map((order, i) => (
-                <div key={order.id} className={styles.orderCard} data-reveal="true" data-delay={i * 80}>
-                  <div className={styles.orderHeader}>
-                    <span className={styles.orderId}>{order.id}</span>
-                    <span className={`badge ${order.status === 'Delivered' ? 'badge-green' : order.status === 'In Transit' ? 'badge-blue' : 'badge-yellow'}`}>
-                      {statusIcon(order.status)} {order.status}
-                    </span>
-                  </div>
-                  <div className={styles.orderItems}>
-                    {order.items.map((item, i) => (
-                      <span key={i}>{item.name} × {item.qty}</span>
-                    ))}
-                  </div>
-                  <div className={styles.orderFooter}>
-                    <span>₹{order.total}</span>
-                    <span>{order.pharmacy}</span>
-                    {order.eta && <span className={styles.eta}>ETA: {order.eta}</span>}
-                  </div>
+              {loadingOrders ? (
+                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Loading recent orders...</p>
+              ) : recentOrders.length === 0 ? (
+                <div style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '2rem', textAlign: 'center' }}>
+                  <ShoppingBag size={36} style={{ color: '#94a3b8', marginBottom: '0.5rem' }} />
+                  <h3 style={{ margin: '0 0 0.25rem 0', color: '#1e293b', fontSize: '1.1rem' }}>No recent orders</h3>
+                  <p style={{ margin: '0 0 1rem 0', color: '#64748b', fontSize: '0.875rem' }}>Your order history will appear here once you place an order.</p>
+                  <Link to="/medicines" className="btn btn-primary btn-sm">Order Medicines Now</Link>
                 </div>
-              ))}
+              ) : (
+                recentOrders.map((order, i) => (
+                  <div key={order.id || i} className={styles.orderCard} data-reveal="true" data-delay={i * 80}>
+                    <div className={styles.orderHeader}>
+                      <span className={styles.orderId}>Order #{order.id}</span>
+                      <span className={`badge ${order.status === 'delivered' ? 'badge-green' : order.status === 'in transit' ? 'badge-blue' : 'badge-yellow'}`}>
+                        {statusIcon(order.status)} {order.status || 'Processing'}
+                      </span>
+                    </div>
+                    <div className={styles.orderItems}>
+                      {(order.orderItems || order.items || []).map((item, idx) => (
+                        <span key={idx}>{item.name} × {item.qty}</span>
+                      ))}
+                    </div>
+                    <div className={styles.orderFooter}>
+                      <span>₹{(order.totalPrice || order.total_price || 0).toFixed(2)}</span>
+                      <span>Placed on {new Date(order.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* Subscription & Stats */}
+          {/* Real User Stats */}
           <div className={styles.sidebar} ref={sideRef}>
-            <div className={styles.subCard} data-reveal="right" data-delay="0">
-              {user.isSubscriber ? (
-                <>
-                  <span className={styles.subIcon}><Sparkles size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>
-                  <h3>MediFly Pro Active</h3>
-                  <p>Valid till {new Date(user.subscriptionExpiry).toLocaleDateString()}</p>
-                  <Link to="/subscription" className="btn btn-secondary btn-sm" style={{marginTop:'var(--space-3)'}}>Manage →</Link>
-                </>
-              ) : (
-                <>
-                  <span className={styles.subIcon}><RefreshCw size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /></span>
-                  <h3>Upgrade to Pro</h3>
-                  <p>Save on every order with auto-refill</p>
-                  <Link to="/subscription" className="btn btn-primary btn-sm" style={{marginTop:'var(--space-3)'}}>Subscribe — ₹99/mo →</Link>
-                </>
-              )}
-            </div>
-
-            <div className={styles.statsCard} data-reveal="right" data-delay="120">
-              <h3>Your Stats</h3>
+            <div className={styles.statsCard} data-reveal="right" data-delay="0">
+              <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b', fontSize: '1.1rem' }}>Your Account Stats</h3>
               <div className={styles.statsList}>
                 <div className={styles.stat}>
-                  <span className={styles.statValue}>4</span>
+                  <span className={styles.statValue}>{userStats.totalOrders}</span>
                   <span className={styles.statLabel}>Total Orders</span>
                 </div>
                 <div className={styles.stat}>
-                  <span className={styles.statValue}>3</span>
+                  <span className={styles.statValue}>{userStats.totalPrescriptions}</span>
                   <span className={styles.statLabel}>Prescriptions</span>
                 </div>
-                <div className={styles.stat}>
-                  <span className={styles.statValue}>₹1,408</span>
-                  <span className={styles.statLabel}>Total Spent</span>
-                </div>
-                <div className={styles.stat}>
-                  <span className={styles.statValue}>47m</span>
-                  <span className={styles.statLabel}>Avg Delivery</span>
+                <div className={styles.stat} style={{ gridColumn: 'span 2' }}>
+                  <span className={styles.statValue}>₹{userStats.totalSpent.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                  <span className={styles.statLabel}>Total Amount Spent</span>
                 </div>
               </div>
             </div>

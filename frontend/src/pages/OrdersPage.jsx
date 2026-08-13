@@ -6,84 +6,70 @@ import { useAuth } from '@/context/AuthContext';
 import { 
   Map, Home, ShoppingBag, Folder, ShoppingCart, User, Settings, 
   Snowflake, MapPin, Truck, RefreshCw, CheckCircle2, Clock, Package, 
-  X, FileText, IndianRupee 
+  X, FileText
 } from 'lucide-react';
-
-const MOCK_ORDERS = [
-  {
-    id: 'MF-2026-9378',
-    date: '28 Jan 2026',
-    total: '₹2,100',
-    status: 'OUT FOR DELIVERY',
-    items: '1× Insulin Glargine 100 IU/ml (Lantus) — Cold Chain Required',
-    address: 'Delivering to Goregaon East, Mumbai',
-    rider: 'Rider: Vikram Chavan · ETA 22 mins',
-    coldChain: true,
-  },
-  {
-    id: 'MF-2026-9341',
-    date: '14 Jan 2026',
-    total: '₹340',
-    status: 'DELIVERED',
-    items: '1× Atorvastatin 20mg (Lipvas) · 2× Metformin 500mg ER (Glycomet SR)',
-    address: 'Delivered to Andheri West, Mumbai',
-    rider: null,
-    coldChain: false,
-  },
-  {
-    id: 'MF-2025-9290',
-    date: '02 Dec 2025',
-    total: '₹189',
-    status: 'DELIVERED',
-    items: '1× Telma 40 (Telmisartan) · 1× Ecosprin 75mg',
-    address: 'Delivered to Bandra West, Mumbai',
-    rider: null,
-    coldChain: false,
-  },
-];
 
 export default function OrdersPage() {
   const pathname = useLocation().pathname;
   const { apiCall } = useAuth();
   const contentRef = useScrollReveal(0.08);
 
-  const [orders, setOrders] = useState(MOCK_ORDERS);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    setError(null);
+
     apiCall('/api/orders/myorders')
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const formatted = data.map(o => ({
-            id: o.id || o._id,
-            date: new Date(o.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-            total: `₹${(o.totalPrice || 0).toLocaleString()}`,
-            status: (o.status || (o.isDelivered ? 'DELIVERED' : 'PROCESSING')).toUpperCase(),
-            items: (o.orderItems || []).map(i => `${i.qty}× ${i.name}`).join(' · ') || 'Prescription Medication',
-            address: o.shippingAddress?.address ? `${o.shippingAddress.address}, ${o.shippingAddress.city || ''}` : 'Delivered to Register Address',
-            rider: o.rider ? 'Fleet Rider Assigned · Delivery in progress' : null,
-            coldChain: o.coldChainFee > 0,
-            raw: o
-          }));
-          setOrders(formatted);
+        if (isMounted) {
+          if (Array.isArray(data)) {
+            const formatted = data.map(o => ({
+              id: o.id || o._id,
+              date: new Date(o.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+              total: `₹${(o.totalPrice || o.total_price || 0).toFixed(2)}`,
+              status: (o.status || (o.isDelivered ? 'DELIVERED' : 'PROCESSING')).toUpperCase(),
+              items: (o.orderItems || o.items || []).map(i => `${i.qty}× ${i.name}`).join(' · ') || 'Prescription Medicines',
+              address: o.shippingAddress?.address ? `${o.shippingAddress.address}, ${o.shippingAddress.city || ''}` : 'Delivered to Registered Address',
+              rider: o.rider_name ? `Assigned Rider: ${o.rider_name}` : null,
+              coldChain: o.coldChainFee > 0 || o.cold_chain_fee > 0,
+              raw: o
+            }));
+            setOrders(formatted);
+          } else {
+            setOrders([]);
+          }
         }
       })
-      .catch(() => {
-        // Fallback to MOCK_ORDERS
+      .catch(err => {
+        console.warn('Could not fetch orders:', err.message);
+        if (isMounted) {
+          setError(err.message || 'Failed to load order history');
+          setOrders([]);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
       });
+
+    return () => { isMounted = false; };
   }, [apiCall]);
 
   const getStatusClass = (status) => {
     const s = (status || '').toUpperCase();
     if (s.includes('DELIVERED')) return styles.statusDelivered;
-    if (s.includes('OUT') || s.includes('DELIVERY') || s.includes('TRANSIT')) return styles.statusOutForDelivery;
+    if (s.includes('OUT') || s.includes('DELIVERY') || s.includes('TRANSIT') || s.includes('DISPATCHED')) return styles.statusOutForDelivery;
     return styles.statusProcessing;
   };
 
   const getStatusIcon = (status) => {
     const s = (status || '').toUpperCase();
     if (s.includes('DELIVERED')) return <CheckCircle2 size={14} />;
-    if (s.includes('OUT') || s.includes('DELIVERY') || s.includes('TRANSIT')) return <Truck size={14} />;
+    if (s.includes('OUT') || s.includes('DELIVERY') || s.includes('TRANSIT') || s.includes('DISPATCHED')) return <Truck size={14} />;
     return <Clock size={14} />;
   };
 
@@ -133,80 +119,92 @@ export default function OrdersPage() {
             </div>
           </div>
 
-          <div className={styles.ordersList}>
-            {orders.map((order, i) => (
-              <div key={order.id || i} className={styles.orderCard} data-reveal="true" data-delay={i * 60}>
-                {/* Order Header */}
-                <div className={styles.orderCardHeader}>
-                  <div className={styles.orderMeta}>
-                    <div className={styles.orderIdRow}>
-                      <span className={styles.orderId}>Order #{order.id}</span>
+          {loading ? (
+            <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+              <p style={{ margin: 0, fontSize: '0.95rem' }}>Loading your order history...</p>
+            </div>
+          ) : error ? (
+            <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '16px', padding: '2rem', textAlign: 'center', color: '#991b1b' }}>
+              <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600 }}>{error}</p>
+              <button onClick={() => window.location.reload()} className="btn btn-outline btn-sm">Retry</button>
+            </div>
+          ) : orders.length === 0 ? (
+            <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '3rem', textAlign: 'center' }}>
+              <Package size={48} style={{ color: '#cbd5e1', marginBottom: '1rem' }} />
+              <h3 style={{ margin: '0 0 0.5rem 0', color: '#1e293b', fontSize: '1.2rem' }}>No orders placed yet</h3>
+              <p style={{ margin: '0 0 1.5rem 0', color: '#64748b', fontSize: '0.9rem' }}>Your medicine orders will appear here once placed.</p>
+              <Link to="/medicines" className="btn btn-primary">Browse Shop & Order Medicines →</Link>
+            </div>
+          ) : (
+            <div className={styles.ordersList}>
+              {orders.map((order, i) => (
+                <div key={order.id || i} className={styles.orderCard} data-reveal="true" data-delay={i * 60}>
+                  {/* Order Header */}
+                  <div className={styles.orderCardHeader}>
+                    <div className={styles.orderMeta}>
+                      <div className={styles.orderIdRow}>
+                        <span className={styles.orderId}>Order #{order.id}</span>
+                      </div>
+                      <span className={styles.orderDate}>
+                        Placed on: {order.date} &nbsp;·&nbsp; Total: <strong className={styles.orderTotal}>{order.total}</strong>
+                      </span>
                     </div>
-                    <span className={styles.orderDate}>
-                      Placed on: {order.date} &nbsp;·&nbsp; Total: <strong className={styles.orderTotal}>{order.total}</strong>
+
+                    <span className={`${styles.statusBadge} ${getStatusClass(order.status)}`}>
+                      {getStatusIcon(order.status)}
+                      {order.status}
                     </span>
                   </div>
 
-                  <span className={`${styles.statusBadge} ${getStatusClass(order.status)}`}>
-                    {getStatusIcon(order.status)}
-                    {order.status}
-                  </span>
-                </div>
-
-                {/* Order Body Details */}
-                <div className={styles.orderBody}>
-                  <div className={styles.orderDetailRow}>
-                    <ShoppingCart size={16} className={styles.detailIcon} />
-                    <div className={styles.detailText}>
-                      {order.items}
-                      {order.coldChain && (
-                        <span className="badge badge-blue" style={{ fontSize: '0.7rem', marginLeft: '6px' }}>
-                          <Snowflake size={11} style={{ display: 'inline', marginRight: '2px' }} /> Cold Chain
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className={styles.orderDetailRow}>
-                    <MapPin size={16} className={styles.detailIcon} />
-                    <div className={styles.detailText}>{order.address}</div>
-                  </div>
-
-                  {/* Rider Banner */}
-                  {order.rider && (
-                    <div className={styles.riderBanner}>
-                      <div className={styles.riderInfo}>
-                        <Truck size={18} style={{ color: 'var(--teal-600)' }} />
-                        <span>{order.rider}</span>
+                  {/* Order Body Details */}
+                  <div className={styles.orderBody}>
+                    <div className={styles.orderDetailRow}>
+                      <ShoppingCart size={16} className={styles.detailIcon} />
+                      <div className={styles.detailText}>
+                        {order.items}
+                        {order.coldChain && (
+                          <span className="badge badge-blue" style={{ fontSize: '0.7rem', marginLeft: '6px' }}>
+                            <Snowflake size={11} style={{ display: 'inline', marginRight: '2px' }} /> Cold Chain
+                          </span>
+                        )}
                       </div>
-                      <span className={styles.etaBadge}>Live Tracking Active</span>
                     </div>
-                  )}
-                </div>
 
-                {/* Order Footer Actions */}
-                <div className={styles.orderFooter}>
-                  {order.status.includes('OUT') && (
-                    <button className="btn btn-primary btn-sm" style={{ gap: '6px' }}>
-                      <Map size={15} /> Track Live
+                    <div className={styles.orderDetailRow}>
+                      <MapPin size={16} className={styles.detailIcon} />
+                      <div className={styles.detailText}>{order.address}</div>
+                    </div>
+
+                    {/* Rider Banner */}
+                    {order.rider && (
+                      <div className={styles.riderBanner}>
+                        <div className={styles.riderInfo}>
+                          <Truck size={18} style={{ color: 'var(--teal-600)' }} />
+                          <span>{order.rider}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Order Footer Actions */}
+                  <div className={styles.orderFooter}>
+                    <button 
+                      className="btn btn-outline btn-sm" 
+                      style={{ gap: '6px' }}
+                      onClick={() => setSelectedReceipt(order)}
+                    >
+                      <FileText size={15} /> View Receipt
                     </button>
-                  )}
-                  <button 
-                    className="btn btn-outline btn-sm" 
-                    style={{ gap: '6px' }}
-                    onClick={() => setSelectedReceipt(order)}
-                  >
-                    <FileText size={15} /> View Receipt
-                  </button>
-                  {order.status.includes('DELIVERED') && (
-                    <button className="btn btn-outline btn-sm" style={{ gap: '6px' }}>
-                      <RefreshCw size={14} /> Reorder
-                    </button>
-                  )}
+                    {order.status.includes('DELIVERED') && (
+                      <Link to="/medicines" className="btn btn-outline btn-sm" style={{ gap: '6px' }}>
+                        <RefreshCw size={14} /> Reorder
+                      </Link>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
@@ -223,7 +221,7 @@ export default function OrdersPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.9rem' }}>
               <div>
-                <strong style={{ color: 'var(--slate-800)' }}>Order ID:</strong> {selectedReceipt.id}
+                <strong style={{ color: 'var(--slate-800)' }}>Order ID:</strong> #{selectedReceipt.id}
               </div>
               <div>
                 <strong style={{ color: 'var(--slate-800)' }}>Date:</strong> {selectedReceipt.date}
