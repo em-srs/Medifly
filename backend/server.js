@@ -28,6 +28,7 @@ app.get('/api/health', async (req, res) => {
 
 // Route mapping
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/medicines', require('./routes/medicineRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/prescriptions', require('./routes/prescriptionRoutes'));

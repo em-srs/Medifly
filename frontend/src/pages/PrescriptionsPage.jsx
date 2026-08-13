@@ -129,8 +129,8 @@ export default function PrescriptionsPage() {
   const headerRef = useScrollReveal(0.05);
   const rxGridRef = useScrollReveal(0.08);
 
-  const [patients,         setPatients]         = useState(SEED_PATIENTS);
-  const [selectedId,       setSelectedId]       = useState(1);
+  const [patients,         setPatients]         = useState([]);
+  const [selectedId,       setSelectedId]       = useState(null);
   const [searchQuery,      setSearchQuery]      = useState('');
   const [activeTab,        setActiveTab]        = useState('active');   // 'active'|'archived'|'orders'
   const [toast,            setToast]            = useState({ msg:'', type:'success' });
@@ -161,13 +161,16 @@ export default function PrescriptionsPage() {
 
   // Fetch Family Members from API on load
   const fetchMembers = useCallback(async () => {
+    const token = user?.token || localStorage.getItem('medifly_token');
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+    if (user?.clerkUser?.id) headers['X-Clerk-Id'] = user.clerkUser.id;
+    if (user?.email) headers['X-User-Email'] = user.email;
+
     try {
-      const res = await fetch(`${API_BASE}/api/vault/members`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
-        }
-      });
+      const res = await fetch(`${API_BASE}/api/vault/members`, { headers });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -181,38 +184,48 @@ export default function PrescriptionsPage() {
           if (!selectedId || !formatted.find(f => f.id === selectedId)) {
             setSelectedId(formatted[0].id);
           }
+        } else if (user?.name) {
+          const fallbackMember = {
+            id: user.id || 1,
+            name: user.name,
+            relation: 'Self',
+            bloodGroup: user.bloodGroup || 'A+',
+            avatar: <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />,
+            prescriptions: [],
+            orders: []
+          };
+          setPatients([fallbackMember]);
+          setSelectedId(fallbackMember.id);
         }
       }
     } catch (err) {
-      console.warn('API offline, using seed patients:', err.message);
+      console.warn('API error fetching family members:', err.message);
     }
-  }, [user?.token, selectedId]);
+  }, [user, selectedId]);
 
   // Fetch prescriptions & orders for selected member
   const fetchMemberDetails = useCallback(async (memberId) => {
     if (!memberId) return;
     setLoadingOrders(true);
 
+    const token = user?.token || localStorage.getItem('medifly_token');
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+    if (user?.clerkUser?.id) headers['X-Clerk-Id'] = user.clerkUser.id;
+    if (user?.email) headers['X-User-Email'] = user.email;
+
     try {
       // 1. Member Prescriptions
-      const rxRes = await fetch(`${API_BASE}/api/vault/members/${memberId}/prescriptions`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
-        }
-      });
+      const rxRes = await fetch(`${API_BASE}/api/vault/members/${memberId}/prescriptions`, { headers });
       if (rxRes.ok) {
         const rxData = await rxRes.json();
         setPatients(prev => prev.map(p => p.id === memberId ? { ...p, prescriptions: rxData } : p));
       }
 
       // 2. Member Orders (Ownership secured server-side)
-      const ordRes = await fetch(`${API_BASE}/api/vault/members/${memberId}/orders`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
-        }
-      });
+      const ordRes = await fetch(`${API_BASE}/api/vault/members/${memberId}/orders`, { headers });
       if (ordRes.ok) {
         const ordData = await ordRes.json();
         setMemberOrders(ordData);
@@ -227,7 +240,7 @@ export default function PrescriptionsPage() {
     } finally {
       setLoadingOrders(false);
     }
-  }, [user?.token, patients]);
+  }, [user, patients]);
 
   useEffect(() => {
     fetchMembers();
@@ -265,16 +278,21 @@ export default function PrescriptionsPage() {
   const savePatient = async () => {
     if (!pForm.name.trim()) return;
 
+    const token = user?.token || localStorage.getItem('medifly_token');
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+    if (user?.clerkUser?.id) headers['X-Clerk-Id'] = user.clerkUser.id;
+    if (user?.email) headers['X-User-Email'] = user.email;
+
     try {
       const url = editPId ? `${API_BASE}/api/vault/members/${editPId}` : `${API_BASE}/api/vault/members`;
       const method = editPId ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
-        },
+        headers,
         body: JSON.stringify(pForm)
       });
 
@@ -291,7 +309,6 @@ export default function PrescriptionsPage() {
           showToast(`${pForm.name} added as a patient!`);
         }
       } else {
-        // Fallback local update if API fails
         if (editPId) {
           setPatients(prev => prev.map(p => p.id === editPId ? { ...p, ...pForm, avatar: RELATION_AVATARS[pForm.relation] } : p));
         } else {
@@ -309,12 +326,17 @@ export default function PrescriptionsPage() {
 
   const confirmDeletePatient = (p) => { setDelPatient(p); setModal('deletePatient'); };
   const executeDeletePatient = async () => {
+    const token = user?.token || localStorage.getItem('medifly_token');
+    const headers = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+    if (user?.clerkUser?.id) headers['X-Clerk-Id'] = user.clerkUser.id;
+    if (user?.email) headers['X-User-Email'] = user.email;
+
     try {
       await fetch(`${API_BASE}/api/vault/members/${delPatient.id}`, {
         method: 'DELETE',
-        headers: {
-          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
-        }
+        headers
       });
     } catch (err) {
       // Ignore API error
@@ -334,13 +356,18 @@ export default function PrescriptionsPage() {
   const saveRx = async () => {
     if (!rxTitle.trim()) return;
 
+    const token = user?.token || localStorage.getItem('medifly_token');
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+    if (user?.clerkUser?.id) headers['X-Clerk-Id'] = user.clerkUser.id;
+    if (user?.email) headers['X-User-Email'] = user.email;
+
     try {
       const res = await fetch(`${API_BASE}/api/vault/members/${selectedId}/prescriptions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
-        },
+        headers,
         body: JSON.stringify({
           title: rxTitle,
           doctor: rxDoctor,

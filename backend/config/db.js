@@ -203,6 +203,13 @@ const initDb = async () => {
     ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS family_member_id INTEGER REFERENCES family_members(id) ON DELETE CASCADE;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS family_member_id INTEGER REFERENCES family_members(id) ON DELETE SET NULL;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS prescription_id INTEGER REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS clerk_id VARCHAR(255);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS alt_phone VARCHAR(50);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS blood_group VARCHAR(10);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS allergies TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS primary_doctor VARCHAR(255);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS upi_id VARCHAR(100);
   `;
   try {
     await pool.query(schemaSql);
