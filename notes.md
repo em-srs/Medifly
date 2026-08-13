@@ -42,8 +42,9 @@ graph TB
         SIO["Socket.io Server Engine"]
     end
 
-    subgraph Database Tier
-        DB[("MongoDB Database")]
+    subgraph Database & Storage Tier
+        DB[("PostgreSQL (Supabase Cloud)")]
+        ST[("Supabase File Storage")]
     end
 
     UI -->|REST API Requests| EX
@@ -58,6 +59,7 @@ graph TB
     CS --> DB
     RAS --> DB
     SCS --> DB
+    MW_R --> ST
     EX --> SIO
 ```
 
@@ -75,9 +77,9 @@ graph TD
     E -- "Valid JWT Token" --> G{"RBAC Guard (roleMiddleware)"}
     G -- "Role Mismatch" --> H["403 Forbidden Response"]
     G -- "Authorized Role" --> I["Controller / Business Services"]
-    I --> J["PricingService / SaltService / RiderService"]
-    J --> K["Mongoose ODM Models"]
-    K --> L[("MongoDB Database")]
+    I --> J["PricingService / VaultService / StorageService"]
+    J --> K["pg Pool & Supabase Storage Client"]
+    K --> L[("PostgreSQL (Supabase Cloud)")]
     L --> K
     K --> M["Real-Time Socket.io Event Emission"]
     M --> N["HTTP 200/201 JSON Response to Client"]

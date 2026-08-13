@@ -15,16 +15,20 @@
 
 ## 📌 Current Project Stage & Tech Stack Overview
 
-### 🚀 Current Project Stage: **Phase 4 — Production-Ready Core Platform & Clerk SSO Multi-Tenancy**
+### 🚀 Current Project Stage: **Phase 5 — Full Codebase Audit & End-to-End Data Verification**
 
 | Milestone / Feature | Stage / Status | Description |
 | :--- | :--- | :--- |
 | **Database Architecture** | **Completed** | PostgreSQL on Supabase with 254,000+ indexed medicines (`pg_trgm` GIN trigram indexing) |
 | **Authentication & RBAC** | **Completed** | **Clerk Authentication & Multi-Tenancy** (`@clerk/react` v6, `<SignIn />`, `<SignUp />`, `<UserButton />`, `<Show>`) with role metadata |
-| **Data Reset & Purge** | **Completed** | 100% mock data purge from `frontend/src`. All views connect directly to real PostgreSQL DB endpoints |
+| **Full Codebase Audit & Data Scoping**| **Completed** | 100% elimination of hardcoded mock data (`SEED_PATIENTS`, `INITIAL_MEDS`, hardcoded rider deliveries). Scoped SQL queries (`WHERE user_id = $1`) |
+| **Cross-Account Test Suite** | **Completed** | Automated test suite (`node backend/scripts/testCrossAccountIsolation.js`) verifying 100% data isolation across distinct accounts |
+| **Prescription Storage & Upload** | **Completed** | Private Supabase Storage bucket (`prescriptions`), 10-min signed URLs (`GET /api/vault/prescriptions/:id/file`), ownership security (`account_owner_id`), & Admin Vault Attribution tree |
+| **Auto-Refill Redesign** | **Completed** | Visual overhaul (split hero, refill cycle tracker, discrete stat chips, medicine cards, consolidated sidebar) & real backend API integration (`GET /api/subscriptions`) |
 | **Role Hierarchy & Isolation**| **Completed** | Dual-tier `admin` & `super_admin` system with SQL-level visibility isolation (`WHERE role != 'super_admin'`) |
 | **Post-Signup Onboarding** | **Completed** | Dedicated `/onboarding` screen collecting mandatory 10-digit phone number & delivery address upon signup |
 | **Prescription Vault** | **Completed** | Family-member profiles (`Self`, `Spouse`, `Father`), member-scoped order history tab, server-side ownership security (`account_owner_id`), & order tracking chips |
+| **Fleet Rider Portal** | **Completed** | Wired `GET /api/rider/deliveries` to real orders database with dynamic rider profile rendering |
 | **Merged About & Contact** | **Completed** | Consolidated `/about` page with auto-redirect from `/contact`, contact form posting to `support_requests`, helpline SLAs, and partner/rider onboarding |
 | **Search Relevance Engine**| **Completed** | Ranked SQL search prioritizing brand name prefix matches (e.g. `Telma`, `Telmikind`) ahead of generic salt composition matches |
 | **Dosage Form Visuals** | **Completed** | Physical appearance image resolver (`getMedicineImage.js`) mapping `dosage_form` (tablet/capsule/injection/syrup/inhaler/topical/cold_chain) to assets |
