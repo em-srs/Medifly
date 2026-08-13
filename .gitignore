@@ -70,3 +70,6 @@ frontend/dist/
 frontend/build_error.txt
 *.log
 
+# Uploaded Files
+backend/uploads/
+

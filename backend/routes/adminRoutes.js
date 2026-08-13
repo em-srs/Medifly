@@ -4,6 +4,7 @@ const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
 
 const { getDashboardStats, getAllUsers, getUserById } = require('../controllers/adminController');
+const { getAdminAttribution } = require('../controllers/vaultController');
 
 // Admin stats route — accessible by admin + super_admin
 router.get('/dashboard', protect, authorize('admin', 'super_admin'), getDashboardStats);
@@ -12,5 +13,8 @@ router.get('/dashboard', protect, authorize('admin', 'super_admin'), getDashboar
 // Visibility is enforced server-side in the controller (admin can't see super_admin)
 router.get('/users', protect, authorize('admin', 'super_admin'), getAllUsers);
 router.get('/users/:id', protect, authorize('admin', 'super_admin'), getUserById);
+
+// Vault tracking & attribution breakdown — accessible by admin + super_admin
+router.get('/vault/attribution', protect, authorize('admin', 'super_admin'), getAdminAttribution);
 
 module.exports = router;

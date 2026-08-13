@@ -201,6 +201,19 @@ const initDb = async () => {
     );
 
     ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS family_member_id INTEGER REFERENCES family_members(id) ON DELETE CASCADE;
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS uploaded_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS title VARCHAR(255);
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS doctor_name VARCHAR(255);
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS specialty_hospital VARCHAR(255);
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS file_url TEXT;
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS file_type VARCHAR(100);
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS file_size_bytes BIGINT;
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS verified_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS verification_notes TEXT;
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS issued_date TIMESTAMP;
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP;
+
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS family_member_id INTEGER REFERENCES family_members(id) ON DELETE SET NULL;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS prescription_id INTEGER REFERENCES prescriptions(id) ON DELETE SET NULL;
 
@@ -211,11 +224,18 @@ const initDb = async () => {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS primary_doctor VARCHAR(255);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS upi_id VARCHAR(100);
 
+    -- Allow document_url to be NULL for new file_url based uploads
+    ALTER TABLE prescriptions ALTER COLUMN document_url DROP NOT NULL;
+
     -- Allow phone to be NULL (was previously NOT NULL with hardcoded '9876543210' default)
     ALTER TABLE users ALTER COLUMN phone DROP NOT NULL;
 
     -- Expand role column to support 'super_admin' (was VARCHAR(20), needs room)
     ALTER TABLE users ALTER COLUMN role TYPE VARCHAR(30);
+
+    CREATE INDEX IF NOT EXISTS idx_prescriptions_family_member ON prescriptions(family_member_id);
+    CREATE INDEX IF NOT EXISTS idx_prescriptions_uploaded_by ON prescriptions(uploaded_by_user_id);
+    CREATE INDEX IF NOT EXISTS idx_family_members_owner ON family_members(account_owner_id);
   `;
   try {
     await pool.query(schemaSql);
