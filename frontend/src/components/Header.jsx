@@ -1,4 +1,4 @@
-import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
+import { Show, SignInButton, SignUpButton } from '@clerk/react';
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -139,11 +139,7 @@ export default function Header() {
               </Show>
             )}
 
-            <Show when="signed-in">
-              <UserButton showName />
-            </Show>
-
-            {/* User Menu - shown when authenticated */}
+            {/* Single User Account Dropdown Menu - shown when authenticated */}
             {user && (
               <div className={styles.userMenuWrap} ref={menuRef}>
                 <button
@@ -151,8 +147,12 @@ export default function Header() {
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   id="user-menu-btn"
                   aria-label="User menu"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.4rem 0.75rem', borderRadius: '20px' }}
                 >
-                  <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
+                  <User size={18} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--slate-800)' }}>
+                    {user.name?.split(' ')[0] || 'Account'}
+                  </span>
                   {user && <span className={styles.userDot}></span>}
                 </button>
 
