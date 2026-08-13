@@ -165,7 +165,7 @@ export default function Header() {
                         <strong>{user.name}</strong>
                         {getRoleBadge(user.role)}
                       </div>
-                      <span className={styles.dropdownRole}>{user.email || user.phone}</span>
+                      <span className={styles.dropdownRole}>{user.email ? user.email.toLowerCase() : user.phone}</span>
                     </div>
                     <div className={styles.dropdownDivider}></div>
                     <Link to="/profile" className={styles.dropdownItem} onClick={() => setUserMenuOpen(false)}>

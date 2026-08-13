@@ -195,7 +195,7 @@
   gap: 0.15rem;
 }
 .dropdownHeader strong { font-size: 0.9rem; color: var(--slate-900); }
-.dropdownRole { font-size: 0.75rem; color: var(--slate-400); text-transform: capitalize; }
+.dropdownRole { font-size: 0.75rem; color: var(--slate-400); text-transform: lowercase; }
 
 .dropdownDivider { height: 1px; background: var(--slate-100); }
 
