@@ -15,14 +15,42 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // Body parser
 
-// Health check endpoint for monitoring & load balancers
+// Root endpoint for simple status & ping
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    message: 'Medifly Backend API is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Lightweight health check endpoint for UptimeRobot / Render monitoring
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Deep health check endpoint (includes database verification)
 app.get('/api/health', async (req, res) => {
   try {
     const { query } = require('./config/db');
     await query('SELECT 1');
-    res.json({ status: 'OK', database: 'PostgreSQL Connected', timestamp: new Date() });
+    res.status(200).json({
+      status: 'OK',
+      database: 'PostgreSQL Connected',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString()
+    });
   } catch (err) {
-    res.status(500).json({ status: 'ERROR', database: 'Disconnected', error: err.message });
+    res.status(500).json({
+      status: 'ERROR',
+      database: 'Disconnected',
+      error: err.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
