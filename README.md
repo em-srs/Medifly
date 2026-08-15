@@ -37,6 +37,7 @@
 | **Salt Matching Engine** | **Completed** | Bioequivalent chemical salt matching & cost savings sorting (up to 70% cheaper generic alternatives) |
 | **Orders & Invoicing** | **Completed** | Uniform order tracking layout, status badges, and interactive "View Receipt" tax invoice modal popup |
 | **Security & Privacy** | **Completed** | Excluded raw database CSV dumps & sensitive log files from Git tracking with strict `.gitignore` protection |
+| **Deployment & Uptime** | **Completed** | Hosted backend on Render with 24/7 UptimeRobot pinging `GET /health` to eliminate 15-min inactivity spin-down |
 
 
 ---
@@ -632,7 +633,9 @@ medifly-mern/
 
 | Category | Method | URL Path | Auth Required | Allowed Roles | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Health** | `GET` | `/api/health` | Public | All | System & Database Connection Health Check |
+| **Health & Ping** | `GET` | `/` | Public | All | Root backend status ping endpoint |
+| **Health & Ping** | `GET` | `/health` | Public | All | Lightweight health check endpoint for UptimeRobot & Render monitoring |
+| **Health & Ping** | `GET` | `/api/health` | Public | All | Deep health check verifying PostgreSQL database connection |
 | **Auth** | `POST` | `/api/auth/register` | Public | All | Register a new user account |
 | **Auth** | `POST` | `/api/auth/login` | Public | All | Authenticate user & return JWT token |
 | **Auth** | `GET` | `/api/auth/profile` | Private | All Logged In | Get current authenticated user profile |
@@ -850,6 +853,23 @@ npm run dev
 
 - **Frontend Application**: `http://localhost:5173`
 - **Backend Express API**: `http://localhost:5000`
+
+---
+
+## 🌐 Render Backend Hosting & 24/7 UptimeRobot Monitoring
+
+Medifly's Express backend is configured for production deployment on **Render** (or Vercel / Railway). Free Render web services spin down after 15 minutes of inactivity, causing initial 50-second cold start delays. Medifly solves this with dedicated ping and health check endpoints:
+
+- **`GET /health`**: Returns an instant `200 OK` response with server uptime metrics.
+- **`GET /`**: Root API ping endpoint returning operational status.
+- **`GET /api/health`**: Deep health check verifying active PostgreSQL pool connectivity.
+
+### Setting Up UptimeRobot (Prevent 15-Min Inactivity Spin-Down)
+1. Register a free account at [UptimeRobot](https://uptimerobot.com).
+2. Click **+ Add New Monitor** and select **HTTP(s)**.
+3. Enter your backend endpoint: `https://your-backend.onrender.com/health`.
+4. Set the monitoring interval to **5 minutes**.
+5. Save the monitor — UptimeRobot will ping your service every 5 minutes, ensuring your Render backend stays active 24/7.
 
 ---
 
