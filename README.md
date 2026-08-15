@@ -9,36 +9,31 @@
 [![Socket.io](https://img.shields.io/badge/socket.io-v4.8.3-black.svg)](https://socket.io/)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
 
-> **Medifly** is an enterprise-grade, real-time emergency healthcare delivery & prescription auto-refill platform built on Node.js Express v5, React 19, Vite 6, **Clerk Authentication & Multi-Tenancy**, and **PostgreSQL (Supabase)**. Medifly hosts over **254,000+ authentic medicines** and **11,800+ bioequivalent chemical salts**, featuring **30-Minute Ultra-Express Delivery**, GIN trigram indexed SQL search, salt comparison matching engine, cold-chain handling, automated subscription refills, and role-based access portals for Patients, Pharmacists, Delivery Riders, and System Administrators.
+> **Medifly** is an enterprise-grade, real-time emergency healthcare delivery & prescription auto-refill platform built on Node.js **Express v5**, **React 19**, **Vite 6**, **Clerk Authentication & Multi-Tenancy**, and **PostgreSQL (Supabase Cloud)**. Medifly hosts over **254,000+ authentic medicines** and **11,800+ bioequivalent chemical salts**, featuring **30-Minute Ultra-Express Delivery**, GIN trigram indexed SQL search (`pg_trgm`), a bioequivalent salt comparison engine, cold-chain handling, automated subscription refills, a family prescription vault with signed file URLs, and role-based access portals for Patients, Pharmacists, Delivery Riders, and System Administrators.
 
 ---
 
 ## 📌 Current Project Stage & Tech Stack Overview
 
-### 🚀 Current Project Stage: **Phase 5 — Full Codebase Audit & End-to-End Data Verification**
+### 🚀 Current Project Stage: **Phase 5 — Full Codebase Audit & Production Architecture**
 
 | Milestone / Feature | Stage / Status | Description |
 | :--- | :--- | :--- |
-| **Database Architecture** | **Completed** | PostgreSQL on Supabase with 254,000+ indexed medicines (`pg_trgm` GIN trigram indexing) |
-| **Authentication & RBAC** | **Completed** | **Clerk Authentication & Multi-Tenancy** (`@clerk/react` v6, `<SignIn />`, `<SignUp />`, `<UserButton />`, `<Show>`) with role metadata |
-| **Full Codebase Audit & Data Scoping**| **Completed** | 100% elimination of hardcoded mock data (`SEED_PATIENTS`, `INITIAL_MEDS`, hardcoded rider deliveries). Scoped SQL queries (`WHERE user_id = $1`) |
-| **Cross-Account Test Suite** | **Completed** | Automated test suite (`node backend/scripts/testCrossAccountIsolation.js`) verifying 100% data isolation across distinct accounts |
-| **Prescription Storage & Upload** | **Completed** | Private Supabase Storage bucket (`prescriptions`), 10-min signed URLs (`GET /api/vault/prescriptions/:id/file`), ownership security (`account_owner_id`), & Admin Vault Attribution tree |
-| **Auto-Refill Redesign** | **Completed** | Visual overhaul (split hero, refill cycle tracker, discrete stat chips, medicine cards, consolidated sidebar) & real backend API integration (`GET /api/subscriptions`) |
+| **Database Architecture** | **Completed** | PostgreSQL on Supabase Cloud with 254,000+ indexed medicines (`pg_trgm` GIN trigram indexing) |
+| **Authentication & RBAC** | **Completed** | **Clerk SSO & Multi-Tenancy** (`@clerk/react` v6) + Custom express auth middleware (`authMiddleware.js`) with automatic user synchronization |
+| **Full Codebase Audit & Data Scoping**| **Completed** | 100% elimination of mock data. Scoped SQL queries (`WHERE user_id = $1`, `WHERE account_owner_id = $1`) enforcing 100% account isolation |
+| **Prescription Storage & Vault** | **Completed** | Private Supabase Storage bucket (`prescriptions`), 10-minute temporary signed URLs (`GET /api/vault/prescriptions/:id/file`), family member profiles, and server-side ownership security |
+| **Auto-Refill Redesign** | **Completed** | Refill cycle tracker, discrete stat chips, medicine selection cards, and real backend API integration (`GET /api/subscriptions`) |
 | **Role Hierarchy & Isolation**| **Completed** | Dual-tier `admin` & `super_admin` system with SQL-level visibility isolation (`WHERE role != 'super_admin'`) |
-| **Post-Signup Onboarding** | **Completed** | Dedicated `/onboarding` screen collecting mandatory 10-digit phone number & delivery address upon signup |
-| **Prescription Vault** | **Completed** | Family-member profiles (`Self`, `Spouse`, `Father`), member-scoped order history tab, server-side ownership security (`account_owner_id`), & order tracking chips |
-| **Fleet Rider Portal** | **Completed** | Wired `GET /api/rider/deliveries` to real orders database with dynamic rider profile rendering |
-| **Merged About & Contact** | **Completed** | Consolidated `/about` page with auto-redirect from `/contact`, contact form posting to `support_requests`, helpline SLAs, and partner/rider onboarding |
+| **Post-Signup Onboarding** | **Completed** | Dedicated `/onboarding` screen collecting mandatory 10-digit phone number & delivery address upon Clerk signup |
+| **Prescription Vault & Family Profiles**| **Completed** | Family member profiles (`Self`, `Spouse`, `Child`, `Parent`), member-scoped order history, and server-side ownership validation |
+| **Fleet Rider Portal** | **Completed** | Real orders database integration (`GET /api/riders/deliveries`) with dynamic rider profile and live GPS location updating |
 | **Search Relevance Engine**| **Completed** | Ranked SQL search prioritizing brand name prefix matches (e.g. `Telma`, `Telmikind`) ahead of generic salt composition matches |
-| **Dosage Form Visuals** | **Completed** | Physical appearance image resolver (`getMedicineImage.js`) mapping `dosage_form` (tablet/capsule/injection/syrup/inhaler/topical/cold_chain) to assets |
+| **Dosage Form Visuals** | **Completed** | Physical appearance image resolver (`getMedicineImage.js`) mapping `dosage_form` (tablet/capsule/injection/syrup/inhaler/topical) to assets |
 | **Delivery SLA Engine** | **Completed** | **30-Minute Ultra-Express Delivery SLA**, Dynamic Multi-Tier Pricing Engine (`PricingService`), Cold-Chain Insulated Logistics |
-| **Real-Time Dispatch** | **Completed** | WebSockets (`Socket.io`) for live rider GPS location streaming & order status notifications |
+| **Real-Time Dispatch** | **Completed** | WebSockets (`Socket.io`) for live rider GPS location streaming & instant order status notifications |
 | **Salt Matching Engine** | **Completed** | Bioequivalent chemical salt matching & cost savings sorting (up to 70% cheaper generic alternatives) |
-| **Orders & Invoicing** | **Completed** | Uniform order tracking layout, status badges, and interactive "View Receipt" tax invoice modal popup |
-| **Security & Privacy** | **Completed** | Excluded raw database CSV dumps & sensitive log files from Git tracking with strict `.gitignore` protection |
-| **Deployment & Uptime** | **Completed** | Hosted backend on Render with 24/7 UptimeRobot pinging `GET /health` to eliminate 15-min inactivity spin-down |
-
+| **Deployment & Uptime** | **Completed** | Hosted backend on Render with UptimeRobot pinging `GET /health` to eliminate 15-minute inactivity spin-down |
 
 ---
 
@@ -48,13 +43,12 @@
 | :--- | :--- | :--- |
 | **Frontend Framework** | **React 19, Vite 6, React Router v7** | Single Page Application UI with modular components, smooth page routing, and instant hot-reloading |
 | **UI Styling & Icons** | **Vanilla CSS Modules, Lucide React** | Scoped component styling, vibrant dark/light themes, compact responsive layouts, and icon set |
-| **Authentication & SSO** | **Clerk CLI (v3.1.0), `@clerk/react` v6** | Primary single sign-on authentication provider with Clerk `<SignIn />` / `<SignUp />` widgets & multi-tenancy role switching |
+| **Authentication & SSO** | **Clerk SSO (`@clerk/react` v6)** | Primary single sign-on authentication provider with Clerk `<SignIn />` / `<SignUp />` widgets & multi-tenancy role switching |
 | **Backend Server** | **Node.js, Express v5.2.1** | REST API web server hosting pricing engines, dispatch logic, and database query handlers |
 | **Database Engine** | **PostgreSQL (Supabase Cloud)** | Relational database hosting 254k+ medicines, 11k+ salts, orders, prescriptions, and users with GIN trigram indexing |
+| **File Storage** | **Supabase Storage** | Private bucket (`prescriptions`) for storing user prescription documents with 10-minute temporary signed URLs |
 | **Real-Time WebSockets**| **Socket.io v4.8.3** | Bidirectional real-time WebSocket communication for live rider location streaming and instant order updates |
 | **Background Automation**| **Node-cron** | Automated daily subscription scanner and zero-touch recurring order generation |
-
----
 
 ---
 
@@ -67,10 +61,11 @@
 
 | Portal / Role | Email Address | Password | Permissions & Features |
 | :--- | :--- | :--- | :--- |
-| **Regular Patient (`user`)** | `user@medifly.com` | `user123` | Search 254k+ meds, Cart, 30-Min Express Checkout, Rx Upload, Orders, Auto-Refill |
-| **Pharmacist (`pharmacy`)** | `pharma@medifly.com` | `pharma123` | Pharmacy Workstation, Rx Document Verification (`VERIFIED` / `REJECTED`), Inventory Stock Updates |
+| **Regular Patient (`user`)** | `user@medifly.com` | `user123` | Search 254k+ meds, Cart, 30-Min Express Checkout, Family Vault, Orders, Auto-Refill |
+| **Pharmacist (`pharmacy`)** | `pharma@medifly.com` | `pharma123` | Pharmacy Workstation, Prescription Document Review (`VERIFIED` / `REJECTED`), Inventory Updates |
 | **Fleet Rider (`rider`)** | `rider@medifly.com` | `rider123` | Fleet Dispatch Terminal, Live GPS Location Updates (`lat`/`lng`), Active Order Deliveries |
-| **System Admin (`admin`)** | `admin@medifly.com` | `admin123` | Admin Command Center, Live PostgreSQL Revenue Analytics, System Overrides, Low-Stock Alerts |
+| **System Admin (`admin`)** | `admin@medifly.com` | `admin123` | Admin Command Center, PostgreSQL Revenue Analytics, System Overrides, Low-Stock Alerts |
+| **Super Admin (`super_admin`)** | `superadmin@medifly.com`| `superadmin123`| Full System Governance, Executive Admin Dashboard, Super Admin User Management |
 
 ---
 
@@ -95,13 +90,12 @@ Medifly's primary mission across every page, header, and order dispatch service 
 ### 1. 254,000+ Medicine Dataset & PostgreSQL Engine
 - **Enterprise Dataset**: Pre-seeded with **254,023 authentic medicines** and **11,850 chemical salt compositions**.
 - **PostgreSQL GIN Trigram Indexing (`pg_trgm`)**: Sub-millisecond indexed SQL search across brand names, generic compositions, and manufacturers.
-- **Fast Estimated Count Caching**: Instant response time (< 100ms) for high-scale pagination.
 
 ### 2. Multi-Role Portal Engine (RBAC)
-- **Patient Workspace**: Interactive 30-min express medicine browser, hero live search widget, salt comparison tool, prescription vault, order tracker, and auto-refill subscriptions.
+- **Patient Workspace**: Interactive 30-minute express medicine browser, hero live search widget, salt comparison tool, family prescription vault, order tracker, and auto-refill subscriptions.
 - **Pharmacist Workstation**: Verification terminal to review uploaded prescription documents (`PENDING` -> `VERIFIED` / `REJECTED`) and manage pharmacy inventory stock.
 - **Fleet Rider Terminal**: Real-time dispatch interface to update live GPS coordinates (`lat`/`lng`) and switch availability status (`OFFLINE` -> `ONLINE` -> `ON_DELIVERY`).
-- **Admin Command Center**: Real-time PostgreSQL database analytics summarizing total revenue, total orders, active user counts, and automated low-stock alerts (`inventoryCount < 10`).
+- **Admin Command Center**: Real-time PostgreSQL database analytics summarizing total revenue, total orders, active user counts, and low-stock alerts (`inventory_count < 10`).
 
 ### 3. Salt Comparison & Generic Alternative Engine
 - **Bioequivalent Matching**: Queries the `salts` and `medicines` relational SQL tables to locate medicines sharing identical active chemical compositions.
@@ -116,78 +110,55 @@ Medifly's primary mission across every page, header, and order dispatch service 
   - **Late-Night Delivery Fee**: Fully waived (₹0 vs ₹20.00 for non-subscribers between 10 PM and 6 AM).
 
 ### 5. Automated Subscription & Refill Engine (`CronService`)
-- **Cron Scheduler**: Inspects active subscriptions daily where `nextDeliveryDate <= Today`.
+- **Cron Scheduler**: Inspects active subscriptions daily where `next_delivery_date <= Today`.
 - **Zero-Touch Order Generation**: Automatically instantiates verified orders, applies subscriber perks, decrements inventory stock, and calculates next delivery date based on frequency (`WEEKLY`, `BIWEEKLY`, `MONTHLY`).
 
 ### 6. Real-Time WebSockets (`Socket.io`)
-- `priceChanged`: Broadcasts instant price updates across all connected clients when a medicine price is updated.
+- `priceChanged`: Broadcasts instant price updates across connected clients when a medicine price is updated.
 - `inventoryChanged`: Pushes real-time stock availability and inventory counts when orders are placed.
-- `orderStatusChanged`: Delivers live status updates (`pending` -> `verified` -> `assigned` -> `picked_up` -> `delivered`) to the user's private WebSocket room.
+- `orderStatusChanged`: Delivers live status updates (`pending` -> `verified` -> `assigned` -> `picked_up` -> `delivered`) to the user's private socket room.
 - `riderLocationUpdated`: Streams live rider GPS coordinates directly to the user awaiting delivery.
 - `prescriptionVerified`: Notifies the patient as soon as a pharmacist approves or rejects their prescription.
+
+### 7. Prescription Vault & Family Profiles
+- **Family Profiles**: Manage medical records for `Self`, `Spouse`, `Child`, `Parent`, and `Sibling`.
+- **Signed URL Access**: Upload prescription files to private Supabase Storage buckets with 10-minute temporary signed URLs for secure viewing.
+- **Server-Side Security**: Enforces ownership verification (`account_owner_id === req.user.id`) to prevent unauthorized document access.
 
 ---
 
 ## Architecture & System Flow
 
-### System Layer Architecture (Text Diagram)
-
-```
-+-----------------------------------------------------------------------------------+
-|                                 CLIENT TIER                                       |
-|  React 19 Single Page Application (Vite 6) + React Router v7 + Lucide React Icons |
-|  Context Providers: AuthContext (JWT/Role) | CartContext | SocketContext (WS)     |
-+-----------------------------------------------------------------------------------+
-                                         |
-                                HTTP / REST & WebSockets
-                                         |
-+-----------------------------------------------------------------------------------+
-|                                 SERVER TIER                                       |
-|  Node.js + Express v5 Web Application Server                                      |
-|  Middlewares: Auth Middleware (JWT Protect) | Role Middleware (RBAC Authorization)|
-|  Controllers: Auth, Medicine, Order, Prescription, Pharmacy, Rider, Subscription, Admin |
-|  Services: PricingService | CronService | RiderAssignmentService | SaltComparison  |
-|  Socket.io Engine: Real-Time Event Dispatcher & Room Management                   |
-+-----------------------------------------------------------------------------------+
-                                         |
-                                node-postgres (pg Pool Driver)
-                                         |
-+-----------------------------------------------------------------------------------+
-|                                DATABASE TIER                                      |
-|  PostgreSQL Database (Supabase Cloud / Local)                                     |
-|  Tables: users, medicines, salts, orders, order_items, prescriptions,             |
-|          pharmacies, riders, subscriptions, subscription_items                    |
-+-----------------------------------------------------------------------------------+
-```
-
-### High-Level Architecture Diagram (Mermaid)
+### System Layer Architecture
 
 ```mermaid
 graph TB
     subgraph Client Tier
         UI["React 19 Frontend SPA (Vite 6)"]
-        AC["AuthContext (JWT & Role)"]
-        CC["CartContext (State)"]
-        SC["SocketContext (WS Client)"]
+        AC["AuthContext (Clerk SSO + JWT)"]
+        CC["CartContext (State & Items)"]
+        SC["SocketContext (WebSocket Client)"]
     end
 
     subgraph Server Tier
         EX["Express.js v5 Web Server"]
-        MW_A["authMiddleware (protect)"]
-        MW_R["roleMiddleware (authorize)"]
+        MW_A["authMiddleware (protect guard)"]
+        MW_R["roleMiddleware (authorize / admin / superAdmin)"]
         
-        subgraph Business Services
+        subgraph Services
             PS["PricingService"]
-            CS["CronService"]
+            CS["CronService (Node-Cron)"]
             RAS["RiderAssignmentService"]
             SCS["SaltComparisonService"]
+            SS["StorageService (Supabase Storage)"]
         end
         
         SIO["Socket.io Server Engine"]
     end
 
     subgraph Database Tier
-        DB[("PostgreSQL Database (Supabase)")]
+        DB[("PostgreSQL (Supabase Cloud)")]
+        ST[("Supabase Storage ('prescriptions')")]
     end
 
     UI -->|REST API Requests| EX
@@ -198,681 +169,255 @@ graph TB
     MW_R --> CS
     MW_R --> RAS
     MW_R --> SCS
+    MW_R --> SS
     PS --> DB
     CS --> DB
     RAS --> DB
     SCS --> DB
+    SS --> ST
     EX --> SIO
 ```
 
 ---
 
-## System Data Flow Diagram
-
-```mermaid
-graph TD
-    A["HTTP Request / Client Action"] --> B["Frontend State (Auth / Cart Context)"]
-    B --> C["API Client (Fetch / HTTP Client)"]
-    C --> D["Express.js Server Middleware Stack"]
-    D --> E{"JWT Protect Guard (authMiddleware)"}
-    E -- "Missing / Invalid Token" --> F["401 Unauthorized Response"]
-    E -- "Valid JWT Token" --> G{"RBAC Guard (roleMiddleware)"}
-    G -- "Role Mismatch" --> H["403 Forbidden Response"]
-    G -- "Authorized Role" --> I["Controller / Business Services"]
-    I --> J["PricingService / SaltService / RiderService"]
-    J --> K["node-postgres pg Pool Driver"]
-    K --> L[("PostgreSQL Database")]
-    L --> K
-    K --> M["Real-Time Socket.io Event Emission"]
-    M --> N["HTTP 200/201 JSON Response to Client"]
-```
-
----
-
-## User Flow & Journey Diagram
-
-```mermaid
-flowchart TD
-    Start(["User Enters Medifly Platform"]) --> Choice{"Is User Logged In?"}
-    
-    Choice -- "No (Guest)" --> GuestFlow["Browse Medicine Catalog & Salt Comparison"]
-    GuestFlow --> LoginReq["Prompt Login / Register"]
-    LoginReq --> AuthPage["POST /api/auth/login or POST /api/auth/register"]
-    
-    Choice -- "Yes" --> RoleCheck{"Check User Role"}
-    AuthPage --> RoleCheck
-    
-    RoleCheck -- "Role: user" --> UserJourney["Patient Journey"]
-    UserJourney --> SearchMed["Search Medicines / Filter Category"]
-    SearchMed --> AddCart["Add Items to Cart"]
-    AddCart --> RxCheck{"Does Any Item Require Prescription?"}
-    RxCheck -- "Yes" --> UploadRx["Upload Prescription Document"]
-    UploadRx --> WaitVerify["Wait for Pharmacist Verification"]
-    WaitVerify --> PlaceOrder["Place 30-Min Order & Select Payment Method"]
-    RxCheck -- "No" --> PlaceOrder
-    PlaceOrder --> OrderTrack["Real-Time Order & Live Rider Map Tracker"]
-
-    RoleCheck -- "Role: pharmacy" --> PharmaJourney["Pharmacist Workstation"]
-    PharmaJourney --> ReviewRx["Review Uploaded Prescriptions"]
-    ReviewRx --> ApproveRx["PUT /api/prescriptions/{id}/verify"]
-    ApproveRx --> StockManage["Update Medicine Inventory Stock"]
-
-    RoleCheck -- "Role: rider" --> RiderJourney["Rider Terminal"]
-    RiderJourney --> ToggleStatus["Set Status to ONLINE"]
-    ToggleStatus --> ReceiveOrder["Auto-Assigned Delivery Order"]
-    ReceiveOrder --> UpdateGPS["PUT /api/riders/location (Live GPS)"]
-    UpdateGPS --> CompleteDelivery["Mark Order Delivered"]
-
-    RoleCheck -- "Role: admin" --> AdminJourney["Admin Command Center"]
-    AdminJourney --> ViewStats["GET /api/admin/dashboard"]
-    ViewStats --> MonitorRevenue["Track PostgreSQL Revenue & Low Stock Alerts"]
-```
-
----
-
-## Database Entity Relationship Diagram (ERD)
+### Entity Relationship Diagram (ERD)
 
 ```mermaid
 erDiagram
-    users ||--o{ orders : "places"
-    users ||--o{ orders : "places"
-    users ||--o{ prescriptions : "uploads"
-    users ||--o{ subscriptions : "subscribes"
-    users ||--o{ family_members : "owns"
-    users ||--o| pharmacies : "operates"
-    users ||--o| riders : "drives"
+    USERS ||--o{ ORDERS : "places"
+    USERS ||--o{ PRESCRIPTIONS : "uploads"
+    USERS ||--o{ SUBSCRIPTIONS : "subscribes"
+    USERS ||--o{ FAMILY_MEMBERS : "owns"
+    USERS ||--o| PHARMACIES : "operates"
+    USERS ||--o| RIDERS : "drives"
 
-    family_members ||--o{ prescriptions : "belongs_to"
-    family_members ||--o{ orders : "tagged_in"
+    SALTS ||--o{ MEDICINES : "composes"
+    MEDICINES ||--o{ ORDER_ITEMS : "contained_in"
+    ORDERS ||--|{ ORDER_ITEMS : "includes"
+    MEDICINES ||--o{ SUBSCRIPTION_ITEMS : "included_in"
+    SUBSCRIPTIONS ||--|{ SUBSCRIPTION_ITEMS : "contains"
+    FAMILY_MEMBERS ||--o{ PRESCRIPTIONS : "belongs_to"
+    FAMILY_MEMBERS ||--o{ ORDERS : "for_member"
+    PRESCRIPTIONS ||--o{ ORDERS : "authorizes"
 
-    salts ||--o{ medicines : "composes"
-    medicines ||--o{ order_items : "contained_in"
-    orders ||--|{ order_items : "includes"
-    subscriptions ||--o{ subscription_items : "contains"
-    medicines ||--o{ subscription_items : "consists_of"
-    
-    users {
-        SERIAL id PK
+    USERS {
+        INTEGER id PK
         VARCHAR name
         VARCHAR email UK
         VARCHAR password
         VARCHAR phone
-        VARCHAR role "user, pharmacy, rider, admin"
+        VARCHAR clerk_id UK
+        VARCHAR role "user, pharmacy, rider, admin, super_admin"
         BOOLEAN is_subscribed
         VARCHAR subscription_plan
-        TIMESTAMP subscription_expiry
-        VARCHAR street
-        VARCHAR city
-        VARCHAR state
-        VARCHAR zip_code
-        FLOAT lat
-        FLOAT lng
         TIMESTAMP created_at
     }
 
-    family_members {
-        SERIAL id PK
-        INTEGER account_owner_id FK
-        VARCHAR name
-        VARCHAR relation "Self, Spouse, Father, Mother, etc."
-        VARCHAR dob
-        VARCHAR blood_group
-        TIMESTAMP created_at
-    }
-
-    salts {
-        SERIAL id PK
+    SALTS {
+        INTEGER id PK
         VARCHAR salt_name UK
         TEXT description
         TEXT_ARRAY medical_uses
         TEXT_ARRAY common_side_effects
         TEXT precautions
-        TIMESTAMP created_at
     }
 
-    medicines {
-        SERIAL id PK
+    MEDICINES {
+        INTEGER id PK
         VARCHAR medicine_id UK
         VARCHAR brand_name
         VARCHAR generic_name
         INTEGER salt_id FK
         VARCHAR category
         VARCHAR dosage_form
-        VARCHAR strength
-        VARCHAR manufacturer
-        VARCHAR schedule_type
-        BOOLEAN requires_prescription
-        BOOLEAN cold_chain_required
-        VARCHAR pack_size
         NUMERIC price
-        BOOLEAN stock
         INTEGER inventory_count
-        TIMESTAMP created_at
     }
 
-    orders {
-        SERIAL id PK
+    ORDERS {
+        INTEGER id PK
         INTEGER user_id FK
         INTEGER rider_id FK
         INTEGER family_member_id FK
         INTEGER prescription_id FK
-        VARCHAR payment_method
-        JSONB payment_result
-        NUMERIC items_price
-        NUMERIC tax_price
-        NUMERIC platform_fee
-        NUMERIC delivery_fee
-        NUMERIC cold_chain_fee
-        NUMERIC emergency_fee
-        NUMERIC late_night_fee
         NUMERIC total_price
         BOOLEAN is_paid
-        TIMESTAMP paid_at
         BOOLEAN is_delivered
-        TIMESTAMP delivered_at
-        VARCHAR status "pending, verified, assigned, picked_up, delivered"
+        VARCHAR status
         JSONB shipping_address
-        TIMESTAMP created_at
     }
 
-    order_items {
-        SERIAL id PK
+    ORDER_ITEMS {
+        INTEGER id PK
         INTEGER order_id FK
         INTEGER medicine_id FK
         VARCHAR name
         INTEGER qty
-        VARCHAR image
         NUMERIC price
     }
 
-    prescriptions {
-        SERIAL id PK
+    FAMILY_MEMBERS {
+        INTEGER id PK
+        INTEGER account_owner_id FK
+        VARCHAR name
+        VARCHAR relation
+        VARCHAR dob
+        VARCHAR blood_group
+    }
+
+    PRESCRIPTIONS {
+        INTEGER id PK
         INTEGER user_id FK
         INTEGER family_member_id FK
-        TEXT document_url
-        TIMESTAMP upload_date
+        TEXT file_url
         VARCHAR status "PENDING, VERIFIED, REJECTED"
         TEXT reviewer_notes
-        INTEGER pharmacist_id FK
         TIMESTAMP verified_at
-        TIMESTAMP created_at
     }
-
-    support_requests {
-        SERIAL id PK
-        VARCHAR name
-        VARCHAR email
-        VARCHAR category
-        TEXT message
-        VARCHAR status "PENDING, RESOLVED"
-        TIMESTAMP created_at
-    }
-
-    pharmacies {
-        SERIAL id PK
-        INTEGER user_id FK
-        VARCHAR name
-        VARCHAR license_number UK
-        VARCHAR street
-        VARCHAR city
-        VARCHAR state
-        VARCHAR zip_code
-        FLOAT lat
-        FLOAT lng
-        VARCHAR status "PENDING, APPROVED"
-        TIMESTAMP created_at
-    }
-
-    riders {
-        SERIAL id PK
-        INTEGER user_id FK
-        VARCHAR vehicle_make
-        VARCHAR vehicle_model
-        VARCHAR vehicle_reg_number
-        FLOAT lat
-        FLOAT lng
-        BOOLEAN is_available
-        VARCHAR status "OFFLINE, ONLINE, ON_DELIVERY"
-        INTEGER active_order_id FK
-        NUMERIC rating
-        TIMESTAMP created_at
-    }
-
-    subscriptions {
-        SERIAL id PK
-        INTEGER user_id FK
-        VARCHAR frequency "WEEKLY, BIWEEKLY, MONTHLY"
-        TIMESTAMP next_delivery_date
-        VARCHAR status "ACTIVE, PAUSED, CANCELLED"
-        TEXT delivery_address
-        TIMESTAMP created_at
-    }
-
-    subscription_items {
-        SERIAL id PK
-        INTEGER subscription_id FK
-        INTEGER medicine_id FK
-        INTEGER quantity
-    }
-```
-
----
-
-## JWT Authentication & Security Section
-
-Medifly implements stateless security utilizing JSON Web Tokens (JWT) and Bcrypt password hashing.
-
-### 1. Password Hashing
-User passwords are encrypted before persistent storage in PostgreSQL using **Bcrypt.js** with 10 salt rounds:
-```javascript
-const salt = await bcrypt.genSalt(10);
-const hashedPassword = await bcrypt.hash(password, salt);
-```
-
-### 2. Token Payload Claims
-Upon authentication, the server signs a JWT containing the user's primary key:
-```json
-{
-  "id": 1,
-  "iat": 1770438000,
-  "exp": 1773030000
-}
-```
-
-### 3. Header Transmission
-Clients pass the JWT token in the HTTP `Authorization` request header:
-```http
-Authorization: Bearer <JWT_TOKEN_STRING>
-```
-
-### JWT Authentication Sequence Diagram
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as React Client SPA
-    participant AuthCtrl as authController
-    participant Middleware as authMiddleware & roleMiddleware
-    participant DB as PostgreSQL Database
-
-    Note over Client, DB: Phase 1: Authentication & Token Issuance
-    Client->>AuthCtrl: POST /api/auth/login { email, password }
-    AuthCtrl->>DB: SELECT * FROM users WHERE email = $1
-    DB-->>AuthCtrl: User Record (with hashed password)
-    AuthCtrl->>AuthCtrl: bcrypt.compare(password, user.password)
-    AuthCtrl-->>Client: HTTP 200 OK { id, name, email, role, token }
-    Client->>Client: Save token to localStorage
-
-    Note over Client, DB: Phase 2: Accessing Protected Endpoint
-    Client->>Middleware: GET /api/admin/dashboard (Header: Authorization: Bearer <token>)
-    Middleware->>Middleware: jwt.verify(token, JWT_SECRET)
-    Middleware->>DB: SELECT * FROM users WHERE id = $1
-    DB-->>Middleware: req.user object
-    Middleware->>Middleware: authorize('admin') -> req.user.role === 'admin'
-    Middleware-->>Client: Proceed to Controller & Return HTTP 200 JSON Data
-```
-
----
-
-## Project Directory Structure
-
-```ascii
-medifly-mern/
-├── README.md                          # Main Repository Documentation
-├── notes.md                           # Comprehensive Developer & Interview Revision Guide
-├── package.json                       # Root Workspace Package (Concurrently Scripts)
-├── index.html                         # Root HTML Entrypoint
-├── vercel.json                        # Monorepo Vercel Deployment Configuration
-├── .gitignore                         # Repository Git Ignore Rules
-│
-├── backend/                           # Node.js + Express v5 Application Server
-│   ├── .env                           # Environment Variables (DATABASE_URL, JWT_SECRET, PORT)
-│   ├── .env.example                   # Environment Template
-│   ├── package.json                   # Backend Dependencies (Express 5, pg, Socket.io, node-cron)
-│   ├── server.js                      # Express App Setup, API Route Mounts, Health Check & Error Handler
-│   ├── socket.js                      # Socket.io Real-Time Singleton Engine & Channel Dispatcher
-│   ├── config/
-│   │   ├── db.js                      # PostgreSQL connection pool & automatic table schema initialization
-│   │   └── auth.js                    # JWT configuration constants
-│   ├── controllers/                   # HTTP Request Handlers & Route Business Logic
-│   │   ├── adminController.js         # Revenue Analytics, System Counters & Low-Stock Alerts
-│   │   ├── authController.js          # User Registration, Login & Authenticated Profile Handlers
-│   │   ├── medicineController.js      # Medicine Search, Filtering, Salt Comparison & Price Updates
-│   │   ├── orderController.js         # Order Creation, Rx Checks, Fee Calculations & Payment Handling
-│   │   ├── pharmacyController.js      # Pharmacy Registration & Store Management
-│   │   ├── prescriptionController.js  # Prescription Document Upload & Pharmacist Verification
-│   │   ├── riderController.js         # Rider Registration, Dispatch Status & Live GPS Coordinates
-│   │   ├── subscriptionController.js  # Refill Subscription Creation & Management
-│   │   ├── supportController.js       # Support Request Form Processing & Table Handler
-│   │   └── vaultController.js         # Family Member Profiles & Per-Member Prescription/Order Queries
-│   ├── data/                          # Seed Datasets
-│   │   ├── medicines.csv              # Initial Medicine Sample Dataset
-│   │   └── meds_dB_original.csv       # Enterprise 254,023 Medicine Master Dataset
-│   ├── middleware/                    # Express Security & Guard Middleware
-│   │   ├── authMiddleware.js          # JWT Verification Guard (`protect`)
-│   │   └── roleMiddleware.js          # Role-Based Access Control Guard (`authorize`)
-│   ├── models/                        # SQL Data Model Wrappers & Query Abstractions
-│   │   ├── User.js                    # User queries (auth, role, subscriptions)
-│   │   ├── Medicine.js                # Medicine queries (trigram search, categories)
-│   │   ├── Salt.js                    # Chemical salt queries & bioequivalent comparison
-│   │   ├── Order.js                   # Order queries & item line links
-│   │   ├── Prescription.js            # Prescription document status queries
-│   │   ├── Pharmacy.js                # Pharmacy profile & license queries
-│   │   ├── Rider.js                   # Fleet rider profile & location updates
-│   │   └── Subscription.js            # Subscription refill schedule queries
-│   ├── routes/                        # Express API Route Definitions
-│   │   ├── adminRoutes.js             # /api/admin Endpoints
-│   │   ├── authRoutes.js              # /api/auth Endpoints
-│   │   ├── medicineRoutes.js          # /api/medicines Endpoints
-│   │   ├── orderRoutes.js             # /api/orders Endpoints
-│   │   ├── pharmacyRoutes.js          # /api/pharmacy Endpoints
-│   │   ├── prescriptionRoutes.js      # /api/prescriptions Endpoints
-│   │   ├── riderRoutes.js             # /api/riders Endpoints
-│   │   ├── subscriptionRoutes.js      # /api/subscriptions Endpoints
-│   │   ├── supportRoutes.js           # /api/support Endpoints
-│   │   └── vaultRoutes.js             # /api/vault Endpoints
-│   ├── scripts/                       # Database Management & Seeding Scripts
-│   │   ├── seedMedicines.js           # 254k Dataset High-Performance PostgreSQL Seeder
-│   │   ├── initDatabase.js            # Table Initialization Script
-│   │   ├── addIndexes.js              # GIN Trigram Indexing Script
-│   │   ├── testSeeder.js              # Seeder Verification Test Script
-│   │   ├── testBatch.js               # Batch Insertion Test Script
-│   │   └── verifyDb.js                # Database Count & Sanity Checker
-│   └── services/                      # Domain Business Logic Services
-│       ├── cronService.js             # Automated Daily Subscription Auto-Refill Job
-│       ├── pricingService.js          # Multi-Tier Tax, Fee & Surcharge Calculator
-│       ├── riderAssignmentService.js  # Proximity-Based Fleet Rider Dispatch Logic
-│       └── saltComparisonService.js   # Bioequivalent Chemical Salt Matcher
-│
-└── frontend/                          # React 19 + Vite 6 Single Page Application
-    ├── package.json                   # Frontend Dependencies (React 19, Vite 6, Lucide, Router v7)
-    ├── vite.config.js                 # Vite Config Setup & Path Aliasing
-    ├── index.html                     # HTML Entrypoint
-    ├── vercel.json                    # Frontend Vercel Rewrite Rules
-    └── src/
-        ├── main.jsx                   # React Application Entrypoint
-        ├── App.jsx                    # Router v7 Component Tree & Layout Shell
-        ├── index.css                  # Modern Design System (Glassmorphism, CSS Variables, Animations)
-        ├── utils/
-        │   └── getMedicineImage.js    # Physical dosage-form image resolver
-        ├── components/                # Reusable UI Components
-        │   ├── Header.jsx             # Top Navbar with Live Search & Navigation
-        │   ├── Footer.jsx             # Platform Footer with Quick Links & Motto
-        │   ├── CartSidebar.jsx        # Slide-over Express Shopping Cart & Fee Summary
-        │   ├── MedicineCard.jsx       # Interactive Medicine Card Component
-        │   └── ProtectedRoute.jsx     # Client-side RBAC Route Guard Component
-        ├── context/                   # React Context State Providers
-        │   ├── AuthContext.jsx        # JWT Authentication & Role Session Management
-        │   ├── CartContext.jsx        # Cart State, Item Manipulation & Total Fees
-        │   └── SocketContext.jsx      # Socket.io WebSockets Provider
-        └── pages/                     # Application Pages
-            ├── HomePage.jsx           # Landing Page with Hero Banner, Search & SLA Matrix
-            ├── MedicinesPage.jsx      # 254k+ Medicine Search Browser with Filters
-            ├── PrescriptionsPage.jsx  # Prescription Vault (Family Profiles & Per-Member Orders)
-            ├── SubscriptionPage.jsx   # Chronic Refill Subscription Management
-            ├── CheckoutPage.jsx       # 30-Min Order Checkout & Multi-Tier Surcharge Review
-            ├── OrdersPage.jsx         # User Order History & Live GPS Dispatch Tracker Map
-            ├── SaltComparePage.jsx    # Generic Bioequivalent Salt Alternative Tool
-            ├── DashboardPage.jsx      # Patient Account Overview Dashboard
-            ├── AdminPage.jsx          # Admin Revenue Metrics & Stock Alerts Dashboard
-            ├── PharmacyPage.jsx       # Pharmacist Verification Terminal Page
-            ├── RiderPage.jsx          # Rider Dispatch & GPS Broadcast Terminal Page
-            ├── PartnerApplyPage.jsx   # Pharmacy Partner Application Page
-            ├── RiderApplyPage.jsx     # Fleet Rider Application Page
-            ├── ProfilePage.jsx        # User Profile Management
-            ├── SettingsPage.jsx       # User Account & Notification Settings
-            ├── AboutPage.jsx          # Merged About & Contact Page
-            └── LoginPage.jsx          # User Login & Account Registration Page
 ```
 
 ---
 
 ## Exhaustive API Reference & Calling Guide
 
-### Endpoints Summary Table
+### Authentication & Users (`/api/auth` & `/api/users`)
+- `POST /api/auth/register` — Register new local patient account
+- `POST /api/auth/login` — Authenticate local patient account
+- `GET /api/auth/profile` — Fetch authenticated profile
+- `POST /api/users/sync` — Sync user profile from Clerk SSO
+- `GET /api/users/me` — Get current PostgreSQL user record
+- `PUT /api/users/me` — Update user profile (Name, Phone, Address)
+- `GET /api/users/stats` — Retrieve user dashboard counters
 
-| Category | Method | URL Path | Auth Required | Allowed Roles | Description |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Health & Ping** | `GET` | `/` | Public | All | Root backend status ping endpoint |
-| **Health & Ping** | `GET` | `/health` | Public | All | Lightweight health check endpoint for UptimeRobot & Render monitoring |
-| **Health & Ping** | `GET` | `/api/health` | Public | All | Deep health check verifying PostgreSQL database connection |
-| **Auth** | `POST` | `/api/auth/register` | Public | All | Register a new user account |
-| **Auth** | `POST` | `/api/auth/login` | Public | All | Authenticate user & return JWT token |
-| **Auth** | `GET` | `/api/auth/profile` | Private | All Logged In | Get current authenticated user profile |
-| **Vault** | `GET` | `/api/vault/members` | Private | `user` | List user's family member profiles (auto-seeds defaults if empty) |
-| **Vault** | `POST` | `/api/vault/members` | Private | `user` | Add a new family member profile |
-| **Vault** | `PUT` | `/api/vault/members/:id` | Private | `user` | Update family member profile (ownership checked) |
-| **Vault** | `DELETE` | `/api/vault/members/:id` | Private | `user` | Delete family member profile (ownership checked) |
-| **Vault** | `GET` | `/api/vault/members/:id/prescriptions` | Private | `user` | Fetch family member's prescriptions (ownership checked) |
-| **Vault** | `GET` | `/api/vault/members/:id/orders` | Private | `user` | Fetch family member's order history (ownership checked) |
-| **Support**| `POST` | `/api/support` | Public | All | Submit contact form request to `support_requests` table |
-| **Medicines** | `GET` | `/api/medicines` | Public | All | Search 254k+ meds with keyword, category, page & sort |
-| **Medicines** | `GET` | `/api/medicines/:id` | Public | All | Fetch single medicine details |
-| **Medicines** | `GET` | `/api/medicines/salt-comparison/:id` | Public | All | Compare bioequivalent salts & generic alternatives |
-| **Medicines** | `PUT` | `/api/medicines/:id/price` | Private | Admin / Pharmacy | Update medicine price & trigger WS broadcast |
-| **Orders** | `POST` | `/api/orders` | Private | `user` | Create order with stock/Rx checks & rider assignment |
-| **Orders** | `GET` | `/api/orders/myorders` | Private | `user` | Fetch logged-in user's order history |
-| **Orders** | `GET` | `/api/orders/:id` | Private | `user`, `admin` | Fetch order details by ID |
-| **Orders** | `PUT` | `/api/orders/:id/pay` | Private | `user` | Update order payment status to paid |
-| **Prescriptions**| `POST` | `/api/prescriptions` | Private | `user` | Upload a new prescription document |
-| **Prescriptions**| `GET` | `/api/prescriptions/my` | Private | `user` | Fetch logged-in user's prescriptions |
-| **Prescriptions**| `PUT` | `/api/prescriptions/:id/verify` | Private | `pharmacy`, `admin` | Verify/reject uploaded prescription |
-| **Subscriptions**| `POST` | `/api/subscriptions` | Private | `user` | Create auto-refill delivery subscription |
-| **Subscriptions**| `GET` | `/api/subscriptions` | Private | `user` | Fetch user's active subscriptions |
-| **Pharmacy** | `POST` | `/api/pharmacy` | Private | `user` | Register a new pharmacy store |
-| **Pharmacy** | `GET` | `/api/pharmacy/dashboard` | Private | `pharmacy`, `admin` | Get pharmacy workstation dashboard details |
-| **Riders** | `POST` | `/api/riders` | Private | `user` | Register a new fleet rider |
-| **Riders** | `PUT` | `/api/riders/location` | Private | `rider` | Update live rider GPS location |
-| **Admin** | `GET` | `/api/admin/dashboard` | Private | `admin` | Get platform analytics & stock alerts |
+### Medicines & Salt Matching (`/api/medicines`)
+- `GET /api/medicines` — Search medicines (supports `keyword`, `pageNumber`, GIN trigram indexing)
+- `GET /api/medicines/:id` — Fetch single medicine details
+- `GET /api/medicines/alternatives/:saltName` — Query bioequivalent generic alternatives
+- `GET /api/medicines/salt-comparison/:medicineId` — Bioequivalent salt comparison matrix
+- `PUT /api/medicines/:id/price` — Update medicine price (Admin/Pharmacy + Socket emission)
+
+### Orders & Checkout (`/api/orders`)
+- `POST /api/orders` — Create new order with pricing engine calculations
+- `GET /api/orders/myorders` — Retrieve orders placed by current user
+- `GET /api/orders/:id` — Get detailed order summary & tracking data
+- `PUT /api/orders/:id/pay` — Mark order as paid
+
+### Prescriptions & Vault (`/api/prescriptions` & `/api/vault`)
+- `POST /api/prescriptions` — Upload prescription document URL
+- `GET /api/prescriptions/my` — List user's uploaded prescriptions
+- `PUT /api/prescriptions/:id/verify` — Pharmacist verification (`VERIFIED` / `REJECTED`)
+- `GET /api/vault/members` — List family members for account owner
+- `POST /api/vault/members` — Add new family member
+- `GET /api/vault/members/:id/prescriptions` — Fetch family member prescriptions
+- `POST /api/vault/members/:id/prescriptions` — Upload prescription document to Supabase
+- `GET /api/vault/prescriptions/:id/file` — Stream signed 10-minute file URL
+
+### Subscriptions & Auto-Refill (`/api/subscriptions`)
+- `POST /api/subscriptions` — Create new recurring refill subscription
+- `GET /api/subscriptions` — Retrieve user's active subscriptions
+- `PATCH /api/subscriptions/:id/status` — Update subscription status (`ACTIVE`, `PAUSED`, `CANCELLED`)
+
+### Portals & Administration (`/api/pharmacy`, `/api/riders`, `/api/admin`, `/api/support`)
+- `POST /api/pharmacy` — Apply for pharmacy partner status
+- `GET /api/pharmacy/dashboard` — Access pharmacy workstation inventory & orders
+- `POST /api/riders` — Register as fleet delivery rider
+- `PUT /api/riders/location` — Update rider live GPS location (`lat`/`lng`)
+- `GET /api/riders/deliveries` — Retrieve assigned delivery orders for rider
+- `GET /api/admin/dashboard` — Platform stats & revenue analytics
+- `GET /api/admin/users` — List system users with SQL-level role isolation
+- `GET /api/admin/vault/attribution` — Vault family attribution analytics
+- `POST /api/support` — Submit customer support request
 
 ---
 
-### Detailed Endpoint Specifications
+## Directory Structure & Sitemap
 
-#### 1. Auth Service
-
-##### `POST /api/auth/register`
-- **Description**: Registers a new user account.
-- **Auth Required**: Public (No Token)
-- **Headers**: `Content-Type: application/json`
-- **Request Body**:
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "securePassword123",
-  "phone": "+919876543210"
-}
 ```
-- **Response `201 Created`**:
-```json
-{
-  "id": 1,
-  "name": "John Doe",
-  "email": "john@example.com",
-  "role": "user",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-##### `POST /api/auth/login`
-- **Description**: Authenticates user credentials and returns JWT token.
-- **Auth Required**: Public (No Token)
-- **Headers**: `Content-Type: application/json`
-- **Request Body**:
-```json
-{
-  "email": "user@medifly.com",
-  "password": "user123"
-}
-```
-- **Response `200 OK`**:
-```json
-{
-  "id": 1,
-  "name": "Test User",
-  "email": "user@medifly.com",
-  "role": "user",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
+medifly-mern/
+├── backend/
+│   ├── config/             # Database connection & PostgreSQL schema init (db.js)
+│   ├── controllers/        # REST API route controllers
+│   ├── middleware/         # authMiddleware (Clerk/JWT) & roleMiddleware (RBAC)
+│   ├── models/             # Schema references
+│   ├── routes/             # Express API router definitions
+│   ├── services/           # PricingService, CronService, RiderAssignment, StorageService
+│   ├── scripts/            # Database test suites & utility scripts
+│   ├── socket.js           # Socket.io real-time event dispatcher
+│   └── server.js           # Express app initialization & server entry point
+├── frontend/
+│   ├── public/             # Static assets & brand icons
+│   └── src/
+│       ├── components/     # Header, Footer, CartSidebar, MedicineCard, ProtectedRoute
+│       ├── context/        # AuthContext, CartContext, SocketContext
+│       ├── pages/          # HomePage, MedicinesPage, PrescriptionsPage, ProfilePage,
+│       │                   # AdminPage, PharmacyPage, RiderPage, SaltComparePage,
+│       │                   # SubscriptionPage, OnboardingPage, AboutPage, CheckoutPage
+│       ├── utils/          # getMedicineImage visual resolver & helpers
+│       ├── App.jsx         # React Router v7 layout & route mappings
+│       └── main.jsx        # ClerkProvider & application root mounting
+├── notes.md                # Comprehensive technical interview preparation guide
+└── README.md               # Production documentation & project reference
 ```
 
 ---
 
-#### 2. Medicines Service
+## Local Development & Setup Guide
 
-##### `GET /api/medicines`
-- **Description**: Queries 254,000+ medicines with GIN trigram SQL index.
-- **Auth Required**: Public
-- **Query Parameters**:
-  | Parameter | Type | Default | Description |
-  | :--- | :--- | :--- | :--- |
-  | `keyword` | String | None | Search brand name, generic composition, or manufacturer |
-  | `category` | String | None | Category filter (e.g., `analgesics`, `diabetes`, `cardiac`) |
-  | `page` | Number | 1 | Page number for pagination |
-  | `pageSize` | Number | 20 | Items per page |
-  | `sort` | String | name | Sort parameter (`name`, `price_asc`, `price_desc`) |
-- **Response `200 OK`**:
-```json
-{
-  "medicines": [
-    {
-      "id": 101,
-      "medicineId": "MED-101",
-      "brandName": "Paracetamol 650",
-      "genericName": "Paracetamol",
-      "category": "Analgesics",
-      "price": 32.50,
-      "stock": true,
-      "inventoryCount": 150
-    }
-  ],
-  "page": 1,
-  "pages": 12702,
-  "total": 254023
-}
-```
+### Prerequisites
+- **Node.js**: v18.0.0 or higher
+- **npm**: v9.0.0 or higher
+- **PostgreSQL Database**: Local PostgreSQL instance or Supabase Cloud credentials
+- **Clerk Account**: Active Clerk application credentials
 
----
-
-#### 3. Orders Service
-
-##### `POST /api/orders`
-- **Description**: Creates order, verifies inventory/Rx, calculates fee breakdown, and dispatches rider.
-- **Auth Required**: Private (`Authorization: Bearer <token>`)
-- **Request Body**:
-```json
-{
-  "orderItems": [
-    { "medicine": 101, "qty": 2 }
-  ],
-  "shippingAddress": {
-    "address": "123 Health St",
-    "city": "Mumbai",
-    "postalCode": "400058",
-    "country": "India"
-  },
-  "paymentMethod": "Razorpay",
-  "isEmergency": true
-}
-```
-- **Response `201 Created`**:
-```json
-{
-  "id": 501,
-  "user_id": 1,
-  "itemsPrice": 65.00,
-  "taxPrice": 3.25,
-  "platformFee": 6.00,
-  "deliveryFee": 30.00,
-  "coldChainFee": 0.00,
-  "emergencyFee": 50.00,
-  "totalPrice": 154.25,
-  "status": "assigned",
-  "isPaid": false
-}
-```
-
----
-
-## 🚀 Local Setup & Installation Guide
-
-### 1️⃣ Prerequisites
-- **Node.js**: `v18.0.0` or higher
-- **Git**
-- **PostgreSQL Database** (Supabase Cloud or Local PostgreSQL)
-
-### 2️⃣ Installation & Setup
-
+### 1. Repository Setup & Dependencies Installation
+Clone the repository and install dependencies for both `backend` and `frontend`:
 ```bash
-# Clone the repository
 git clone https://github.com/em-srs/Medifly.git
 cd Medifly
 
-# Install all root, backend, and frontend dependencies
+# Install root, backend, and frontend dependencies
 npm run install:all
 ```
 
-### 3️⃣ Configure Environment Variables
+### 2. Environment Variables Configuration
 
-Create `backend/.env`:
+Create a `.env` file in the `backend/` directory:
 ```env
 PORT=5000
 NODE_ENV=development
-DATABASE_URL=postgresql://postgres.your_project_ref:your_password@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres
-PGHOST=aws-0-ap-northeast-1.pooler.supabase.com
-PGUSER=postgres.your_project_ref
-PGPASSWORD=your_password
-PGDATABASE=postgres
-PGPORT=6543
+DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres
 PGSSL=true
-JWT_SECRET=supersecretjwtkey_for_medifly
+JWT_SECRET=medifly_secret_key_2026
+SUPABASE_URL=https://[YOUR_PROJECT].supabase.co
+SUPABASE_KEY=[YOUR_SUPABASE_SERVICE_KEY]
 ```
 
-Create `frontend/.env`:
+Create a `.env` file in the `frontend/` directory:
 ```env
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_[YOUR_CLERK_KEY]
 VITE_API_URL=http://localhost:5000
 ```
 
-### 4️⃣ Database Seeding & Setup
-
-To seed the 254,000+ medicine dataset into PostgreSQL:
-
-```bash
-npm --prefix backend run dev
-# Seeding scripts in backend/scripts/ automatically build tables and indices
-```
-
-### 5️⃣ Run the Application
-
-From the root directory, start both backend and frontend concurrently:
-
+### 3. Launch Development Servers
+Start both backend API server (Port `5000`) and Vite frontend dev server (Port `5173`) concurrently:
 ```bash
 npm run dev
 ```
 
-- **Frontend Application**: `http://localhost:5173`
-- **Backend Express API**: `http://localhost:5000`
+Or start servers individually:
+```bash
+# Start backend server only
+npm run dev:backend
+
+# Start frontend Vite server only
+npm run dev:frontend
+```
 
 ---
 
-## 🌐 Render Backend Hosting & 24/7 UptimeRobot Monitoring
+## Security, Data Isolation & Best Practices
 
-Medifly's Express backend is configured for production deployment on **Render** (or Vercel / Railway). Free Render web services spin down after 15 minutes of inactivity, causing initial 50-second cold start delays. Medifly solves this with dedicated ping and health check endpoints:
-
-- **`GET /health`**: Returns an instant `200 OK` response with server uptime metrics.
-- **`GET /`**: Root API ping endpoint returning operational status.
-- **`GET /api/health`**: Deep health check verifying active PostgreSQL pool connectivity.
-
-### Setting Up UptimeRobot (Prevent 15-Min Inactivity Spin-Down)
-1. Register a free account at [UptimeRobot](https://uptimerobot.com).
-2. Click **+ Add New Monitor** and select **HTTP(s)**.
-3. Enter your backend endpoint: `https://your-backend.onrender.com/health`.
-4. Set the monitoring interval to **5 minutes**.
-5. Save the monitor — UptimeRobot will ping your service every 5 minutes, ensuring your Render backend stays active 24/7.
-
----
-
-## License
-
-This project is licensed under the **ISC License**.
+1. **Strict Data Scoping**: All user queries execute with parameter bindings (`WHERE user_id = $1` or `WHERE account_owner_id = $1`), ensuring 100% account data isolation.
+2. **Server-Side Role Guarding**: Roles are assigned server-side in PostgreSQL. Frontend route checking provides smooth UX while Express middleware blocks unauthorized API calls.
+3. **Private File Vaulting**: User prescriptions are kept in a private storage bucket. File access tokens expire after 10 minutes (`createSignedUrl`).
+4. **Environment Safety**: Secrets, API keys, database credentials, and upload files are excluded from Git version control via `.gitignore`.
