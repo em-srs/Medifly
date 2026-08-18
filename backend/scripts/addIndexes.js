@@ -3,9 +3,10 @@ const { query } = require('../config/db');
 async function createIndexes() {
   console.log('⚡ Adding PostgreSQL Indexes for 254,000+ medicines...');
   try {
-    // Trigram extension for ultra-fast ILIKE searches
-    await query(`CREATE EXTENSION IF NOT EXISTS pg_trgm;`);
-    console.log('✅ pg_trgm extension enabled');
+    // Trigram extension for ultra-fast ILIKE searches, installed in the extensions schema
+    await query(`CREATE SCHEMA IF NOT EXISTS extensions;`);
+    await query(`CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA extensions;`);
+    console.log('✅ pg_trgm extension enabled in "extensions" schema');
 
     // Indexes for fast search & filtering
     await query(`CREATE INDEX IF NOT EXISTS idx_medicines_brand_trgm ON medicines USING gin (brand_name gin_trgm_ops);`);
