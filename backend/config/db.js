@@ -236,6 +236,20 @@ const initDb = async () => {
     CREATE INDEX IF NOT EXISTS idx_prescriptions_family_member ON prescriptions(family_member_id);
     CREATE INDEX IF NOT EXISTS idx_prescriptions_uploaded_by ON prescriptions(uploaded_by_user_id);
     CREATE INDEX IF NOT EXISTS idx_family_members_owner ON family_members(account_owner_id);
+
+    -- Enforce Row-Level Security (RLS) on all tables to secure public schema against anonymous API exposure
+    ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE salts ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE medicines ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE pharmacies ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE prescriptions ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE riders ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE subscription_items ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE support_requests ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE family_members ENABLE ROW LEVEL SECURITY;
   `;
   try {
     await pool.query(schemaSql);
