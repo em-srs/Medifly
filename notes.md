@@ -12,8 +12,8 @@
 
 ## 🌐 Live URLs & Credentials
 
-- **Live Production API**: [https://medifly-api.onrender.com](https://medifly-api.onrender.com)
-- **Production Health Check**: `GET https://medifly-api.onrender.com/health`
+- **Live Production API**: [https://medifly-nb4i.onrender.com](https://medifly-nb4i.onrender.com)
+- **Production Health Check**: `GET https://medifly-nb4i.onrender.com/health`
 - **GitHub Repository**: [https://github.com/em-srs/Medifly](https://github.com/em-srs/Medifly)
 
 | Portal / Role | Email Address | Password | Key Scope |

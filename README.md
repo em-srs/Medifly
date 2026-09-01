@@ -18,8 +18,8 @@
 
 ## 🌐 Live Demo & Credentials
 
-- **Live Backend API**: [https://medifly-api.onrender.com](https://medifly-api.onrender.com)
-- **API Health Check**: `GET https://medifly-api.onrender.com/health`
+- **Live Backend API**: [https://medifly-nb4i.onrender.com](https://medifly-nb4i.onrender.com)
+- **API Health Check**: `GET https://medifly-nb4i.onrender.com/health`
 - **GitHub Repository**: [https://github.com/em-srs/Medifly](https://github.com/em-srs/Medifly)
 
 ### Demo Credentials & Portal Roles
@@ -609,7 +609,7 @@ node backend/scripts/testVaultEndToEnd.js
 | Layer | Provider | Live URL / Config | Key Configuration File |
 | :--- | :--- | :--- | :--- |
 | **Frontend SPA** | Vercel / Netlify | Static Vite Build (`dist/`) | `frontend/package.json` |
-| **Backend Server API** | Render | [https://medifly-api.onrender.com](https://medifly-api.onrender.com) | `backend/server.js` |
+| **Backend Server API** | Render | [https://medifly-nb4i.onrender.com](https://medifly-nb4i.onrender.com) | `backend/server.js` |
 | **Uptime Monitor** | UptimeRobot | Pings `GET /health` every 5 min | `backend/server.js` |
 | **Database Engine** | Supabase Cloud | PostgreSQL 15 Pool (`pg_trgm`) | `backend/config/db.js` |
 | **File Vault Storage**| Supabase Storage | Private `prescriptions` Bucket | `backend/services/storageService.js` |
