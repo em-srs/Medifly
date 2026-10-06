@@ -24,10 +24,20 @@ app.get('/', (req, res) => {
   });
 });
 
-// Lightweight health check endpoint for UptimeRobot / Render monitoring
-app.get('/health', (req, res) => {
+// Lightweight health check endpoint for UptimeRobot / Render / Supabase monitoring
+app.get('/health', async (req, res) => {
+  let dbStatus = 'OK';
+  try {
+    const { query } = require('./config/db');
+    await query('SELECT 1');
+  } catch (err) {
+    dbStatus = 'Degraded';
+    console.warn('⚠️ /health DB ping warning:', err.message);
+  }
+
   res.status(200).json({
     status: 'OK',
+    dbStatus,
     uptime: process.uptime(),
     timestamp: new Date().toISOString()
   });

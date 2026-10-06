@@ -54,7 +54,7 @@ export default function MedicinesPage() {
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout guard
+      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout guard to allow Supabase wakeup
 
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timeoutId);
@@ -88,7 +88,7 @@ export default function MedicinesPage() {
       console.warn('Backend fetch fallback to static file:', err.message);
     }
 
-    // Fallback to static JSON if backend is offline
+    // Fallback to static JSON if backend is offline or DB warming up
     try {
       setIsLiveDb(false);
       const res = await fetch('/medicines.json');
@@ -249,6 +249,53 @@ export default function MedicinesPage() {
             <option value="price-high">Price: High to Low</option>
           </select>
         </div>
+
+        {/* Fallback mode alert banner */}
+        {!loading && !isLiveDb && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.15))',
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+            borderRadius: '12px',
+            padding: '12px 18px',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justify: 'space-between',
+            gap: '12px',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Database size={20} style={{ color: '#d97706', flexShrink: 0 }} />
+              <div>
+                <strong style={{ color: '#b45309', fontSize: '0.9rem', display: 'block' }}>
+                  Offline Catalog Mode (400 Medicines)
+                </strong>
+                <span style={{ color: '#78350f', fontSize: '0.82rem' }}>
+                  Supabase live database was sleeping. Showing sample medicines catalog while connection wakes up.
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => fetchMedicines(query, activeCategory, sortBy, currentPage)}
+              style={{
+                background: '#d97706',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '6px 14px',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 4px rgba(217, 119, 6, 0.2)'
+              }}
+              onMouseOver={(e) => e.target.style.background = '#b45309'}
+              onMouseOut={(e) => e.target.style.background = '#d97706'}
+            >
+              🔄 Retry Live Database (254k+ Meds)
+            </button>
+          </div>
+        )}
 
         {/* Results count */}
         <div className={styles.results} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>

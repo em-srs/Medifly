@@ -2,6 +2,16 @@ const cron = require('node-cron');
 const { query, pool } = require('../config/db');
 
 const startCronJobs = () => {
+  // ⚡ Supabase DB Keepalive Ping (Every 3 minutes)
+  // Keeps Supabase PostgreSQL connection pool warm and prevents project auto-pausing/sleep state
+  cron.schedule('*/3 * * * *', async () => {
+    try {
+      await query('SELECT 1');
+    } catch (err) {
+      console.warn('⚠️ Supabase keepalive ping warning:', err.message);
+    }
+  });
+
   // Run everyday at 00:00 (Midnight)
   cron.schedule('0 0 * * *', async () => {
     console.log('Running daily subscription & auto-refill check...');

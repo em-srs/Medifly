@@ -2,6 +2,7 @@
 
 # Dependencies
 node_modules/
+**/node_modules/
 .pnp
 .pnp.*
 .yarn/*
@@ -10,46 +11,66 @@ node_modules/
 !.yarn/releases
 !.yarn/versions
 
-# Logs
-logs
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+*.env
+*.env.local
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+serviceAccount*.json
+firebase-*.json
+*credentials*.json
+*secrets*.json
+
+# Logs & Diagnostic Dumps
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 lerna-debug.log*
+frontend/build_error.txt
+frontend/err.log
+backend/error.log
+backend/error2.log
+backend/success.log
 
-# Testing
+# Testing & Coverage
 coverage/
 *.lcov
 .nyc_output
 
-# Build & Production
+# Build & Production Bundles
 build/
 dist/
 out/
 .next/
 .nuxt/
-
-# Environment Variables
-.env
-.env.*
-!.env.example
+frontend/dist/
+frontend/build/
 
 # OS & IDE Files
 .DS_Store
-*.pem
+Thumbs.db
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
 
-# Vercel
+# Vercel & Hosting
 .vercel
 
-# Misc Node.js
+# Misc Node.js & Temporary Caches
 pids
 *.pid
 *.seed
@@ -65,11 +86,11 @@ backend/data/
 *.sqlite
 *.sql
 
-# Build Outputs & Logs
-frontend/dist/
-frontend/build_error.txt
-*.log
-
-# Uploaded Files
+# User Uploaded Files & Private Documents
+uploads/
 backend/uploads/
+frontend/uploads/
 
+# Internal API Specifications & Private Postman Collections
+endpoints/
+backend/endpoints/

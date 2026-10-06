@@ -14,6 +14,11 @@ const poolConfig = process.env.DATABASE_URL
   ? {
       connectionString: process.env.DATABASE_URL,
       ssl: sslConfig,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
     }
   : {
       host: process.env.PGHOST || 'localhost',
@@ -22,9 +27,19 @@ const poolConfig = process.env.DATABASE_URL
       database: process.env.PGDATABASE || 'postgres',
       port: parseInt(process.env.PGPORT || '5432', 10),
       ssl: sslConfig,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
     };
 
 const pool = new Pool(poolConfig);
+
+// Handle idle connection errors gracefully without crashing process
+pool.on('error', (err) => {
+  console.error('⚠️ Unexpected error on idle PostgreSQL client:', err.message);
+});
 
 const connectDB = async () => {
   try {
@@ -259,8 +274,34 @@ const initDb = async () => {
   }
 };
 
+// Resilient query wrapper with automatic 2-attempt retry on transient connection resets
+const queryWithRetry = async (text, params, retries = 2) => {
+  for (let attempt = 1; attempt <= retries + 1; attempt++) {
+    try {
+      return await pool.query(text, params);
+    } catch (err) {
+      const isConnError = 
+        err.code === '57P01' || // admin_shutdown
+        err.code === '57P03' || // cannot_connect_now
+        err.code === '08006' || // connection_failure
+        err.code === '08003' || // connection_does_not_exist
+        err.code === 'ECONNRESET' ||
+        err.code === 'ETIMEDOUT' ||
+        err.message?.includes('Connection terminated') ||
+        err.message?.includes('closed unexpectedly');
+
+      if (isConnError && attempt <= retries) {
+        console.warn(`⚠️ PostgreSQL connection error (attempt ${attempt}/${retries + 1}). Retrying query in 500ms...`);
+        await new Promise(res => setTimeout(res, 500 * attempt));
+        continue;
+      }
+      throw err;
+    }
+  }
+};
+
 module.exports = {
   pool,
   connectDB,
-  query: (text, params) => pool.query(text, params),
+  query: queryWithRetry,
 };
