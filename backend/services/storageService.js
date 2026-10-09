@@ -11,10 +11,24 @@ if (!fs.existsSync(LOCAL_UPLOAD_DIR)) {
 let supabaseClient = null;
 try {
   const { createClient } = require('@supabase/supabase-js');
-  const supabaseUrl = process.env.SUPABASE_URL || (process.env.PGHOST ? `https://${process.env.PGHOST.split('.')[0]}.supabase.co` : null);
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+  
+  // Extract project ref (e.g. ehdyoeznrfzbrsclpdpo) from PGUSER or DATABASE_URL if available
+  let derivedRef = null;
+  if (process.env.PGUSER && process.env.PGUSER.includes('.')) {
+    derivedRef = process.env.PGUSER.split('.')[1];
+  } else if (process.env.DATABASE_URL) {
+    const match = process.env.DATABASE_URL.match(/postgres\.([a-z0-9]+)[:@]/);
+    if (match) derivedRef = match[1];
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL || (derivedRef ? `https://${derivedRef}.supabase.co` : (process.env.PGHOST ? `https://${process.env.PGHOST.split('.')[0]}.supabase.co` : null));
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+
   if (supabaseUrl && supabaseKey) {
     supabaseClient = createClient(supabaseUrl, supabaseKey);
+    console.log(`✅ Supabase Storage client initialized (${supabaseUrl})`);
+  } else {
+    console.log(`ℹ️ Supabase Storage notice: URL (${supabaseUrl || 'missing'}) or API Key (missing) not configured. Uploads will use local disk storage fallback until SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY is provided in .env`);
   }
 } catch (err) {
   console.log('Supabase client module notice:', err.message);
@@ -54,12 +68,34 @@ const uploadPrescriptionFile = async ({ file, accountOwnerId, familyMemberId }) 
   // Try Supabase Storage first if client is configured
   if (supabaseClient) {
     try {
-      const { data, error } = await supabaseClient.storage
+      // Try upload
+      let { data, error } = await supabaseClient.storage
         .from('prescriptions')
         .upload(keyPath, file.buffer || fs.readFileSync(file.path), {
           contentType: file.mimetype,
           upsert: true,
         });
+
+      // If bucket does not exist, attempt to auto-create private bucket if service role key is present
+      if (error && (error.message?.includes('not found') || error.message?.includes('Bucket') || error.statusCode === '404' || error.error === 'Bucket not found')) {
+        try {
+          await supabaseClient.storage.createBucket('prescriptions', {
+            public: false, // Private bucket for HIPAA/prescription security
+            fileSizeLimit: 10485760, // 10MB
+          });
+          // Retry upload after bucket creation
+          const retry = await supabaseClient.storage
+            .from('prescriptions')
+            .upload(keyPath, file.buffer || fs.readFileSync(file.path), {
+              contentType: file.mimetype,
+              upsert: true,
+            });
+          data = retry.data;
+          error = retry.error;
+        } catch (bucketErr) {
+          console.warn('Auto-creating Supabase prescriptions bucket failed:', bucketErr.message);
+        }
+      }
 
       if (!error && data) {
         return {
@@ -107,9 +143,18 @@ const getSignedFileUrl = async (prescription, requesterUserId, requesterRole) =>
   // If stored in Supabase Storage and client is ready
   if (supabaseClient && prescription.file_url && prescription.file_url.startsWith('prescriptions/')) {
     try {
-      const { data, error } = await supabaseClient.storage
+      let { data, error } = await supabaseClient.storage
         .from('prescriptions')
         .createSignedUrl(prescription.file_url, expirySeconds);
+
+      if (error || !data?.signedUrl) {
+        const altPath = prescription.file_url.replace(/^prescriptions\//, '');
+        const retry = await supabaseClient.storage
+          .from('prescriptions')
+          .createSignedUrl(altPath, expirySeconds);
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (!error && data?.signedUrl) {
         return data.signedUrl;
