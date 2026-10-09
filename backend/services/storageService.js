@@ -22,11 +22,15 @@ try {
   }
 
   const supabaseUrl = process.env.SUPABASE_URL || (derivedRef ? `https://${derivedRef}.supabase.co` : (process.env.PGHOST ? `https://${process.env.PGHOST.split('.')[0]}.supabase.co` : null));
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+  const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+  const isPlaceholder = !rawKey || rawKey.includes('your_') || rawKey.includes('placeholder') || rawKey.includes('<') || rawKey.length < 20;
+  const supabaseKey = isPlaceholder ? null : rawKey;
 
   if (supabaseUrl && supabaseKey) {
     supabaseClient = createClient(supabaseUrl, supabaseKey);
     console.log(`✅ Supabase Storage client initialized (${supabaseUrl})`);
+  } else if (isPlaceholder && rawKey) {
+    console.log(`⚠️ Supabase Storage notice: API Key in backend/.env is currently a placeholder ("${rawKey}"). Replace it with your actual Supabase service_role or anon key from Supabase Dashboard -> Settings -> API. Uploads are currently falling back to local disk storage.`);
   } else {
     console.log(`ℹ️ Supabase Storage notice: URL (${supabaseUrl || 'missing'}) or API Key (missing) not configured. Uploads will use local disk storage fallback until SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY is provided in .env`);
   }
