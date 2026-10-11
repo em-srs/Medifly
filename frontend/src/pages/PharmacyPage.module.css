@@ -1,32 +1,198 @@
-.page { padding: var(--space-8) 0 var(--space-16); min-height: calc(100vh - var(--header-height)); background: var(--bg-secondary); }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-4); }
-.header h1 { font-size: var(--text-2xl); margin-bottom: var(--space-1); }
-.header p { font-size: var(--text-sm); color: var(--slate-500); }
-.headerStats { display: flex; gap: var(--space-4); }
-.hStat { text-align: center; padding: var(--space-3) var(--space-5); background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-xl); }
-.hStat strong { display: block; font-family: var(--font-display); font-size: var(--text-xl); font-weight: 800; color: var(--teal-600); }
-.hStat span { font-size: var(--text-xs); color: var(--slate-500); }
+.page {
+  padding: var(--space-8) 0 var(--space-20);
+  min-height: calc(100vh - var(--header-height));
+  background: var(--bg-secondary);
+}
 
-.content { margin-top: var(--space-6); }
-.orderList, .rxList { display: flex; flex-direction: column; gap: var(--space-4); }
-.orderCard, .rxCard { background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-xl); padding: var(--space-5); transition: all var(--transition-base); }
-.orderCard:hover, .rxCard:hover { border-color: var(--teal-200); box-shadow: var(--shadow-sm); }
-.orderHeader, .rxHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3); }
-.orderId { font-family: monospace; font-size: var(--text-sm); font-weight: 600; color: var(--slate-500); }
-.orderItems { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-3); }
-.orderItem { display: flex; justify-content: space-between; font-size: var(--text-sm); color: var(--slate-700); padding: var(--space-2) var(--space-3); background: var(--slate-50); border-radius: var(--radius-md); }
-.orderFooter { display: flex; justify-content: space-between; align-items: center; padding-top: var(--space-3); border-top: 1px solid var(--slate-100); font-size: var(--text-sm); font-weight: 600; }
-.orderActions { display: flex; gap: var(--space-2); }
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
 
-.rxCard p { font-size: var(--text-sm); color: var(--slate-600); margin-bottom: var(--space-2); }
-.rxMeds { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-3); }
-.rxActions { display: flex; gap: var(--space-2); }
+.header h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--slate-900);
+  margin-bottom: 0.35rem;
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+}
 
-.earningsGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
-.earningCard { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-5); background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-xl); }
-.earningCard span { font-size: 2rem; }
-.earningCard strong { display: block; font-size: var(--text-xl); font-weight: 700; color: var(--slate-900); }
-.earningCard small { font-size: var(--text-xs); color: var(--slate-500); }
+.header p {
+  font-size: 1rem;
+  color: var(--slate-500);
+}
+
+.headerStats {
+  display: flex;
+  gap: 1rem;
+}
+
+.hStat {
+  text-align: center;
+  padding: 0.85rem 1.35rem;
+  background: white;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xs);
+}
+
+.hStat strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--teal-700);
+  line-height: 1.2;
+}
+
+.hStat span {
+  font-size: 0.75rem;
+  color: var(--slate-500);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.content {
+  margin-top: var(--space-8);
+}
+
+.orderList, .rxList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.orderCard, .rxCard {
+  background: white;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-2xl);
+  padding: 1.5rem;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-card);
+}
+
+.orderCard:hover, .rxCard:hover {
+  border-color: var(--teal-300);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.orderHeader, .rxHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.orderId {
+  font-family: monospace;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--slate-800);
+}
+
+.orderItems {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.orderItem {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--slate-700);
+  padding: 0.65rem 0.95rem;
+  background: var(--slate-50);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--slate-100);
+}
+
+.orderFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--slate-100);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--slate-800);
+}
+
+.orderActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.rxCard p {
+  font-size: 0.9rem;
+  color: var(--slate-600);
+  margin-bottom: 0.65rem;
+}
+
+.rxMeds {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.rxActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.earningsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.earningCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: white;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-card);
+  transition: all var(--transition-base);
+}
+
+.earningCard:hover {
+  border-color: var(--teal-300);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.earningCard span {
+  font-size: 2.25rem;
+}
+
+.earningCard strong {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--slate-900);
+  font-family: var(--font-display);
+  line-height: 1.2;
+}
+
+.earningCard small {
+  font-size: 0.78rem;
+  color: var(--slate-500);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 
 @media (max-width: 768px) {
   .header { flex-direction: column; align-items: flex-start; }

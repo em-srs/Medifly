@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import MedicineCard from '@/components/MedicineCard';
 import styles from './MedicinesPage.module.css';
 import { 
@@ -24,10 +25,20 @@ const CATEGORIES = [
 ];
 
 export default function MedicinesPage() {
-  const [query,          setQuery]          = useState('');
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchParams] = useSearchParams();
+  const urlCategory = searchParams.get('category');
+  const urlKeyword = searchParams.get('keyword');
+
+  const [query,          setQuery]          = useState(urlKeyword || '');
+  const [activeCategory, setActiveCategory] = useState(urlCategory || 'all');
   const [sortBy,         setSortBy]         = useState('name');
   const [currentPage,    setCurrentPage]    = useState(1);
+
+  // Sync state if URL changes
+  useEffect(() => {
+    if (urlCategory) setActiveCategory(urlCategory);
+    if (urlKeyword !== null && urlKeyword !== undefined) setQuery(urlKeyword);
+  }, [urlCategory, urlKeyword]);
 
   // API response state
   const [items,       setItems]       = useState([]);
