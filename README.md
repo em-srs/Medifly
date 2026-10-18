@@ -8,8 +8,7 @@
 [![Vite Version](https://img.shields.io/badge/vite-v6.2.0-646cff.svg)](https://vitejs.dev/)
 [![Clerk Auth](https://img.shields.io/badge/auth-Clerk%20SSO%20%26%20Multi--Tenancy-6C47FF.svg)](https://clerk.com/)
 [![PostgreSQL](https://img.shields.io/badge/database-PostgreSQL%20Supabase-blue.svg)](https://supabase.com/)
-[![Socket.io](https://img.shields.io/badge/socket.io-v4.8.3-black.svg)](https://socket.io/)
-[![Isolation Test](https://img.shields.io/badge/account%20isolation-100%25%20passed-success.svg)](backend/scripts/testCrossAccountIsolation.js)
+[![Row-Level Security](https://img.shields.io/badge/security-PostgreSQL%20RLS%20Enforced-success.svg)](backend/config/db.js)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
 
 > **Medifly** is an enterprise-grade, real-time emergency healthcare delivery & prescription auto-refill platform built on Node.js **Express v5**, **React 19**, **Vite 6**, **Clerk Authentication & Multi-Tenancy**, and **PostgreSQL (Supabase Cloud)**. Medifly hosts over **254,023 authentic medicines** and **11,850 bioequivalent chemical salts**, featuring **30-Minute Ultra-Express Delivery**, `pg_trgm` GIN trigram indexed SQL search, a bioequivalent salt comparison engine (saving up to 70% on generics), cold-chain insulated logistics, automated subscription refills (`node-cron`), a family prescription vault with 10-minute signed file URLs, and role-based access portals for Patients, Pharmacists, Delivery Riders, and System Administrators.
@@ -106,7 +105,6 @@ graph TB
             PS["PricingService"]
             CS["CronService (Node-Cron)"]
             RAS["RiderAssignmentService"]
-            SCS["SaltComparisonService"]
             SS["StorageService (Supabase Storage)"]
         end
         
@@ -126,12 +124,10 @@ graph TB
     MW_R --> PS
     MW_R --> CS
     MW_R --> RAS
-    MW_R --> SCS
     MW_R --> SS
     PS --> DB
     CS --> DB
     RAS --> DB
-    SCS --> DB
     SS --> ST
     EX --> SIO
 ```
@@ -258,23 +254,25 @@ medifly-mern/
 │   ├── config/             # PostgreSQL Pool setup & table auto-init (db.js)
 │   ├── controllers/        # Express controllers (auth, medicine, order, vault, etc.)
 │   ├── middleware/         # authMiddleware (Clerk/JWT) & roleMiddleware (RBAC)
-│   ├── models/             # Schema structures & references
 │   ├── routes/             # Express API route modules
 │   ├── services/           # PricingService, CronService, RiderAssignment, StorageService
-│   ├── scripts/            # Database verification & test scripts (verifyDb.js, testCrossAccountIsolation.js)
+│   ├── scripts/            # Database initialization & seeding scripts (initDatabase.js, seedMedicines.js, addIndexes.js)
+│   ├── data/               # Authentic 254k+ medicine dataset CSVs (meds_dB_original.csv)
 │   ├── socket.js           # Socket.io real-time event engine
 │   └── server.js           # Express app setup & server entry point
 ├── frontend/
-│   ├── public/             # Static web assets & icons
+│   ├── public/             # Static web assets, favicon, hero banner & offline catalog
 │   └── src/
 │       ├── components/     # Header, Footer, CartSidebar, MedicineCard, ProtectedRoute
 │       ├── context/        # AuthContext, CartContext, SocketContext
+│       ├── hooks/          # useScrollReveal animation hook
 │       ├── pages/          # HomePage, MedicinesPage, PrescriptionsPage, ProfilePage,
 │       │                   # AdminPage, PharmacyPage, RiderPage, SaltComparePage,
 │       │                   # SubscriptionPage, OnboardingPage, AboutPage, CheckoutPage
 │       ├── utils/          # getMedicineImage visual resolver & formatting helpers
 │       ├── App.jsx         # React Router v7 layout & route mappings
 │       └── main.jsx        # ClerkProvider & root mounting
+├── PROJECT_GUIDE.md        # Master Architecture, API & Technical Interview Preparation Guide
 ├── notes.md                # Technical interview preparation & revision guide
 └── README.md               # Production documentation & project reference
 ```
@@ -582,25 +580,28 @@ npm run dev
 
 ---
 
-## 🧪 Testing & Verification
+## 🧪 Database Setup & Migration Scripts
 
-Automated backend verification scripts validate database health, storage upload, and account data isolation:
+Backend utilities for initializing schemas, creating trigram indexes, and seeding catalog data:
 
 ```bash
-# Run database schema & record count check (254k+ meds, 11k+ salts)
-node backend/scripts/verifyDb.js
+# 1. Initialize database schema & verify connection
+node backend/scripts/initDatabase.js
 
-# Run 100% Cross-Account Data Isolation Test (5/5 checks passed)
-node backend/scripts/testCrossAccountIsolation.js
+# 2. Add pg_trgm extension & GIN trigram indexes for sub-15ms search
+node backend/scripts/addIndexes.js
 
-# Run Vault & Signed URL End-to-End Verification (6/6 checks passed)
-node backend/scripts/testVaultEndToEnd.js
+# 3. Enable Row-Level Security (RLS) across all 12 tables
+node backend/scripts/enableRls.js
+
+# 4. Ingest authentic 254k+ medicine dataset into PostgreSQL
+node backend/scripts/seedMedicines.js
 ```
 
-### Verified Test Results:
-- **`verifyDb.js`**: Verified 254,023 authentic medicines and 11,850 salts across 12 PostgreSQL tables.
-- **`testCrossAccountIsolation.js`**: **5/5 checks passed** verifying user accounts cannot access foreign family profiles, orders, or subscriptions.
-- **`testVaultEndToEnd.js`**: **6/6 checks passed** verifying private bucket file upload and signed URL generation.
+### Architectural Guarantees:
+- **Trigram Search Performance**: Sub-15ms fuzzy search execution over 254,023 records backed by GIN indexes.
+- **Tenant Isolation**: Server-side ownership gating (`account_owner_id = $1`) and PostgreSQL Row-Level Security (RLS) on all 12 tables.
+- **Prescription Privacy**: 10-minute expiring signed URLs for document access (`expiresIn: 600`).
 
 ---
 
@@ -639,9 +640,9 @@ Co-authored-by: Claude AI <claude-agent@noreply.invalid>
 
 ## 📄 Documentation & Deliverables
 
+- **[PROJECT_GUIDE.md](file:///d:/CODINGBRO/medifly%20mern/PROJECT_GUIDE.md)**: Master Architecture, API & Technical Interview Preparation Guide
 - **[notes.md](file:///d:/CODINGBRO/medifly%20mern/notes.md)**: Technical Interview Preparation & Revision Guide
-- **[db.js](file:///d:/CODINGBRO/medifly%20mern/backend/config/db.js)**: PostgreSQL Schema & Pool Setup
-- **[testCrossAccountIsolation.js](file:///d:/CODINGBRO/medifly%20mern/backend/scripts/testCrossAccountIsolation.js)**: Cross-Account Isolation Test Suite
+- **[db.js](file:///d:/CODINGBRO/medifly%20mern/backend/config/db.js)**: PostgreSQL Schema, Pool Setup & Connection Retry Logic
 
 ---
 

@@ -143,7 +143,6 @@ Traditional pharmacy and e-commerce medical delivery platforms suffer from sever
 medifly/
 ├── backend/
 │   ├── config/
-│   │   ├── auth.js                     # Clerk & JWT security constants
 │   │   └── db.js                       # PostgreSQL Pool setup, schema auto-migration, retry wrapper & RLS
 │   ├── controllers/
 │   │   ├── adminController.js          # Revenue analytics, stock alerts, SQL-isolated user management
@@ -175,13 +174,16 @@ medifly/
 │   │   ├── cronService.js              # Node-cron daily refill runner & 3-min DB keepalive ping
 │   │   ├── pricingService.js           # Multi-tier dynamic pricing engine (GST, cold-chain, late-night fees)
 │   │   ├── riderAssignmentService.js   # Automated nearest-available rider dispatch algorithm
-│   │   ├── saltComparisonService.js    # Chemical formula & bioequivalent salt alternative matcher
 │   │   └── storageService.js           # Supabase Storage client, 10-min signed URLs & local disk fallback
 │   ├── scripts/
 │   │   ├── addIndexes.js               # pg_trgm extension enabler & GIN trigram index creator
 │   │   ├── enableRls.js                # Row-Level Security activator for Supabase tables
-│   │   ├── seedMedicines.js            # Bulk CSV streaming ingestion engine for 254k+ drugs
-│   │   └── testCrossAccountIsolation.js# End-to-end multi-tenant account isolation test suite
+│   │   ├── fixExtensions.js            # Schema path resolver for extensions
+│   │   ├── initDatabase.js             # Initial database verification & creator
+│   │   └── seedMedicines.js            # Bulk CSV streaming ingestion engine for 254k+ drugs
+│   ├── data/
+│   │   ├── medicines.csv               # Sample medicines dataset
+│   │   └── meds_dB_original.csv        # Authentic 254,023 medicines master dataset (32MB)
 │   ├── socket.js                       # Socket.io server instance, room manager & event broadcaster
 │   └── server.js                       # Express app bootstrap, HTTP server mount & global error handler
 │
@@ -300,7 +302,6 @@ graph TB
             PS["PricingService"]
             CS["CronService (Node-Cron)"]
             RAS["RiderAssignmentService"]
-            SCS["SaltComparisonService"]
             SS["StorageService"]
         end
         
@@ -318,12 +319,10 @@ graph TB
     MW_R --> PS
     MW_R --> CS
     MW_R --> RAS
-    MW_R --> SCS
     MW_R --> SS
     PS --> DB
     CS --> DB
     RAS --> DB
-    SCS --> DB
     SS --> ST
     EX --> SIO
 ```
@@ -662,26 +661,28 @@ const getSignedFileUrl = async (prescription, requesterUserId, requesterRole) =>
 
 ---
 
-### Cross-Account Data Isolation Test Verification (`scripts/testCrossAccountIsolation.js`)
+### Cross-Account Data Isolation & Server-Side Ownership Gating
 
-To mathematically guarantee 100% tenant data isolation, Medifly incorporates an automated cross-account verification suite:
+To mathematically guarantee 100% tenant data isolation, Medifly enforces server-side ownership gating across every sensitive controller:
 
 ```javascript
-// Verification Step: User Alpha attempting to access User Beta's family member
-const checkAlphaAccessToBetaMember = await vaultController.checkMemberOwnership(memberBetaId, alphaId);
-
-if (!checkAlphaAccessToBetaMember) {
-  console.log('✅ Security Ownership Check Passed: User Alpha CANNOT access User Beta family member');
-} else {
-  throw new Error('SECURITY VIOLATION: User Alpha accessed User Beta family member!');
-}
+// Server-Side Ownership Check in vaultController.js
+// Guarantees that users can only access family profiles they legally own
+const checkMemberOwnership = async (familyMemberId, accountOwnerId) => {
+  const result = await query(
+    'SELECT id FROM family_members WHERE id = $1 AND account_owner_id = $2',
+    [familyMemberId, accountOwnerId]
+  );
+  return result.rows.length > 0;
+};
 ```
 
-The test validates:
-1. **Profile Isolation**: User A cannot read or modify User B's family members.
-2. **Prescription Isolation**: Prescriptions uploaded by Account A return HTTP 403 when queried by Account B.
-3. **Order History Isolation**: Orders are strictly scoped to `WHERE user_id = $1`.
+The system enforces 4 layers of multi-tenant security:
+1. **Profile Isolation**: User A cannot read or modify User B's family members (`WHERE account_owner_id = $1`).
+2. **Prescription Isolation**: Prescriptions uploaded by Account A return HTTP 403 Forbidden when requested by any other account.
+3. **Order History Isolation**: Orders are strictly scoped to the authenticated caller (`WHERE user_id = $1`).
 4. **Subscription Isolation**: Auto-refill schedules cannot leak across accounts.
+5. **Database-Level Protection**: PostgreSQL Row-Level Security (RLS) is activated on all 12 tables.
 
 ---
 

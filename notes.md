@@ -49,7 +49,6 @@ graph TB
             PS["PricingService"]
             CS["CronService (Node-Cron)"]
             RAS["RiderAssignmentService"]
-            SCS["SaltComparisonService"]
             SS["StorageService (Supabase Storage)"]
         end
         
@@ -69,12 +68,10 @@ graph TB
     MW_R --> PS
     MW_R --> CS
     MW_R --> RAS
-    MW_R --> SCS
     MW_R --> SS
     PS --> DB
     CS --> DB
     RAS --> DB
-    SCS --> DB
     SS --> ST
     EX --> SIO
 ```
@@ -571,7 +568,7 @@ const startCronJobs = () => {
 
 ### Question 5: Testing Strategy & Verification
 **Q: How did you approach testing and data isolation verification?**
-> **Answer**: Core business logic services (`PricingService`, `SaltComparisonService`, `RiderAssignmentService`) were written as pure functions decoupled from Express HTTP objects. Automated test scripts (`testCrossAccountIsolation.js` and `testVaultEndToEnd.js`) were executed against Supabase PostgreSQL, verifying 100% pass rates across 5 cross-account isolation checks and 6 storage vault end-to-end checks.
+> **Answer**: Core business logic services (`PricingService`, `RiderAssignmentService`, `StorageService`) and controllers (`medicineController`, `vaultController`) were written as pure decoupled functions. Cross-account data isolation is mathematically enforced at the SQL layer with server-side ownership checks (`WHERE account_owner_id = $1`), strict `roleMiddleware` guards, and PostgreSQL Row-Level Security (RLS) enabled across all 12 tables.
 
 ### Question 6: Price Snapshotting & Historical Integrity
 **Q: How does price snapshotting or historical data preservation work in Medifly?**
